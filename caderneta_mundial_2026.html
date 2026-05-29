@@ -966,7 +966,7 @@
       <div class="auth-view auth-register">
         <div class="auth-kicker">Caderneta Mundial 2026</div>
         <h1 class="auth-title">Registo</h1>
-        <p id="authRegisterStatusText" class="auth-copy">Convite aceite. Cria a tua conta. Depois voltas ao login para entrar.</p>
+        <p id="authRegisterStatusText" class="auth-copy">Convite aceite. Cria a tua conta para entrar automaticamente.</p>
         <div class="auth-form">
           <input id="authRegisterUsernameInput" class="auth-input" type="text" maxlength="24" placeholder="Username" autocomplete="username" />
           <div class="password-field">
@@ -1076,6 +1076,7 @@
   <script>
     const STORAGE_KEY = "caderneta_mundial_2026_estado_v1";
     const LIVE_REFRESH_MS = 15000;
+    const IDLE_LOGOUT_MS = 30 * 60 * 1000;
 
     let stickers = [];
     let currentView = "all";
@@ -1087,6 +1088,7 @@
     let liveProfile = "";
     let liveUpdatedAt = "";
     let liveRefreshTimer = null;
+    let idleLogoutTimer = null;
     let inviteToken = "";
     let inviteValid = false;
     let inviteFromCurrentLink = false;
@@ -2161,26 +2163,60 @@
       liveRefreshTimer = setInterval(refreshLiveNow, LIVE_REFRESH_MS);
     }
 
-    async function finishLiveLogin(user) {
-      liveProfile = user.username;
-      liveUsernameInput.value = user.username;
-      localStorage.setItem("caderneta_live_profile", user.username);
-      updateLiveLoginUI();
-      liveStatusText.textContent = `Ligado como ${user.username}. A carregar caderneta...`;
+    function stopIdleLogoutTimer() {
+      if (!idleLogoutTimer) return;
+      clearTimeout(idleLogoutTimer);
+      idleLogoutTimer = null;
+    }
 
-      const data = await fetchLiveState();
-      if (data.exists && data.csv) {
-        loadStickers(parseTextFile(data.csv));
-        liveUpdatedAt = data.updatedAt || "";
-      } else {
-        await loadBaseAlbum();
-        await writeLiveStateNow();
+    function resetIdleLogoutTimer() {
+      if (!liveProfile) {
+        stopIdleLogoutTimer();
+        return;
       }
 
-      liveStatusText.textContent = `Ligado como ${user.username}. Sincronizacao online ativa.`;
-      setSaveStatus("Online ligado com sucesso");
-      startLiveRefresh();
-      await loadLiveProfiles();
+      stopIdleLogoutTimer();
+      idleLogoutTimer = setTimeout(() => {
+        logoutLiveAccount("idle");
+      }, IDLE_LOGOUT_MS);
+    }
+
+    function registerIdleActivityListeners() {
+      ["click", "keydown", "input", "scroll", "touchstart"].forEach(eventName => {
+        window.addEventListener(eventName, resetIdleLogoutTimer);
+      });
+    }
+
+    async function finishLiveLogin(user) {
+      const previousProfile = liveProfile;
+
+      try {
+        liveProfile = user.username;
+        liveUsernameInput.value = user.username;
+        localStorage.setItem("caderneta_live_profile", user.username);
+        liveStatusText.textContent = `Ligado como ${user.username}. A carregar caderneta...`;
+
+        const data = await fetchLiveState();
+        if (data.exists && data.csv) {
+          loadStickers(parseTextFile(data.csv));
+          liveUpdatedAt = data.updatedAt || "";
+        } else {
+          await loadBaseAlbum();
+          await writeLiveStateNow();
+        }
+
+        setAuthMode("app");
+        updateLiveLoginUI();
+        liveStatusText.textContent = `Ligado como ${user.username}. Sincronizacao online ativa.`;
+        setSaveStatus("Online ligado com sucesso");
+        startLiveRefresh();
+        resetIdleLogoutTimer();
+        await loadLiveProfiles();
+      } catch (error) {
+        liveProfile = previousProfile || "";
+        updateLiveLoginUI();
+        throw error;
+      }
     }
 
     async function loginLiveAccount() {
@@ -2228,7 +2264,7 @@
       try {
         setAuthMessage("A criar conta...", "register");
         liveStatusText.textContent = "A criar conta...";
-        await authRequest("/api/auth/register", credentials);
+        const data = await authRequest("/api/auth/register", credentials);
         localStorage.setItem("caderneta_live_profile", credentials.username);
         sessionStorage.removeItem("caderneta_invite_token");
         localStorage.removeItem("caderneta_invite_token");
@@ -2238,9 +2274,8 @@
         authLoginPasswordInput.value = "";
         authRegisterPasswordInput.value = "";
         liveUsernameInput.value = credentials.username;
-        setAuthMode("login");
-        updateLiveLoginUI();
-        setAuthMessage("Conta criada. Agora faz login.", "login");
+        setAuthMessage("Conta criada. A entrar...", "register");
+        await finishLiveLogin(data.user);
         setSaveStatus("Conta criada com sucesso");
       } catch (error) {
         setAuthMessage(error.message, "register");
@@ -2249,7 +2284,7 @@
       }
     }
 
-    async function logoutLiveAccount() {
+    async function logoutLiveAccount(reason = "manual") {
       if (!liveEnabled) return;
 
       try {
@@ -2260,11 +2295,16 @@
       liveUpdatedAt = "";
       if (liveRefreshTimer) clearInterval(liveRefreshTimer);
       liveRefreshTimer = null;
+      stopIdleLogoutTimer();
       liveComparison.innerHTML = "";
       liveFriendSelect.innerHTML = `<option value="">Escolhe um amigo</option>`;
-      liveStatusText.textContent = "Sessao terminada. Entra para voltar ao modo online.";
+      liveStatusText.textContent = reason === "idle"
+        ? "Sessao expirada por inatividade. Entra novamente."
+        : "Sessao terminada. Entra para voltar ao modo online.";
+      setAuthMode("login");
       updateLiveLoginUI();
-      setSaveStatus("Sessao terminada");
+      setAuthMessage(reason === "idle" ? "Sessao expirada por inatividade. Faz login novamente." : "", "login");
+      setSaveStatus(reason === "idle" ? "Sessao expirada por inatividade" : "Sessao terminada");
     }
 
     async function refreshLiveNow() {
@@ -2388,7 +2428,7 @@
         liveProfile = "";
         if (inviteValid) {
           setAuthMode("register");
-          authRegisterStatusText.textContent = "Convite aceite. Cria a tua conta. Depois voltas ao login para entrar.";
+          authRegisterStatusText.textContent = "Convite aceite. Cria a tua conta para entrar automaticamente.";
           setAuthMessage("", "register");
           setSaveStatus("Registo por convite");
         } else {
@@ -2693,6 +2733,7 @@
     countryScrollLeft.addEventListener("blur", stopCountryScroll);
     countryScrollRight.addEventListener("blur", stopCountryScroll);
     window.addEventListener("resize", applyCountryTabsOffset);
+    registerIdleActivityListeners();
 
 
     async function loadBaseAlbum() {

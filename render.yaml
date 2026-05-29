@@ -19,5 +19,7 @@ services:
         value: caderneta
       - key: MONGO_CONNECT_TIMEOUT_MS
         value: "8000"
+      - key: SESSION_IDLE_MINUTES
+        value: "30"
       - key: REGISTER_PIN
         sync: false

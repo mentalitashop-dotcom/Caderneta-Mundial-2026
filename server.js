@@ -11,11 +11,10 @@ const BASE_FILE = path.join(ROOT, "cromos_base.txt");
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
 const COOKIE_NAME = "caderneta_session";
-const SESSION_DAYS = 30;
+const SESSION_IDLE_MINUTES = Number(process.env.SESSION_IDLE_MINUTES || 30);
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
-const APP_VERSION = "1.0.5";
 const IS_RENDER = process.env.RENDER === "true";
 const IS_PRODUCTION = process.env.NODE_ENV === "production" || IS_RENDER;
 const ONLINE_REQUIRED = process.env.ONLINE_REQUIRED !== "false";
@@ -142,33 +141,6 @@ function assertOnlineConfig() {
   }
 }
 
-async function onlineHealthStatus() {
-  const config = onlineConfigStatus();
-  const status = {
-    ...config,
-    mongoConnected: false,
-    mongoError: config.ok ? "" : "MONGODB_URI em falta",
-    mongoHint: ""
-  };
-
-  if (!config.ok) return status;
-
-  try {
-    const db = await getMongoDb();
-    await db.command({ ping: 1 });
-    status.mongoConnected = true;
-    status.mongoError = "";
-  } catch (error) {
-    status.mongoError = error?.message || "Falha ao ligar ao MongoDB";
-    if (/bad auth|authentication failed/i.test(status.mongoError)) {
-      status.mongoHint = "Confirma username/password do Database Access. Se o URI tiver /caderneta, usa o URI do Atlas sem base no caminho e define MONGODB_DB=caderneta, ou acrescenta authSource=admin.";
-    }
-  }
-
-  status.ok = config.ok && status.mongoConnected;
-  return status;
-}
-
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = "";
@@ -234,7 +206,7 @@ function parseCookies(req) {
 }
 
 function sessionCookie(token) {
-  const maxAge = SESSION_DAYS * 24 * 60 * 60;
+  const maxAge = SESSION_IDLE_MINUTES * 60;
   const parts = [
     `${COOKIE_NAME}=${encodeURIComponent(token)}`,
     "HttpOnly",
@@ -623,7 +595,7 @@ async function findVerifiedUser(db, username) {
   return publicUser(user);
 }
 
-async function getAuthUser(req) {
+async function getAuthUser(req, res) {
   if (!MONGODB_URI) return null;
   const token = parseCookies(req)[COOKIE_NAME];
   if (!token) return null;
@@ -637,7 +609,19 @@ async function getAuthUser(req) {
   }
 
   const session = await db.collection(COLLECTIONS.sessions).findOne({ _id: tokenHash(token) });
-  if (!session || new Date(session.expiresAt) <= new Date()) return null;
+  const now = new Date();
+  if (!session || new Date(session.expiresAt) <= now) {
+    if (session) await db.collection(COLLECTIONS.sessions).deleteOne({ _id: session._id });
+    return null;
+  }
+
+  const expiresAt = new Date(now.getTime() + SESSION_IDLE_MINUTES * 60 * 1000);
+  await db.collection(COLLECTIONS.sessions).updateOne(
+    { _id: session._id },
+    { $set: { lastSeenAt: now, expiresAt } }
+  );
+
+  if (res) res.setHeader("Set-Cookie", sessionCookie(token));
 
   return findVerifiedUser(db, session.userId);
 }
@@ -645,7 +629,7 @@ async function getAuthUser(req) {
 async function createSession(db, user) {
   const token = crypto.randomBytes(32).toString("hex");
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(now.getTime() + SESSION_IDLE_MINUTES * 60 * 1000);
 
   await db.collection(COLLECTIONS.sessions).insertOne({
     _id: tokenHash(token),
@@ -653,6 +637,7 @@ async function createSession(db, user) {
     username: user.username,
     role: user.role,
     createdAt: now,
+    lastSeenAt: now,
     expiresAt
   });
 
@@ -660,7 +645,7 @@ async function createSession(db, user) {
 }
 
 async function requireVerifiedUser(req, res) {
-  const user = await getAuthUser(req);
+  const user = await getAuthUser(req, res);
   if (!user) {
     sendJson(res, 401, { error: "Acesso bloqueado. Inicia sessao com uma conta verificada." });
     return null;
@@ -823,7 +808,7 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
 async function handleAuthRoute(req, res, url) {
   if (url.pathname === "/api/auth/status") {
     if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
-    const user = await getAuthUser(req);
+    const user = await getAuthUser(req, res);
     return sendJson(res, 200, {
       enabled: Boolean(MONGODB_URI),
       registrationEnabled: Boolean(REGISTER_PIN),
@@ -902,10 +887,13 @@ async function handleAuthRoute(req, res, url) {
       throw error;
     }
 
+    await ensureUserStickerRows(db, publicUser(user));
+    const token = await createSession(db, user);
+
     return sendJson(res, 200, {
       ok: true,
       user: publicUser(user)
-    });
+    }, { "Set-Cookie": sessionCookie(token) });
   }
 
   if (url.pathname === "/api/auth/register") return methodNotAllowed(res, ["POST"]);
@@ -954,7 +942,7 @@ async function handleAuthRoute(req, res, url) {
 async function handleLiveRoute(req, res, url) {
   if (url.pathname === "/api/live/status") {
     if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
-    const user = await getAuthUser(req);
+    const user = await getAuthUser(req, res);
     return sendJson(res, 200, {
       enabled: Boolean(MONGODB_URI),
       registrationEnabled: Boolean(REGISTER_PIN),
@@ -1050,30 +1038,9 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, {
         ok: true,
         service: "caderneta-mundial-2026",
-        version: APP_VERSION,
         onlineConfigured: config.ok,
         onlineRequired: config.onlineRequired,
         missingConfig: config.missing,
-        databaseName: config.databaseName,
-        registrationConfigured: config.registrationConfigured,
-        uptimeSeconds: Math.round(process.uptime())
-      });
-    }
-
-    if (url.pathname === "/api/ready") {
-      if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
-      const config = await onlineHealthStatus();
-      const ready = config.ok || !ONLINE_REQUIRED;
-      return sendJson(res, ready ? 200 : 503, {
-        ok: ready,
-        service: "caderneta-mundial-2026",
-        version: APP_VERSION,
-        onlineReady: config.ok,
-        onlineRequired: config.onlineRequired,
-        missingConfig: config.missing,
-        mongoConnected: config.mongoConnected,
-        mongoError: config.mongoError,
-        mongoHint: config.mongoHint,
         databaseName: config.databaseName,
         registrationConfigured: config.registrationConfigured,
         uptimeSeconds: Math.round(process.uptime())
@@ -1088,10 +1055,6 @@ const server = http.createServer(async (req, res) => {
 
     if (url.pathname === "/" || url.pathname === "/caderneta_mundial_2026.html") {
       return send(res, 200, fs.readFileSync(HTML_FILE, "utf8"), "text/html; charset=utf-8");
-    }
-
-    if (url.pathname === "/DEPLOY_VERSION.txt") {
-      return send(res, 200, `${APP_VERSION}\n`, "text/plain; charset=utf-8");
     }
 
     if (url.pathname === "/api/base-cromos") {
@@ -1129,7 +1092,7 @@ const server = http.createServer(async (req, res) => {
 assertOnlineConfig();
 
 server.listen(PORT, () => {
-  console.log(`Caderneta Mundial 2026 v${APP_VERSION} online na porta ${PORT}`);
+  console.log(`Caderneta Mundial 2026 online na porta ${PORT}`);
   console.log(`Base de dados MongoDB: ${MONGODB_DB}`);
 });
 
