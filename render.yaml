@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: caderneta-mundial-2026
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22
+      - key: ONLINE_REQUIRED
+        value: "true"
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: caderneta
+      - key: MONGO_CONNECT_TIMEOUT_MS
+        value: "8000"
+      - key: REGISTER_PIN
+        sync: false

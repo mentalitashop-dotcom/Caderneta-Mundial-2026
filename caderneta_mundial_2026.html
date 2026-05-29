@@ -243,6 +243,10 @@
       gap: 10px;
     }
 
+    .auth-actions-single {
+      grid-template-columns: 1fr;
+    }
+
     .auth-message {
       min-height: 20px;
       color: #4b5563;
@@ -334,8 +338,13 @@
 
     .toolbar-actions {
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       align-items: stretch;
+    }
+
+    .toolbar-actions .export-list-btn {
+      flex: 1 1 154px;
     }
 
     .share-panel {
@@ -913,6 +922,26 @@
       .topbar {
         align-items: flex-start;
       }
+
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .toolbar-actions {
+        flex-direction: column;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .country-count {
+        width: 100%;
+        margin-left: 0;
+        text-align: left;
+      }
     }  </style>
 </head>
 <body class="auth-locked auth-mode-login">
@@ -925,7 +954,7 @@
         <div class="auth-form">
           <input id="authLoginUsernameInput" class="auth-input" type="text" maxlength="24" placeholder="Username" autocomplete="username" />
           <div class="password-field">
-            <input id="authLoginPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" />
+            <input id="authLoginPasswordInput" class="auth-input" type="password" minlength="8" maxlength="72" placeholder="Password" autocomplete="current-password" />
             <button class="password-toggle" type="button" onclick="togglePasswordVisibility('authLoginPasswordInput', this)" aria-label="Mostrar password" title="Mostrar password">&#128065;</button>
           </div>
           <div class="auth-actions auth-actions-single">
@@ -941,7 +970,7 @@
         <div class="auth-form">
           <input id="authRegisterUsernameInput" class="auth-input" type="text" maxlength="24" placeholder="Username" autocomplete="username" />
           <div class="password-field">
-            <input id="authRegisterPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="new-password" />
+            <input id="authRegisterPasswordInput" class="auth-input" type="password" minlength="8" maxlength="72" placeholder="Password" autocomplete="new-password" />
             <button class="password-toggle" type="button" onclick="togglePasswordVisibility('authRegisterPasswordInput', this)" aria-label="Mostrar password" title="Mostrar password">&#128065;</button>
           </div>
           <div class="auth-actions auth-actions-single">
@@ -1007,7 +1036,7 @@
       <div class="live-controls">
         <input id="liveUsernameInput" class="live-input" type="text" maxlength="24" placeholder="Utilizador" autocomplete="username" />
         <div class="password-field">
-          <input id="livePasswordInput" class="live-input" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" />
+          <input id="livePasswordInput" class="live-input" type="password" minlength="8" maxlength="72" placeholder="Password" autocomplete="current-password" />
           <button class="password-toggle" type="button" onclick="togglePasswordVisibility('livePasswordInput', this)" aria-label="Mostrar password" title="Mostrar password">&#128065;</button>
         </div>
         <button id="liveLoginButton" type="button" onclick="loginLiveAccount()">Entrar</button>
@@ -1032,11 +1061,11 @@
     </section>
 
     <section class="country-tabs-wrap" aria-label="Países da caderneta">
-      <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver países anteriores" onmouseover="startCountryScroll(-1)" onmouseout="stopCountryScroll()">‹</button>
+      <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver países anteriores">‹</button>
       <div class="country-tabs-viewport">
         <div id="countryTabs" class="country-tabs"></div>
       </div>
-      <button id="countryScrollRight" class="country-scroll-arrow" type="button" aria-label="Ver próximos países" onmouseover="startCountryScroll(1)" onmouseout="stopCountryScroll()">›</button>
+      <button id="countryScrollRight" class="country-scroll-arrow" type="button" aria-label="Ver próximos países">›</button>
     </section>
 
     <section id="content"></section>
@@ -1046,6 +1075,7 @@
 
   <script>
     const STORAGE_KEY = "caderneta_mundial_2026_estado_v1";
+    const LIVE_REFRESH_MS = 15000;
 
     let stickers = [];
     let currentView = "all";
@@ -1393,8 +1423,19 @@
       });
     }
 
+    function readSavedState() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      } catch {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch {}
+        return {};
+      }
+    }
+
     function mergeWithSavedState(list) {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      const saved = readSavedState();
       return list.map(sticker => {
         const savedSticker = saved[sticker.id];
         if (savedSticker !== undefined) {
@@ -1435,7 +1476,11 @@
           repetidos: sticker.repetidos || 0
         };
       });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (error) {
+        console.warn("Nao foi possivel gravar o estado local.", error);
+      }
 
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
@@ -2113,7 +2158,7 @@
     }
     function startLiveRefresh() {
       if (liveRefreshTimer) clearInterval(liveRefreshTimer);
-      liveRefreshTimer = setInterval(refreshLiveNow, 4000);
+      liveRefreshTimer = setInterval(refreshLiveNow, LIVE_REFRESH_MS);
     }
 
     async function finishLiveLogin(user) {
@@ -2171,6 +2216,12 @@
       if (!credentials.username || !credentials.password) {
         setAuthMessage("Escolhe username e password", "register");
         setSaveStatus("Escolhe username e password");
+        return;
+      }
+
+      if (credentials.password.length < 8) {
+        setAuthMessage("A password deve ter pelo menos 8 caracteres", "register");
+        setSaveStatus("Password demasiado curta");
         return;
       }
 
@@ -2480,6 +2531,7 @@
     }
 
     function renderStickerCard(sticker) {
+      const stickerId = escapeJS(sticker.id);
       return `
         <div
           class="sticker ${sticker.tenho ? "is-owned" : ""}"
@@ -2487,8 +2539,8 @@
           role="checkbox"
           aria-checked="${sticker.tenho ? "true" : "false"}"
           tabindex="0"
-          onclick="toggleStickerOwned('${sticker.id}')"
-          onkeydown="handleStickerCardKey(event, '${sticker.id}')"
+          onclick="toggleStickerOwned('${stickerId}')"
+          onkeydown="handleStickerCardKey(event, '${stickerId}')"
           title="${sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido"}"
         >
           <div class="sticker-state" aria-hidden="true"></div>
@@ -2502,8 +2554,8 @@
                 <div class="duplicate-summary">Repetidos: <span class="duplicate-summary-count">${sticker.repetidos || 0}</span></div>
                 <div class="duplicate-controls" style="${duplicateInputStyle(sticker.pais)}">
                   <div class="duplicate-buttons">
-                    <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${sticker.id}', -1)" title="Remover repetido" ${sticker.repetidos ? "" : "disabled"}>-</button>
-                    <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${sticker.id}', 1)" title="Adicionar repetido">+</button>
+                    <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido" ${sticker.repetidos ? "" : "disabled"}>-</button>
+                    <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', 1)" title="Adicionar repetido">+</button>
                   </div>
                 </div>
               </div>
@@ -2599,7 +2651,11 @@
     }
 
     function escapeJS(value) {
-      return String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+      return String(value)
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'")
+        .replace(/\r/g, "\\r")
+        .replace(/\n/g, "\\n");
     }
 
     function loadStickers(list, options = {}) {

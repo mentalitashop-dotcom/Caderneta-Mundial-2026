@@ -3,8 +3,9 @@ const http = require("http");
 const path = require("path");
 const crypto = require("crypto");
 
-const PORT = Number(process.env.PORT || 1312);
 const ROOT = __dirname;
+loadLocalEnv(path.join(ROOT, ".env"));
+const PORT = Number(process.env.PORT || 1312);
 const HTML_FILE = path.join(ROOT, "caderneta_mundial_2026.html");
 const BASE_FILE = path.join(ROOT, "cromos_base.txt");
 const MONGODB_URI = process.env.MONGODB_URI || "";
@@ -12,6 +13,32 @@ const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
 const COOKIE_NAME = "caderneta_session";
 const SESSION_DAYS = 30;
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
+const MAX_BODY_BYTES = 5_000_000;
+const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
+const IS_RENDER = process.env.RENDER === "true";
+const IS_PRODUCTION = process.env.NODE_ENV === "production" || IS_RENDER;
+const ONLINE_REQUIRED = process.env.ONLINE_REQUIRED !== "false";
+const SECURITY_HEADERS = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "same-origin",
+  "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
+  "Content-Security-Policy": [
+    "default-src 'self'",
+    "base-uri 'none'",
+    "connect-src 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "img-src 'self' data:",
+    "object-src 'none'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'"
+  ].join("; ")
+};
+
+if (IS_PRODUCTION) {
+  SECURITY_HEADERS["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+}
 
 const COLLECTIONS = {
   users: "users",
@@ -27,7 +54,38 @@ const emptyAlbum = [
 ];
 
 let mongoDbPromise = null;
+let mongoClient = null;
 let baseSyncPromise = null;
+
+class HttpError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
+function loadLocalEnv(filePath) {
+  if (!fs.existsSync(filePath)) return;
+
+  const lines = fs.readFileSync(filePath, "utf8").split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const index = trimmed.indexOf("=");
+    if (index === -1) continue;
+
+    const key = trimmed.slice(0, index).trim();
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key) || process.env[key] !== undefined) continue;
+
+    let value = trimmed.slice(index + 1).trim();
+    if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+}
 
 function readBaseAlbum() {
   if (fs.existsSync(BASE_FILE)) return fs.readFileSync(BASE_FILE, "utf8");
@@ -38,6 +96,7 @@ function send(res, status, body, type = "text/plain; charset=utf-8", extraHeader
   res.writeHead(status, {
     "Content-Type": type,
     "Cache-Control": "no-store",
+    ...SECURITY_HEADERS,
     ...extraHeaders
   });
   res.end(body);
@@ -47,14 +106,72 @@ function sendJson(res, status, payload, extraHeaders = {}) {
   send(res, status, JSON.stringify(payload), "application/json; charset=utf-8", extraHeaders);
 }
 
+function methodNotAllowed(res, allowedMethods) {
+  return sendJson(
+    res,
+    405,
+    { error: "Metodo nao permitido" },
+    { Allow: allowedMethods.join(", ") }
+  );
+}
+
+function onlineConfigStatus() {
+  const missing = [];
+  if (!MONGODB_URI) missing.push("MONGODB_URI");
+
+  return {
+    ok: missing.length === 0,
+    missing,
+    onlineRequired: ONLINE_REQUIRED,
+    production: IS_PRODUCTION,
+    render: IS_RENDER,
+    databaseName: MONGODB_DB,
+    registrationConfigured: Boolean(REGISTER_PIN)
+  };
+}
+
+function assertOnlineConfig() {
+  const status = onlineConfigStatus();
+  if (ONLINE_REQUIRED && !status.ok) {
+    throw new Error(`Configuracao online incompleta: falta ${status.missing.join(", ")}.`);
+  }
+
+  if (IS_PRODUCTION && !REGISTER_PIN) {
+    console.warn("Aviso: REGISTER_PIN nao esta definido. O registo fica fechado e so contas existentes conseguem entrar.");
+  }
+}
+
+async function onlineHealthStatus() {
+  const config = onlineConfigStatus();
+  const status = {
+    ...config,
+    mongoConnected: false,
+    mongoError: config.ok ? "" : "MONGODB_URI em falta"
+  };
+
+  if (!config.ok) return status;
+
+  try {
+    const db = await getMongoDb();
+    await db.command({ ping: 1 });
+    status.mongoConnected = true;
+    status.mongoError = "";
+  } catch (error) {
+    status.mongoError = error?.message || "Falha ao ligar ao MongoDB";
+  }
+
+  status.ok = config.ok && status.mongoConnected;
+  return status;
+}
+
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let body = "";
     req.setEncoding("utf8");
     req.on("data", chunk => {
       body += chunk;
-      if (body.length > 5_000_000) {
-        reject(new Error("Pedido demasiado grande"));
+      if (body.length > MAX_BODY_BYTES) {
+        reject(new HttpError(413, "Pedido demasiado grande"));
         req.destroy();
       }
     });
@@ -65,7 +182,11 @@ function readBody(req) {
 
 async function readJson(req) {
   const body = await readBody(req);
-  return JSON.parse(body || "{}");
+  try {
+    return JSON.parse(body || "{}");
+  } catch {
+    throw new HttpError(400, "JSON invalido");
+  }
 }
 
 function cleanUsername(value) {
@@ -81,7 +202,7 @@ function validateUsername(username) {
 }
 
 function validatePassword(password) {
-  return typeof password === "string" && password.length >= 4 && password.length <= 72;
+  return typeof password === "string" && password.length >= 8 && password.length <= 72;
 }
 
 function hashPassword(password, salt) {
@@ -114,9 +235,10 @@ function sessionCookie(token) {
     "HttpOnly",
     "SameSite=Lax",
     "Path=/",
-    `Max-Age=${maxAge}`
+    `Max-Age=${maxAge}`,
+    "Priority=High"
   ];
-  if (process.env.RENDER) parts.push("Secure");
+  if (IS_RENDER) parts.push("Secure");
   return parts.join("; ");
 }
 
@@ -126,9 +248,10 @@ function clearSessionCookie() {
     "HttpOnly",
     "SameSite=Lax",
     "Path=/",
-    "Max-Age=0"
+    "Max-Age=0",
+    "Priority=High"
   ];
-  if (process.env.RENDER) parts.push("Secure");
+  if (IS_RENDER) parts.push("Secure");
   return parts.join("; ");
 }
 
@@ -346,13 +469,27 @@ async function getMongoDb() {
         throw new Error("A dependencia mongodb nao esta instalada. Corre npm install.");
       }
 
-      const client = new MongoClient(MONGODB_URI);
-      await client.connect();
-      const db = client.db(MONGODB_DB);
-      await normalizeExistingUsersForIndexes(db);
-      await ensureIndexes(db);
-      return db;
-    })();
+      const client = new MongoClient(MONGODB_URI, {
+        appName: "caderneta-mundial-2026",
+        serverSelectionTimeoutMS: MONGO_CONNECT_TIMEOUT_MS
+      });
+
+      try {
+        await client.connect();
+        const db = client.db(MONGODB_DB);
+        await normalizeExistingUsersForIndexes(db);
+        await ensureIndexes(db);
+        mongoClient = client;
+        return db;
+      } catch (error) {
+        await client.close().catch(() => {});
+        throw error;
+      }
+    })().catch(error => {
+      mongoDbPromise = null;
+      mongoClient = null;
+      throw error;
+    });
   }
 
   return mongoDbPromise;
@@ -412,7 +549,10 @@ async function syncBaseAlbum(db) {
     );
 
     return stickers;
-  })();
+  })().catch(error => {
+    baseSyncPromise = null;
+    throw error;
+  });
 
   return baseSyncPromise;
 }
@@ -450,9 +590,19 @@ async function normalizeUserAccount(db, user) {
   return { ...user, ...changes };
 }
 
+async function findUserAccount(db, username, options = {}) {
+  const key = userKey(username);
+  if (!key) return null;
+
+  const users = db.collection(COLLECTIONS.users);
+  return (await users.findOne({ _id: key }, options)) ||
+    (await users.findOne({ usernameLower: key }, options));
+}
+
 async function findVerifiedUser(db, username) {
-  let user = await db.collection(COLLECTIONS.users).findOne(
-    { _id: userKey(username) },
+  let user = await findUserAccount(
+    db,
+    username,
     { projection: { username: 1, usernameLower: 1, role: 1, verified: 1 } }
   );
 
@@ -660,6 +810,7 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
 
 async function handleAuthRoute(req, res, url) {
   if (url.pathname === "/api/auth/status") {
+    if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
     const user = await getAuthUser(req);
     return sendJson(res, 200, {
       enabled: Boolean(MONGODB_URI),
@@ -670,6 +821,7 @@ async function handleAuthRoute(req, res, url) {
   }
 
   if (url.pathname === "/api/auth/invite") {
+    if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
     const inviteToken = String(
       url.searchParams.get("convite") ||
       url.searchParams.get("invite") ||
@@ -708,7 +860,7 @@ async function handleAuthRoute(req, res, url) {
     }
 
     if (!validatePassword(password)) {
-      return sendJson(res, 400, { error: "A password deve ter entre 4 e 72 caracteres." });
+      return sendJson(res, 400, { error: "A password deve ter entre 8 e 72 caracteres." });
     }
 
     const db = await openMongoDbForRequest(res);
@@ -744,6 +896,8 @@ async function handleAuthRoute(req, res, url) {
     });
   }
 
+  if (url.pathname === "/api/auth/register") return methodNotAllowed(res, ["POST"]);
+
   if (url.pathname === "/api/auth/login" && req.method === "POST") {
     const payload = await readJson(req);
     const username = cleanUsername(payload.username);
@@ -751,7 +905,7 @@ async function handleAuthRoute(req, res, url) {
     const db = await openMongoDbForRequest(res);
     if (!db) return;
 
-    let user = await db.collection(COLLECTIONS.users).findOne({ _id: userKey(username) });
+    let user = await findUserAccount(db, username);
     user = await normalizeUserAccount(db, user);
 
     if (!user || !passwordMatches(password, user.salt, user.passwordHash)) {
@@ -770,6 +924,8 @@ async function handleAuthRoute(req, res, url) {
     }, { "Set-Cookie": sessionCookie(token) });
   }
 
+  if (url.pathname === "/api/auth/login") return methodNotAllowed(res, ["POST"]);
+
   if (url.pathname === "/api/auth/logout" && req.method === "POST") {
     const db = await openMongoDbForRequest(res);
     if (!db) return;
@@ -778,11 +934,14 @@ async function handleAuthRoute(req, res, url) {
     return sendJson(res, 200, { ok: true }, { "Set-Cookie": clearSessionCookie() });
   }
 
+  if (url.pathname === "/api/auth/logout") return methodNotAllowed(res, ["POST"]);
+
   return false;
 }
 
 async function handleLiveRoute(req, res, url) {
   if (url.pathname === "/api/live/status") {
+    if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
     const user = await getAuthUser(req);
     return sendJson(res, 200, {
       enabled: Boolean(MONGODB_URI),
@@ -802,6 +961,7 @@ async function handleLiveRoute(req, res, url) {
   if (!db) return;
 
   if (url.pathname === "/api/live/profiles") {
+    if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
     const users = await db.collection(COLLECTIONS.users)
       .find(
         { role: "verificado", verified: true },
@@ -863,12 +1023,32 @@ async function handleLiveRoute(req, res, url) {
     }
   }
 
+  if (url.pathname === "/api/live/state") return methodNotAllowed(res, ["GET", "POST"]);
+
   return false;
 }
 
 const server = http.createServer(async (req, res) => {
   try {
-    const url = new URL(req.url, `http://${req.headers.host}`);
+    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+
+    if (url.pathname === "/api/health" || url.pathname === "/healthz") {
+      if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
+      const config = await onlineHealthStatus();
+      const healthy = config.ok || !ONLINE_REQUIRED;
+      return sendJson(res, healthy ? 200 : 503, {
+        ok: healthy,
+        service: "caderneta-mundial-2026",
+        onlineReady: config.ok,
+        onlineRequired: config.onlineRequired,
+        missingConfig: config.missing,
+        mongoConnected: config.mongoConnected,
+        mongoError: config.mongoError,
+        databaseName: config.databaseName,
+        registrationConfigured: config.registrationConfigured,
+        uptimeSeconds: Math.round(process.uptime())
+      });
+    }
 
     const authHandled = await handleAuthRoute(req, res, url);
     if (authHandled !== false) return;
@@ -891,7 +1071,7 @@ const server = http.createServer(async (req, res) => {
         return send(res, 200, stickersToCSV(stickers), "text/plain; charset=utf-8");
       }
 
-      return sendJson(res, 410, { error: "O modo local foi desativado. As alteracoes gravam apenas online." });
+      return methodNotAllowed(res, ["GET"]);
     }
 
     if (url.pathname.startsWith("/api/")) {
@@ -900,13 +1080,46 @@ const server = http.createServer(async (req, res) => {
 
     return send(res, 404, "ESTA APP NAO FOI CRIADA PARA SI");
   } catch (error) {
-    console.error(error);
     const wantsJson = req.url && req.url.startsWith("/api/");
+    if (error && error.statusCode) {
+      if (wantsJson) return sendJson(res, error.statusCode, { error: error.message });
+      return send(res, error.statusCode, error.message);
+    }
+
+    console.error(error);
     if (wantsJson) return sendJson(res, 500, { error: "Erro interno" });
     return send(res, 500, "Erro interno");
   }
 });
 
+assertOnlineConfig();
+
 server.listen(PORT, () => {
-  console.log(`Caderneta online pronta em http://localhost:${PORT}`);
+  console.log(`Caderneta Mundial 2026 online na porta ${PORT}`);
+  console.log(`Base de dados MongoDB: ${MONGODB_DB}`);
 });
+
+async function closeMongoClient() {
+  if (!mongoClient) return;
+  const client = mongoClient;
+  mongoClient = null;
+  mongoDbPromise = null;
+  await client.close().catch(() => {});
+}
+
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`A terminar servidor (${signal})...`);
+
+  server.close(async () => {
+    await closeMongoClient();
+    process.exit(0);
+  });
+
+  setTimeout(() => process.exit(1), 10000).unref();
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
