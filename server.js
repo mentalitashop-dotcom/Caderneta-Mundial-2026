@@ -15,7 +15,7 @@ const SESSION_DAYS = 30;
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
-const APP_VERSION = "1.0.4";
+const APP_VERSION = "1.0.5";
 const IS_RENDER = process.env.RENDER === "true";
 const IS_PRODUCTION = process.env.NODE_ENV === "production" || IS_RENDER;
 const ONLINE_REQUIRED = process.env.ONLINE_REQUIRED !== "false";
@@ -1088,6 +1088,10 @@ const server = http.createServer(async (req, res) => {
 
     if (url.pathname === "/" || url.pathname === "/caderneta_mundial_2026.html") {
       return send(res, 200, fs.readFileSync(HTML_FILE, "utf8"), "text/html; charset=utf-8");
+    }
+
+    if (url.pathname === "/DEPLOY_VERSION.txt") {
+      return send(res, 200, `${APP_VERSION}\n`, "text/plain; charset=utf-8");
     }
 
     if (url.pathname === "/api/base-cromos") {

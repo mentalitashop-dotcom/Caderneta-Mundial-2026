@@ -1,6 +1,6 @@
 {
   "name": "caderneta-mundial-2026",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "description": "Caderneta Mundial 2026",
   "main": "server.js",
