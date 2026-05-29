@@ -918,17 +918,17 @@
 
     .sticker-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+      gap: 6px;
     }
 
     .sticker {
       border: 1px solid #111827;
-      border-radius: 10px;
-      padding: 9px 38px 9px 10px;
+      border-radius: 8px;
+      padding: 7px 30px 7px 8px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: var(--sticker-bg, #fff);
       color: var(--sticker-text, var(--text));
       cursor: pointer;
@@ -964,10 +964,10 @@
 
     .sticker-state {
       position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 22px;
-      height: 22px;
+      top: 7px;
+      right: 7px;
+      width: 18px;
+      height: 18px;
       border: 2px solid var(--check-border, #111827);
       border-radius: 999px;
       background: rgba(255,255,255,.78);
@@ -981,8 +981,8 @@
 
     .sticker-state::before {
       content: "";
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       transform: scale(0);
       clip-path: polygon(14% 44%, 0 59%, 40% 100%, 100% 16%, 84% 0, 37% 64%);
       background: currentColor;
@@ -1009,13 +1009,15 @@
 
     .code {
       font-weight: 800;
-      margin-bottom: 2px;
-      font-size: 13px;
+      margin-bottom: 1px;
+      font-size: 11px;
+      line-height: 1.15;
     }
 
     .name {
       color: var(--sticker-muted, var(--muted));
-      font-size: 12px;
+      font-size: 10px;
+      line-height: 1.2;
       overflow-wrap: anywhere;
     }
 
@@ -1034,12 +1036,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      margin-top: 6px;
+      gap: 4px;
+      margin-top: 4px;
     }
     .duplicate-summary {
       color: var(--sticker-muted, var(--muted));
-      font-size: 11px;
+      font-size: 9px;
       font-family: inherit;
       font-style: normal;
       overflow-wrap: anywhere;
@@ -1059,18 +1061,18 @@
     .duplicate-buttons {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     .duplicate-control-btn {
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       padding: 0;
       border: 2px solid var(--duplicate-color, var(--line));
       border-radius: 8px;
       background: var(--duplicate-color, var(--main));
       color: var(--duplicate-text, #fff);
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 900;
       line-height: 1;
       display: inline-grid;
@@ -2439,15 +2441,15 @@
         tradeSuggestions.innerHTML = `
           <div class="trade-select-grid">
             <div class="trade-card">
-              <div class="trade-card-title">Repetidos que ${escapeHTML(friendProfile)} já tem</div>
+              <div class="trade-card-title">Repetidos que o ${escapeHTML(friendProfile)} já tem</div>
               <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendAlreadyHas)}</div>
             </div>
             <div class="trade-card">
-              <div class="trade-card-title">Meus cromos que ${escapeHTML(friendProfile)} precisa</div>
+              <div class="trade-card-title">Cromos que o ${escapeHTML(friendProfile)} precisa</div>
               <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendNeeds)}</div>
             </div>
             <div class="trade-card">
-              <div class="trade-card-title">Cromos de ${escapeHTML(friendProfile)} que não tenho</div>
+              <div class="trade-card-title">Cromos do ${escapeHTML(friendProfile)} que te faltam</div>
               <div class="trade-lines">Não há troca possível, ${escapeHTML(friendProfile)} não tem nenhum cromo que tu precises.</div>
             </div>
           </div>
@@ -2469,17 +2471,17 @@
           <div class="trade-card-title">Nova proposta para ${escapeHTML(friendProfile)}</div>
           <div class="trade-select-grid">
             <div class="trade-card">
-              <div class="trade-card-title">Repetidos que ${escapeHTML(friendProfile)} já tem</div>
+              <div class="trade-card-title">Repetidos que o ${escapeHTML(friendProfile)} já tem</div>
               <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendAlreadyHas)}</div>
             </div>
             <div class="trade-card">
-              <div class="trade-card-title">Meus cromos que ${escapeHTML(friendProfile)} precisa</div>
+              <div class="trade-card-title">Cromos que o ${escapeHTML(friendProfile)} precisa</div>
               <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendNeeds)}</div>
             </div>
           </div>
           <div class="trade-select-grid">
             <div class="trade-card">
-              <div class="trade-card-title">Cromos de ${escapeHTML(friendProfile)} que não tenho</div>
+              <div class="trade-card-title">Cromos do ${escapeHTML(friendProfile)} que te faltam</div>
               <div class="trade-lines is-scrollable">${tradeStickerList(receives)}</div>
             </div>
           </div>
