@@ -838,12 +838,119 @@ function publicTrade(doc, viewer) {
     receive: doc.receive || [],
     message: doc.message || "",
     createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt
+    updatedAt: doc.updatedAt,
+    acceptedAt: doc.acceptedAt || null,
+    rejectedAt: doc.rejectedAt || null,
+    cancelledAt: doc.cancelledAt || null
   };
 }
 
 function tradeStickerLabel(sticker) {
   return `${sticker.pais} ${sticker.codigo} - ${sticker.nome}`;
+}
+
+async function findUserById(db, userId) {
+  const user = await db.collection(COLLECTIONS.users).findOne(
+    { _id: userId },
+    { projection: { username: 1, usernameLower: 1, role: 1, verified: 1 } }
+  );
+  const normalized = await normalizeUserAccount(db, user);
+  if (!normalized || normalized.role !== "verificado" || normalized.verified !== true) return null;
+  return publicUser(normalized);
+}
+
+async function validateAcceptedTrade(db, trade, fromUser, toUser) {
+  const [fromStickers, toStickers] = await Promise.all([
+    getUserStickerState(db, fromUser),
+    getUserStickerState(db, toUser)
+  ]);
+  const fromById = new Map(fromStickers.map(sticker => [sticker.id, sticker]));
+  const toById = new Map(toStickers.map(sticker => [sticker.id, sticker]));
+
+  for (const sticker of trade.give || []) {
+    const fromSticker = fromById.get(sticker.id);
+    const toSticker = toById.get(sticker.id);
+    if (!fromSticker || !toSticker) throw new HttpError(400, "A troca ja nao e valida.");
+    if (!fromSticker.tenho || normalizeDuplicates(fromSticker.repetidos) <= 0) {
+      throw new HttpError(409, `${fromUser.username} ja nao tem ${tradeStickerLabel(fromSticker)} repetido.`);
+    }
+    if (toSticker.tenho) {
+      throw new HttpError(409, `${toUser.username} ja tem ${tradeStickerLabel(toSticker)}.`);
+    }
+  }
+
+  for (const sticker of trade.receive || []) {
+    const fromSticker = fromById.get(sticker.id);
+    const toSticker = toById.get(sticker.id);
+    if (!fromSticker || !toSticker) throw new HttpError(400, "A troca ja nao e valida.");
+    if (fromSticker.tenho) {
+      throw new HttpError(409, `${fromUser.username} ja tem ${tradeStickerLabel(fromSticker)}.`);
+    }
+    if (!toSticker.tenho || normalizeDuplicates(toSticker.repetidos) <= 0) {
+      throw new HttpError(409, `${toUser.username} ja nao tem ${tradeStickerLabel(toSticker)} repetido.`);
+    }
+  }
+}
+
+async function applyAcceptedTrade(db, trade) {
+  const fromUser = await findUserById(db, trade.fromUserId);
+  const toUser = await findUserById(db, trade.toUserId);
+  if (!fromUser || !toUser) throw new HttpError(404, "Um dos users desta troca ja nao existe.");
+
+  await validateAcceptedTrade(db, trade, fromUser, toUser);
+
+  const now = new Date();
+  const operations = [];
+  const decrementDuplicate = (user, sticker) => operations.push({
+    updateOne: {
+      filter: { userId: user.id, stickerId: sticker.id, owned: true, duplicates: { $gt: 0 } },
+      update: {
+        $inc: { duplicates: -1 },
+        $set: { updatedAt: now, tradeUpdatedAt: now }
+      }
+    }
+  });
+  const markOwned = (user, sticker) => operations.push({
+    updateOne: {
+      filter: { userId: user.id, stickerId: sticker.id },
+      update: {
+        $set: {
+          owned: true,
+          missing: false,
+          status: "obtido",
+          updatedAt: now,
+          tradeUpdatedAt: now
+        }
+      }
+    }
+  });
+
+  (trade.give || []).forEach(sticker => {
+    decrementDuplicate(fromUser, sticker);
+    markOwned(toUser, sticker);
+  });
+
+  (trade.receive || []).forEach(sticker => {
+    decrementDuplicate(toUser, sticker);
+    markOwned(fromUser, sticker);
+  });
+
+  if (operations.length) {
+    const result = await db.collection(COLLECTIONS.userStickers).bulkWrite(operations, { ordered: true });
+    if (result.modifiedCount !== operations.length) {
+      throw new HttpError(409, "A troca ja nao pode ser aplicada. Atualiza as cadernetas e tenta outra proposta.");
+    }
+  }
+
+  const updatedAt = now.toISOString();
+  const [fromStickers, toStickers] = await Promise.all([
+    getUserStickerState(db, fromUser),
+    getUserStickerState(db, toUser)
+  ]);
+  await Promise.all([
+    saveSnapshot(db, fromUser, fromStickers, updatedAt),
+    saveSnapshot(db, toUser, toStickers, updatedAt)
+  ]);
 }
 
 async function createTradeProposal(db, user, payload) {
@@ -924,9 +1031,22 @@ async function updateTradeProposalStatus(db, user, payload) {
   if ((status === "accepted" || status === "rejected") && !isReceiver) throw new HttpError(403, "So quem recebeu a proposta pode responder.");
 
   const updatedAt = new Date();
+  if (status === "accepted") {
+    await applyAcceptedTrade(db, trade);
+  }
+
   await db.collection(COLLECTIONS.trades).updateOne(
     { _id: tradeId },
-    { $set: { status, updatedAt, respondedBy: user.username } }
+    {
+      $set: {
+        status,
+        updatedAt,
+        respondedBy: user.username,
+        ...(status === "accepted" ? { acceptedAt: updatedAt } : {}),
+        ...(status === "rejected" ? { rejectedAt: updatedAt } : {}),
+        ...(status === "cancelled" ? { cancelledAt: updatedAt } : {})
+      }
+    }
   );
 
   return db.collection(COLLECTIONS.trades).findOne({ _id: tradeId });

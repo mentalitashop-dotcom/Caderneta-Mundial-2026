@@ -2362,7 +2362,16 @@
 
     function tradeStickerList(list) {
       if (!list || !list.length) return "Sem cromos";
-      return list.map(sticker => escapeHTML(stickerTradeLabel(sticker))).join("<br>");
+      const groups = new Map();
+      list.forEach(sticker => {
+        const country = exportGroupLabel(sticker.pais);
+        if (!groups.has(country)) groups.set(country, []);
+        groups.get(country).push(stickerExportNumber(sticker));
+      });
+
+      return [...groups.entries()]
+        .map(([country, codes]) => `${escapeHTML(country)} ${[...new Set(codes)].map(escapeHTML).join(", ")}`)
+        .join("<br>");
     }
 
     function tradeActionButtons(trade) {
@@ -2383,14 +2392,8 @@
       `;
     }
 
-    function renderTradeRequests() {
-      if (!tradeList) return;
-      if (!tradeRequests.length) {
-        tradeList.innerHTML = `<div class="comparison-empty">Ainda nao ha propostas de troca.</div>`;
-        return;
-      }
-
-      tradeList.innerHTML = tradeRequests.map(trade => {
+    function renderTradeCards(trades) {
+      return trades.map(trade => {
         const title = trade.direction === "incoming"
           ? `${trade.fromUser} propos uma troca`
           : `Proposta enviada a ${trade.toUser}`;
@@ -2408,6 +2411,24 @@
           </div>
         `;
       }).join("");
+    }
+
+    function renderTradeRequests() {
+      if (!tradeList) return;
+      if (!tradeRequests.length) {
+        tradeList.innerHTML = `<div class="comparison-empty">Ainda nao ha propostas de troca.</div>`;
+        return;
+      }
+
+      const pending = tradeRequests.filter(trade => trade.status === "pending");
+      const history = tradeRequests.filter(trade => trade.status !== "pending");
+
+      tradeList.innerHTML = `
+        <div class="trade-card-title">Propostas atuais</div>
+        ${pending.length ? renderTradeCards(pending) : `<div class="comparison-empty">Nao ha propostas pendentes.</div>`}
+        <div class="trade-card-title">Historico de trocas</div>
+        ${history.length ? renderTradeCards(history) : `<div class="comparison-empty">Ainda nao ha historico.</div>`}
+      `;
     }
 
     function renderTradePanel() {
@@ -2466,8 +2487,12 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "Nao foi possivel atualizar troca");
-        setSaveStatus("Troca atualizada");
+        setSaveStatus(status === "accepted" ? "Troca aceite e cadernetas atualizadas" : "Troca atualizada");
         await loadTradeRequests();
+        await refreshOwnAlbumState();
+        if (hasSelectedFriend()) await loadFriendAlbum(friendProfile, activePage);
+        renderTradePanel();
+        setSaveStatus(status === "accepted" ? "Troca aceite e cadernetas atualizadas" : "Troca atualizada");
       } catch (error) {
         setSaveStatus(error.message);
       }
@@ -2646,6 +2671,14 @@
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Nao foi possivel ler o perfil live");
       return data;
+    }
+
+    async function refreshOwnAlbumState() {
+      const data = await fetchLiveState();
+      if (data.exists && data.csv) {
+        loadStickers(parseTextFile(data.csv));
+        liveUpdatedAt = data.updatedAt || liveUpdatedAt;
+      }
     }
 
     async function loadLiveProfiles() {
