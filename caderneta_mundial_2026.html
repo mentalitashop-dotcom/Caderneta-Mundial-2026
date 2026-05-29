@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Caderneta Mundial 2026</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --main: #111827;
+      --ok: #111827;
+      --danger: #dc2626;
+      --shadow: 0 10px 25px rgba(0,0,0,.06);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--section-header-bg, var(--line));
+    }
+
+    .topbar {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-weight: 800;
+      letter-spacing: -.03em;
+      font-size: 20px;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .view-title {
+      color: var(--main);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+      padding: 10px 0;
+      user-select: none;
+    }
+
+    .view-title.is-changing {
+      animation: viewTitlePulse .28s ease;
+    }
+
+    @keyframes viewTitlePulse {
+      0% { transform: translateY(0); }
+      45% { transform: translateY(-2px); }
+      100% { transform: translateY(0); }
+    }
+
+    nav button {
+      cursor: default;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    button {
+      border: 0;
+      background: var(--main);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--main);
+      border: 1px solid var(--line);
+    }
+
+    button.active {
+      background: var(--ok);
+      color: #fff;
+    }
+
+    button.danger {
+      background: var(--danger);
+    }
+
+    main {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 22px 18px 60px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: stretch;
+    }
+
+    .search-shell {
+      position: relative;
+      min-width: 0;
+    }
+
+    .search {
+      width: 100%;
+      height: 100%;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 12px 46px 12px 16px;
+      outline: none;
+      font-size: 15px;
+      background: #fff;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .search:focus {
+      border-color: var(--main);
+      box-shadow: 0 0 0 4px rgba(17, 24, 39, .08);
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 7px;
+      top: 50%;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      transform: translateY(-50%);
+      display: none;
+      place-items: center;
+      background: #f3f4f6;
+      color: var(--main);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .clear-search.is-visible {
+      display: grid;
+    }
+
+    .export-list-btn {
+      align-self: stretch;
+      min-width: 154px;
+      padding: 9px 18px;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      white-space: nowrap;
+      background: var(--main);
+      transition: filter .15s ease, transform .15s ease;
+    }
+
+    .export-list-btn small {
+      color: rgba(255,255,255,.76);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .export-list-btn:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .share-panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 0 0 14px;
+      padding: 16px;
+    }
+
+    .share-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .share-panel-title {
+      display: grid;
+      gap: 3px;
+    }
+
+    .share-panel-title strong {
+      font-size: 15px;
+    }
+
+    .share-panel-title span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .share-close {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      background: #f3f4f6;
+      color: var(--main);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .share-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .share-code-input {
+      width: 100%;
+      min-height: 86px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      font: inherit;
+      font-size: 13px;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .share-code-input:focus {
+      border-color: var(--main);
+      box-shadow: 0 0 0 4px rgba(17, 24, 39, .08);
+    }
+
+    .share-comparison {
+      display: grid;
+      gap: 10px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .comparison-block {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #f9fafb;
+    }
+
+    .comparison-block strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .comparison-lines,
+    .comparison-empty {
+      color: #4b5563;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+    .result-summary {
+      min-height: 21px;
+      margin: -2px 0 14px;
+      color: #4b5563;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: border-color .15s ease, transform .15s ease;
+    }
+
+    .stat:hover,
+    .stat:focus-visible {
+      border-color: var(--main);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .stat.active {
+      border-color: var(--main);
+      box-shadow: 0 10px 24px rgba(17, 24, 39, .12), inset 0 3px 0 var(--main);
+    }
+
+    .stat.active span,
+    .stat.active strong {
+      color: var(--main);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 26px;
+      margin-bottom: 0;
+      text-align: right;
+    }
+
+    .stat p {
+      display: none;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .country-tabs-wrap {
+      position: sticky;
+      top: 64px;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) 38px;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 0 16px;
+      margin-bottom: 4px;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    .country-scroll-arrow {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border-radius: 999px;
+      background: var(--main);
+      color: #fff;
+      border: 1px solid var(--main);
+      font-size: 22px;
+      line-height: 1;
+      display: inline-grid;
+      place-items: center;
+      box-shadow: var(--shadow);
+    }
+
+    .country-scroll-arrow:hover {
+      filter: brightness(1.12);
+    }
+
+    .country-tabs-viewport {
+      min-width: 0;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .country-tabs {
+      display: flex;
+      gap: 8px;
+      width: max-content;
+      max-width: none;
+      white-space: nowrap;
+      will-change: transform;
+    }
+    .country-tab {
+      flex: 0 0 auto;
+      background: #e5e7eb;
+      color: var(--main);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 13px;
+      box-shadow: none;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    .country-tab:hover {
+      background: var(--tab-hover-bg, #f3f4f6);
+      border-color: var(--tab-hover-bg, var(--line));
+      color: var(--tab-hover-text, var(--main));
+    }
+
+    .country-tab.active {
+      background: var(--main);
+      color: #fff;
+      border-color: var(--main);
+    }
+
+    .country {
+      background: #fff;
+      border: 1px solid #111827;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .country-header {
+      padding: 16px 18px;
+      background: var(--section-header-bg, var(--main));
+      border-bottom: 1px solid var(--section-header-bg, var(--line));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+      flex-wrap: wrap;
+    }
+
+    .country-heading {
+      min-width: 0;
+    }
+
+    .country-progress {
+      flex: 0 0 100%;
+      height: 7px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--progress-track, rgba(255,255,255,.28));
+    }
+
+    .country-progress-bar {
+      height: 100%;
+      width: var(--progress-width, 0%);
+      border-radius: inherit;
+      background: var(--progress-fill, #fff);
+      transition: width .2s ease;
+    }
+
+    .country-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--section-text, var(--text));
+    }
+
+    .country-name {
+      margin-top: 3px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      color: var(--header-muted, var(--muted));
+    }
+
+    .country-count {
+      color: var(--header-muted, var(--muted));
+      font-size: 14px;
+      font-weight: 800;
+      margin-left: auto;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .stickers {
+      padding: 12px;
+    }
+
+    .sticker-section + .sticker-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 3px solid var(--section-border, var(--line));
+    }
+
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+      gap: 10px;
+    }
+
+    .sticker {
+      border: 1px solid #111827;
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--sticker-bg, #fff);
+      color: var(--sticker-text, var(--text));
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, filter .15s ease;
+    }
+
+    .sticker:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px var(--sticker-shadow, rgba(17, 24, 39, .12));
+      filter: brightness(1.02);
+    }
+
+    .sticker:focus-visible {
+      outline: 3px solid var(--sticker-focus, rgba(17, 24, 39, .24));
+      outline-offset: 2px;
+    }
+
+    .sticker.is-owned {
+      border-color: #111827;
+      box-shadow: inset 4px 0 0 var(--check-border, #111827), 0 8px 18px var(--sticker-shadow, rgba(17, 24, 39, .12));
+    }
+
+    .sticker-state {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 26px;
+      height: 26px;
+      border: 2px solid var(--check-border, #111827);
+      border-radius: 999px;
+      background: rgba(255,255,255,.78);
+      color: transparent;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      box-shadow: 0 3px 8px rgba(17, 24, 39, .10);
+      transition: background .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
+    }
+
+    .sticker-state::before {
+      content: "";
+      width: 11px;
+      height: 11px;
+      transform: scale(0);
+      clip-path: polygon(14% 44%, 0 59%, 40% 100%, 100% 16%, 84% 0, 37% 64%);
+      background: currentColor;
+      transition: transform .15s ease;
+    }
+
+    .sticker:hover .sticker-state {
+      transform: scale(1.06);
+    }
+
+    .sticker.is-owned .sticker-state {
+      background: var(--check-bg, #111827);
+      color: var(--check-mark, #ffffff);
+      box-shadow: 0 6px 14px var(--sticker-shadow, rgba(17, 24, 39, .16));
+    }
+
+    .sticker.is-owned .sticker-state::before {
+      transform: scale(1);
+    }
+    .sticker-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .code {
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
+    .name {
+      color: var(--sticker-muted, var(--muted));
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .duplicates {
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--sticker-muted, var(--muted));
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+
+    .duplicate-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .duplicate-summary {
+      color: var(--sticker-muted, var(--muted));
+      font-size: 12px;
+      font-family: inherit;
+      font-style: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .duplicate-summary-count {
+      font-weight: 800;
+    }
+    .duplicate-controls {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 0;
+    }
+
+    .duplicate-buttons {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .duplicate-control-btn {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 2px solid var(--duplicate-color, var(--line));
+      border-radius: 8px;
+      background: var(--duplicate-color, var(--main));
+      color: var(--duplicate-text, #fff);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
+      display: inline-grid;
+      place-items: center;
+      box-shadow: none;
+    }
+
+    .duplicate-control-btn:hover {
+      filter: brightness(.92);
+    }
+
+    .duplicate-control-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      filter: grayscale(.15);
+    }
+
+    .duplicate-control-btn:disabled:hover {
+      filter: grayscale(.15);
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      background: #fff;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      padding: 35px 20px;
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+    }
+
+    .empty strong {
+      color: #374151;
+      font-size: 15px;
+    }
+
+    .empty-actions {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .empty-action-btn {
+      background: #fff;
+      color: var(--main);
+      border: 1px solid var(--line);
+    }
+
+    .empty-action-btn:hover {
+      border-color: var(--main);
+    }
+    .save-status {
+      display: block;
+      max-width: 1150px;
+      margin: 18px auto 0;
+      padding: 0 18px 14px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 760px) {
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .export-list-btn {
+        width: 100%;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+    }  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div class="brand">Caderneta Mundial 2026</div>
+      <nav aria-live="polite"><div id="currentViewTitle" class="view-title">Cromos Todos</div></nav>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="toolbar">
+      <div class="search-shell">
+        <input id="search" class="search" type="search" placeholder="Pesquisar por país, código ou nome do cromo..." />
+        <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">×</button>
+      </div>
+      <div class="toolbar-actions">
+        <button id="exportListButton" class="export-list-btn" type="button" onclick="exportMissingAndDuplicates()"><span>Exportar lista</span><small id="exportSummary">0 faltam · 0 rep.</small></button>
+        <button id="shareToggleButton" class="export-list-btn" type="button" onclick="toggleSharePanel()"><span>Partilhar</span><small>código</small></button>
+      </div>
+    </section>
+
+    <div id="resultSummary" class="result-summary" aria-live="polite"></div>
+
+    <section id="sharePanel" class="share-panel hidden" aria-label="Partilhar e comparar coleções">
+      <div class="share-panel-head">
+        <div class="share-panel-title">
+          <strong>Partilhar com amigos</strong>
+          <span>Copia o teu código ou cola o código de um amigo para comparar.</span>
+        </div>
+        <button class="share-close" type="button" onclick="toggleSharePanel(false)" aria-label="Fechar partilha">×</button>
+      </div>
+      <div class="share-actions">
+        <button type="button" onclick="copyShareCode()">Copiar o meu código</button>
+        <button class="secondary" type="button" onclick="pasteShareCodeFromClipboard()">Colar código copiado</button>
+      </div>
+      <textarea id="friendShareCode" class="share-code-input" placeholder="Cola aqui o código que o teu amigo te enviou..."></textarea>
+      <div class="share-actions">
+        <button type="button" onclick="compareFriendCode()">Comparar amigo</button>
+        <button class="secondary" type="button" onclick="clearFriendComparison()">Limpar comparação</button>
+      </div>
+      <div id="shareComparison" class="share-comparison" aria-live="polite"></div>
+    </section>
+    <section class="stats">
+      <div class="stat active" data-view="all" role="button" tabindex="0" onclick="setView('all')" onkeydown="activateStat(event, 'all')"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
+      <div class="stat" data-view="missing" role="button" tabindex="0" onclick="setView('missing')" onkeydown="activateStat(event, 'missing')"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
+      <div class="stat" data-view="owned" role="button" tabindex="0" onclick="setView('owned')" onkeydown="activateStat(event, 'owned')"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
+      <div class="stat" data-view="duplicates" role="button" tabindex="0" onclick="setView('duplicates')" onkeydown="activateStat(event, 'duplicates')"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
+    </section>
+
+    <section class="country-tabs-wrap" aria-label="Países da caderneta">
+      <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver países anteriores" onmouseover="startCountryScroll(-1)" onmouseout="stopCountryScroll()">‹</button>
+      <div class="country-tabs-viewport">
+        <div id="countryTabs" class="country-tabs"></div>
+      </div>
+      <button id="countryScrollRight" class="country-scroll-arrow" type="button" aria-label="Ver próximos países" onmouseover="startCountryScroll(1)" onmouseout="stopCountryScroll()">›</button>
+    </section>
+
+    <section id="content"></section>
+  </main>
+
+  <footer id="saveStatus" class="save-status">A iniciar...</footer>
+
+  <script>
+    const STORAGE_KEY = "caderneta_mundial_2026_estado_v1";
+
+    let stickers = [];
+    let currentView = "all";
+    let selectedCountry = "all";
+    let serverAvailable = false;
+    let saveTimer = null;
+    let countryScrollFrame = null;
+    let countryTabsOffset = 0;
+
+    const content = document.getElementById("content");
+    const countryTabs = document.getElementById("countryTabs");
+    const countryScrollLeft = document.getElementById("countryScrollLeft");
+    const countryScrollRight = document.getElementById("countryScrollRight");
+    const search = document.getElementById("search");
+    const clearSearchButton = document.getElementById("clearSearchButton");
+    const exportListButton = document.getElementById("exportListButton");
+    const exportSummary = document.getElementById("exportSummary");
+    const resultSummary = document.getElementById("resultSummary");
+    const sharePanel = document.getElementById("sharePanel");
+    const friendShareCode = document.getElementById("friendShareCode");
+    const shareComparison = document.getElementById("shareComparison");
+    const saveStatus = document.getElementById("saveStatus");
+
+    const currentViewTitle = document.getElementById("currentViewTitle");
+
+    const totalCount = document.getElementById("totalCount");
+    const missingCount = document.getElementById("missingCount");
+    const ownedCount = document.getElementById("ownedCount");
+    const duplicatesCount = document.getElementById("duplicatesCount");
+
+    const demoStickers = [
+      { pais: "Portugal", codigo: "POR1", nome: "Cromo exemplo 1", tenho: false },
+      { pais: "Portugal", codigo: "POR2", nome: "Cromo exemplo 2", tenho: true },
+      { pais: "Brasil", codigo: "BRA1", nome: "Cromo exemplo 1", tenho: false },
+      { pais: "Argentina", codigo: "ARG1", nome: "Cromo exemplo 1", tenho: false }
+    ];
+
+    const COUNTRY_COLORS = {
+      FWC: "#111827",
+      MEX: "#006847",
+      RSA: "#007749",
+      KOR: "#c60c30",
+      CZE: "#d7141a",
+      CAN: "#d80621",
+      BIH: "#002395",
+      QAT: "#8a1538",
+      SUI: "#d52b1e",
+      BRA: "#ffdf00",
+      MAR: "#c1272d",
+      HAI: "#00209f",
+      SCO: "#005eb8",
+      USA: "#b31942",
+      PAR: "#0038a8",
+      AUS: "#e4002b",
+      TUR: "#e30a17",
+      GER: "#000000",
+      CUW: "#002b7f",
+      CIV: "#f77f00",
+      ECU: "#ffdd00",
+      NED: "#ff4f00",
+      JPN: "#ffffff",
+      SWE: "#006aa7",
+      TUN: "#e70013",
+      BEL: "#000000",
+      EGV: "#ce1126",
+      IRN: "#239f40",
+      NZL: "#00247d",
+      ESP: "#c60b1e",
+      CPV: "#003893",
+      KSA: "#006c35",
+      URU: "#0038a8",
+      FRA: "#0055a4",
+      SEN: "#00853f",
+      IRQ: "#ce1126",
+      NOR: "#00205b",
+      ARG: "#6cace4",
+      ALG: "#006233",
+      AUT: "#ed2939",
+      JOR: "#007a3d",
+      POR: "#ff0000",
+      COD: "#007fff",
+      UZB: "#0099b5",
+      COL: "#003893",
+      ENG: "#ce1124",
+      CRO: "#ce1126",
+      GHA: "#ce1126",
+      PAN: "#005293"
+    };
+
+    const COUNTRY_SECONDARY_COLORS = {
+      FWC: "#111827",
+      MEX: "#ce1126",
+      RSA: "#ffb81c",
+      KOR: "#003478",
+      CZE: "#11457e",
+      CAN: "#d80621",
+      BIH: "#fecb00",
+      QAT: "#8a1538",
+      SUI: "#d52b1e",
+      BRA: "#009739",
+      MAR: "#006233",
+      HAI: "#d21034",
+      SCO: "#005eb8",
+      USA: "#0a3161",
+      PAR: "#d52b1e",
+      AUS: "#00008b",
+      TUR: "#e30a17",
+      GER: "#dd0000",
+      CUW: "#f9e814",
+      CIV: "#009e60",
+      ECU: "#034ea2",
+      NED: "#21468b",
+      JPN: "#bc002d",
+      SWE: "#fecc00",
+      TUN: "#e70013",
+      BEL: "#fae042",
+      EGV: "#000000",
+      IRN: "#da0000",
+      NZL: "#cc142b",
+      ESP: "#ffc400",
+      CPV: "#cf2027",
+      KSA: "#006c35",
+      URU: "#ffffff",
+      FRA: "#ce1126",
+      SEN: "#e31b23",
+      IRQ: "#000000",
+      NOR: "#ba0c2f",
+      ARG: "#ffffff",
+      ALG: "#ffffff",
+      AUT: "#ed2939",
+      JOR: "#ce1126",
+      POR: "#006600",
+      COD: "#ce1021",
+      UZB: "#1eb53a",
+      COL: "#fcd116",
+      ENG: "#ffffff",
+      CRO: "#171796",
+      GHA: "#fcd116",
+      PAN: "#d21034"
+    };
+
+
+
+    const COUNTRY_TERTIARY_COLORS = {
+      MEX: "#ffffff",
+      KOR: "#ffffff",
+      CAN: "#ffffff",
+      QAT: "#ffffff",
+      SUI: "#ffffff",
+      BRA: "#002776",
+      SCO: "#ffffff",
+      USA: "#ffffff",
+      PAR: "#ffffff",
+      AUS: "#ffffff",
+      TUR: "#ffffff",
+      GER: "#ffce00",
+      CUW: "#002b7f",
+      CIV: "#ffffff",
+      NED: "#ffffff",
+      JPN: "#ffffff",
+      TUN: "#ffffff",
+      BEL: "#ed2939",
+      EGV: "#ffffff",
+      IRN: "#ffffff",
+      NZL: "#ffffff",
+      ESP: "#c60b1e",
+      CPV: "#ffffff",
+      KSA: "#ffffff",
+      URU: "#fcd116",
+      FRA: "#ffffff",
+      SEN: "#fdef42",
+      NOR: "#ffffff",
+      ALG: "#d21034",
+      AUT: "#ffffff",
+      POR: "#ffcc00",
+      COD: "#f7d618",
+      COL: "#ce1126",
+      ENG: "#fcd116",
+      CRO: "#ffffff",
+      GHA: "#006b3f",
+      PAN: "#ffffff"
+    };
+    const COUNTRY_NAMES = {
+      FWC: "TROFÉUS INICIAIS",
+      MEX: "MÉXICO",
+      RSA: "ÁFRICA DO SUL",
+      KOR: "COREIA DO SUL",
+      CZE: "TCHÉQUIA",
+      CAN: "CANADÁ",
+      BIH: "BÓSNIA E HERZEGOVINA",
+      QAT: "CATAR",
+      SUI: "SUIÇA",
+      BRA: "BRASIL",
+      MAR: "MARROCOS",
+      HAI: "HAITI",
+      SCO: "ESCÓCIA",
+      USA: "ESTADOS UNIDOS",
+      PAR: "PARAGUAI",
+      AUS: "AUSTRÁLIA",
+      TUR: "TURQUIA",
+      GER: "ALEMANHA",
+      CUW: "CURAÇAO",
+      CIV: "COSTA DO MARFIM",
+      ECU: "EQUADOR",
+      NED: "PAÍSES BAIXOS",
+      JPN: "JAPÃO",
+      SWE: "SUÉCIA",
+      TUN: "TUNÍSIA",
+      BEL: "BÉLGICA",
+      EGV: "EGITO",
+      IRN: "IRÃO",
+      NZL: "NOVA ZELÂNDIA",
+      ESP: "ESPANHA",
+      CPV: "CABO VERDE",
+      KSA: "ARÁBIA SAUDITA",
+      URU: "URUGUAI",
+      FRA: "FRANÇA",
+      SEN: "SENEGAL",
+      IRQ: "IRAQUE",
+      NOR: "NORUEGA",
+      ARG: "ARGENTINA",
+      ALG: "ARGÉLIA",
+      AUT: "ÁUSTRIA",
+      JOR: "JORDÂNIA",
+      POR: "PORTUGAL",
+      COD: "REP. DEM. DO CONGO",
+      UZB: "UZBEQUISTÃO",
+      COL: "COLÔMBIA",
+      ENG: "INGLATERRA",
+      CRO: "CROÁCIA",
+      GHA: "GANA",
+      PAN: "PANAMÁ"
+    };
+    function normalizeOwned(value) {
+      if (typeof value === "boolean") return value;
+      const v = String(value || "").trim().toLowerCase();
+      return ["sim", "s", "yes", "y", "true", "1", "obtido", "tenho"].includes(v);
+    }
+
+    function normalizeDuplicates(value) {
+      const parsed = Number.parseInt(String(value ?? "0").trim(), 10);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    }
+
+    function makeId(sticker) {
+      return `${sticker.pais}__${sticker.codigo}`.toLowerCase().replace(/\s+/g, "_");
+    }
+
+    function cleanSticker(item) {
+      const sticker = {
+        pais: String(item.pais || item.país || item.country || "Sem país").trim(),
+        codigo: String(item.codigo || item.código || item.code || item.id || "").trim(),
+        nome: String(item.nome || item.name || item.jogador || item.player || "").trim(),
+        tenho: normalizeOwned(item.tenho ?? item.owned ?? item.obtido ?? item.have),
+        repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount)
+      };
+
+      if (!sticker.codigo) sticker.codigo = `${sticker.pais}-${Math.random().toString(36).slice(2, 7)}`;
+      if (!sticker.nome) sticker.nome = "Sem nome definido";
+
+      sticker.id = makeId(sticker);
+      return sticker;
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = "";
+      let insideQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const next = line[i + 1];
+
+        if (char === '"' && next === '"') {
+          current += '"';
+          i++;
+        } else if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if ((char === "," || char === ";") && !insideQuotes) {
+          result.push(current.trim());
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+
+      result.push(current.trim());
+      return result;
+    }
+
+    function parseTextFile(text) {
+      const trimmed = text.trim();
+
+      if (!trimmed) return [];
+
+      if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+        const json = JSON.parse(trimmed);
+        const arr = Array.isArray(json) ? json : json.cromos || json.stickers || [];
+        return arr.map(cleanSticker);
+      }
+
+      const lines = trimmed.split(/\r?\n/).filter(Boolean);
+      const firstLine = parseCSVLine(lines[0]);
+      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates"].includes(h.trim().toLowerCase()));
+
+      let headers = ["pais", "codigo", "nome", "tenho"];
+      let start = 0;
+
+      if (hasHeader) {
+        headers = firstLine.map(h => h.trim().toLowerCase());
+        start = 1;
+      }
+
+      return lines.slice(start).map(line => {
+        const values = parseCSVLine(line);
+        const item = {};
+        headers.forEach((header, index) => item[header] = values[index] || "");
+        return cleanSticker(item);
+      });
+    }
+
+    function mergeWithSavedState(list) {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      return list.map(sticker => {
+        const savedSticker = saved[sticker.id];
+        if (savedSticker !== undefined) {
+          if (typeof savedSticker === "object") {
+            sticker.tenho = Boolean(savedSticker.tenho);
+            sticker.repetidos = normalizeDuplicates(savedSticker.repetidos);
+          } else {
+            sticker.tenho = savedSticker;
+          }
+        }
+        return sticker;
+      });
+    }
+
+    function stickersToCSV() {
+      const header = "pais,codigo,nome,tenho,repetidos";
+      const rows = stickers.map(s => [
+        s.pais,
+        s.codigo,
+        s.nome,
+        s.tenho ? "sim" : "nao",
+        s.repetidos || 0
+      ].map(v => `"${String(v).replaceAll('"', '""')}"`).join(","));
+
+      return [header, ...rows].join("\n");
+    }
+
+    function setSaveStatus(text) {
+      saveStatus.textContent = text;
+    }
+
+    async function writeTxtFileNow() {
+      if (!serverAvailable) {
+        setSaveStatus("Ficheiro lido com sucesso");
+        return;
+      }
+
+      setSaveStatus("A gravar alterações...");
+      const response = await fetch("/api/cromos", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: stickersToCSV()
+      });
+
+      if (!response.ok) throw new Error("Nao foi possivel gravar cromos.txt");
+      setSaveStatus("Ficheiro lido com sucesso");
+    }
+
+    function saveState() {
+      const state = {};
+      stickers.forEach(sticker => {
+        state[sticker.id] = {
+          tenho: sticker.tenho,
+          repetidos: sticker.repetidos || 0
+        };
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        writeTxtFileNow().catch(error => {
+          setSaveStatus("Erro ao gravar alterações");
+          console.error(error);
+        });
+      }, 150);
+    }
+
+    function activateStat(event, view) {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      setView(view);
+    }
+    function viewTitleText(view) {
+      return {
+        all: "Cromos Todos",
+        missing: "Cromos em Falta",
+        owned: "Cromos Obtidos",
+        duplicates: "Cromos Repetidos"
+      }[view] || "Cromos Todos";
+    }
+
+    function updateActiveStat() {
+      document.querySelectorAll(".stat[data-view]").forEach(stat => {
+        stat.classList.toggle("active", stat.dataset.view === currentView);
+      });
+    }
+
+    function pulseViewTitle() {
+      currentViewTitle.classList.remove("is-changing");
+      void currentViewTitle.offsetWidth;
+      currentViewTitle.classList.add("is-changing");
+    }
+
+    function setView(view) {
+      currentView = view;
+      currentViewTitle.textContent = viewTitleText(view);
+      updateActiveStat();
+      pulseViewTitle();
+      render();
+      requestAnimationFrame(focusSelectedCountryTab);
+    }
+
+    function albumCountries() {
+      const countries = [];
+      const seen = new Set();
+
+      stickers.forEach(sticker => {
+        if (seen.has(sticker.pais)) return;
+        seen.add(sticker.pais);
+        countries.push(sticker.pais);
+      });
+
+      return countries;
+    }
+
+    function maxCountryTabsOffset() {
+      const viewport = countryTabs.parentElement;
+      return Math.max(0, countryTabs.scrollWidth - viewport.clientWidth);
+    }
+
+    function applyCountryTabsOffset() {
+      countryTabsOffset = Math.max(0, Math.min(countryTabsOffset, maxCountryTabsOffset()));
+      countryTabs.style.transform = `translateX(${-countryTabsOffset}px)`;
+    }
+
+    function focusSelectedCountryTab() {
+      const activeTab = countryTabs.querySelector(".country-tab.active");
+      const viewport = countryTabs.parentElement;
+      if (!activeTab || !viewport) {
+        applyCountryTabsOffset();
+        return;
+      }
+
+      countryTabsOffset = activeTab.offsetLeft - ((viewport.clientWidth - activeTab.offsetWidth) / 2);
+      applyCountryTabsOffset();
+    }
+
+    function scrollCountryTabs(direction) {
+      countryTabsOffset += direction * 180;
+      applyCountryTabsOffset();
+    }
+
+    function startCountryScroll(direction) {
+      stopCountryScroll();
+      const step = () => {
+        countryTabsOffset += direction * 5;
+        applyCountryTabsOffset();
+        countryScrollFrame = requestAnimationFrame(step);
+      };
+      countryScrollFrame = requestAnimationFrame(step);
+    }
+
+    function stopCountryScroll() {
+      if (!countryScrollFrame) return;
+      cancelAnimationFrame(countryScrollFrame);
+      countryScrollFrame = null;
+    }
+
+    function openCountryFromHeader(country) {
+      if (selectedCountry !== "all") return;
+      setCountry(country);
+    }
+    function setCountry(country) {
+      selectedCountry = country;
+      search.value = "";
+      render();
+      content.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function filteredStickers() {
+      const term = normalizeSearch(search.value);
+
+      return stickers.filter(sticker => {
+        const matchesView =
+          currentView === "all" ||
+          (currentView === "missing" && !sticker.tenho) ||
+          (currentView === "owned" && sticker.tenho) ||
+          (currentView === "duplicates" && sticker.tenho && (sticker.repetidos || 0) > 0);
+
+        const matchesCountry =
+          selectedCountry === "all" ||
+          sticker.pais === selectedCountry;
+
+        const matchesSearch =
+          !term ||
+          stickerSearchRank(sticker, term) < 9;
+
+        return matchesView && matchesCountry && matchesSearch;
+      });
+    }
+    function groupByCountry(list) {
+      return list.reduce((acc, sticker) => {
+        if (!acc[sticker.pais]) acc[sticker.pais] = [];
+        acc[sticker.pais].push(sticker);
+        return acc;
+      }, {});
+    }
+
+    function countryColor(country) {
+      const code = String(country).split(" ")[0];
+      return COUNTRY_COLORS[code] || "#111827";
+    }
+
+    function countrySecondaryColor(country) {
+      const code = String(country).split(" ")[0];
+      return COUNTRY_SECONDARY_COLORS[code] || "#111827";
+    }
+
+
+    function countryCheckboxColor(country) {
+      const code = String(country).split(" ")[0];
+      return COUNTRY_TERTIARY_COLORS[code] || COUNTRY_SECONDARY_COLORS[code] || "#111827";
+    }
+    function readableTextColor(hex) {
+      const normalized = String(hex).replace("#", "");
+      const r = parseInt(normalized.slice(0, 2), 16);
+      const g = parseInt(normalized.slice(2, 4), 16);
+      const b = parseInt(normalized.slice(4, 6), 16);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.62 ? "#111827" : "#ffffff";
+    }
+
+    function lightenColor(hex, amount = 0.72) {
+      const normalized = String(hex).replace("#", "");
+      const r = parseInt(normalized.slice(0, 2), 16);
+      const g = parseInt(normalized.slice(2, 4), 16);
+      const b = parseInt(normalized.slice(4, 6), 16);
+      const mix = value => Math.round(value + (255 - value) * amount).toString(16).padStart(2, "0");
+      return `#${mix(r)}${mix(g)}${mix(b)}`;
+    }
+
+    function darkenColor(hex, amount = 0.18) {
+      const normalized = String(hex).replace("#", "");
+      const r = parseInt(normalized.slice(0, 2), 16);
+      const g = parseInt(normalized.slice(2, 4), 16);
+      const b = parseInt(normalized.slice(4, 6), 16);
+      const mix = value => Math.round(value * (1 - amount)).toString(16).padStart(2, "0");
+      return `#${mix(r)}${mix(g)}${mix(b)}`;
+    }
+
+
+    function hexToRgba(hex, alpha) {
+      const normalized = String(hex).replace("#", "");
+      const r = parseInt(normalized.slice(0, 2), 16);
+      const g = parseInt(normalized.slice(2, 4), 16);
+      const b = parseInt(normalized.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    function tabStyle(country) {
+      const hoverBg = lightenColor(countryColor(country));
+      const hoverText = readableTextColor(hoverBg);
+      const rules = [`--tab-hover-bg:${hoverBg}`, `--tab-hover-text:${hoverText}`];
+
+      if (selectedCountry === country) {
+        const bg = countryColor(country);
+        const text = readableTextColor(bg);
+        rules.push(`background:${bg}`, `border-color:${bg}`, `color:${text}`);
+      }
+
+      return ` style="${rules.join(";")}"`;
+    }
+
+    function checkboxStyle(country) {
+      const color = countryCheckboxColor(country).toLowerCase();
+      const mark = readableTextColor(color);
+      return `--check-bg:${color};--check-border:${color};--check-mark:${mark};--sticker-shadow:${hexToRgba(color, .32)};--sticker-focus:${hexToRgba(color, .34)}`;
+    }
+
+    function duplicateInputStyle(country) {
+      const color = countryCheckboxColor(country).toLowerCase();
+      const text = readableTextColor(color);
+      return `--duplicate-color:${color};--duplicate-text:${text}`;
+    }
+    function duplicateBadgeStyle(country) {
+      const bg = countryCheckboxColor(country).toLowerCase();
+      const text = readableTextColor(bg);
+      return ` style="background:${bg};border-color:${bg};color:${text}"`;
+    }
+
+    function countryFullName(country) {
+      if (country === "FWC - EQUIPAS HISTÓRICAS") return "EQUIPAS HISTÓRICAS";
+      const code = String(country).split(" ")[0];
+      return COUNTRY_NAMES[code] || "";
+    }
+
+    function normalizeSearch(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function stickerSearchRank(sticker, term) {
+      if (!term) return 0;
+
+      const countryCode = normalizeSearch(sticker.pais);
+      const countryName = normalizeSearch(countryFullName(sticker.pais));
+      const code = normalizeSearch(sticker.codigo);
+      const name = normalizeSearch(sticker.nome);
+
+      if (countryCode === term || countryName === term) return 0;
+      if (countryCode.includes(term) || countryName.includes(term)) return 1;
+      if (code.includes(term)) return 2;
+      if (name.includes(term)) return 3;
+      return 9;
+    }
+
+    function countrySearchRank(country, countryStickers, term) {
+      if (!term) return 0;
+
+      const countryCode = normalizeSearch(country);
+      const countryName = normalizeSearch(countryFullName(country));
+
+      if (countryCode === term || countryName === term) return 0;
+      if (countryCode.includes(term) || countryName.includes(term)) return 1;
+      if (countryStickers.some(sticker => normalizeSearch(sticker.codigo).includes(term))) return 2;
+      if (countryStickers.some(sticker => normalizeSearch(sticker.nome).includes(term))) return 3;
+      return 9;
+    }
+    function sectionStyle(country) {
+      const primary = countryColor(country);
+      const secondary = countrySecondaryColor(country).toLowerCase();
+      const base = secondary === "white" ? "#ffffff" : secondary;
+      const stickerBg = lightenColor(base, 0.28);
+      const border = lightenColor(base, 0.08);
+      const headerText = readableTextColor(primary);
+      const headerMuted = headerText === "#ffffff" ? "rgba(255,255,255,.86)" : "#374151";
+      const stickerText = readableTextColor(stickerBg);
+      const stickerMuted = stickerText === "#ffffff" ? "rgba(255,255,255,.84)" : "#374151";
+      const progressTrack = headerText === "#ffffff" ? "rgba(255,255,255,.28)" : "rgba(17,24,39,.18)";
+      return `--section-header-bg:${primary};--sticker-bg:${stickerBg};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${headerText}`;
+    }
+    function renderCountryTabs() {
+      const countries = albumCountries();
+      const buttons = [
+        `<button class="country-tab ${selectedCountry === "all" ? "active" : ""}"${tabStyle("all")} onclick="setCountry('all')">Todos</button>`,
+        ...countries.map(country => {
+          const active = selectedCountry === country ? "active" : "";
+          return `<button class="country-tab ${active}"${tabStyle(country)} onclick="setCountry('${escapeJS(country)}')">${escapeHTML(country)}</button>`;
+        })
+      ];
+
+      countryTabs.innerHTML = buttons.join("");
+      requestAnimationFrame(focusSelectedCountryTab);
+    }
+
+
+    function stickerExportNumber(sticker) {
+      const code = String(sticker.codigo || "").trim();
+      if (code === "00") return "00";
+      const match = code.match(/(\d+)\s*$/);
+      return match ? String(Number(match[1])) : code;
+    }
+
+    function exportGroupLabel(country) {
+      return String(country).split(" ")[0];
+    }
+
+    function countryCompleteMessage(country) {
+      if (country === "FWC") return "Já completou os Troféus";
+      if (country === "FWC - EQUIPAS HISTÓRICAS") return "Já completou as Equipas Históricas";
+      return "Já completou esta seleção";
+    }
+
+    function countryDuplicateEmptyMessage(country) {
+      if (country === "FWC") return "Não tem nenhum repetido dos Troféus";
+      if (country === "FWC - EQUIPAS HISTÓRICAS") return "Não tem nenhum repetido das Equipas Históricas";
+      return "Não tem nenhum repetido desta seleção";
+    }
+
+    function countryOwnedEmptyMessage(country) {
+      if (country === "FWC") return "Não tem nenhum cromo dos Troféus";
+      if (country === "FWC - EQUIPAS HISTÓRICAS") return "Não tem nenhum cromo das Equipas Históricas";
+      return "Não tem nenhum cromo desta seleção";
+    }
+
+    function emptyViewMessage() {
+      if (normalizeSearch(search.value)) return "Não há cromos para mostrar nesta pesquisa.";
+
+      if (selectedCountry === "all") {
+        if (currentView === "missing") return "Já completaste a caderneta.";
+        if (currentView === "owned") return "Ainda não tens nenhum cromo obtido.";
+        if (currentView === "duplicates") return "Não tens nenhum cromo repetido.";
+        return "Não há cromos para mostrar nesta vista.";
+      }
+
+      if (currentView === "missing") return countryCompleteMessage(selectedCountry);
+      if (currentView === "owned") return countryOwnedEmptyMessage(selectedCountry);
+      if (currentView === "duplicates") return countryDuplicateEmptyMessage(selectedCountry);
+      return "Não há cromos para mostrar nesta seleção.";
+    }
+
+    function exportGroupedLines(list, formatter) {
+      return albumCountries()
+        .map(country => {
+          const countryStickers = list
+            .filter(sticker => sticker.pais === country)
+            .sort((a, b) => stickerNumber(a) - stickerNumber(b));
+          if (!countryStickers.length) return "";
+          return `${exportGroupLabel(country)}: ${countryStickers.map(formatter).join(", ")}`;
+        })
+        .filter(Boolean);
+    }
+
+    function exportMissingAndDuplicates() {
+      if (!stickers.length) {
+        setSaveStatus("Sem cromos para exportar");
+        return;
+      }
+
+      const missing = stickers.filter(sticker => !sticker.tenho);
+      const duplicates = stickers.filter(sticker => sticker.tenho && (sticker.repetidos || 0) > 0);
+      const duplicateTotal = duplicates.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
+      const missingLines = exportGroupedLines(missing, sticker => stickerExportNumber(sticker));
+      const duplicateLines = exportGroupedLines(duplicates, sticker => `${stickerExportNumber(sticker)} (x${sticker.repetidos || 0})`);
+      const lines = [
+        `Cromos em Falta (${missing.length}):`,
+        "",
+        ...(missingLines.length ? missingLines : ["Sem cromos em falta"]),
+        "",
+        `Cromos Repetidos (${duplicateTotal}):`,
+        "",
+        ...(duplicateLines.length ? duplicateLines : ["Sem cromos repetidos"])
+      ];
+
+      const blob = new Blob([`${lines.join("\r\n")}\r\n`], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Mundial Cromos em Falta.txt";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+      setSaveStatus("Lista exportada com sucesso");
+    }
+
+
+    function encodeShareCode() {
+      const payload = {
+        v: 1,
+        o: stickers.filter(sticker => sticker.tenho).map(sticker => sticker.id),
+        d: stickers.filter(sticker => (sticker.repetidos || 0) > 0).map(sticker => [sticker.id, sticker.repetidos || 0])
+      };
+      return `MWC26|${btoa(unescape(encodeURIComponent(JSON.stringify(payload))))}`;
+    }
+
+    function decodeShareCode(value) {
+      const clean = String(value || "").trim().replace(/^MWC26\|/, "");
+      if (!clean) throw new Error("Sem código");
+      const payload = JSON.parse(decodeURIComponent(escape(atob(clean))));
+      if (!payload || payload.v !== 1 || !Array.isArray(payload.o)) throw new Error("Código inválido");
+      return payload;
+    }
+
+    function toggleSharePanel(forceOpen) {
+      const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : sharePanel.classList.contains("hidden");
+      sharePanel.classList.toggle("hidden", !shouldOpen);
+      if (shouldOpen) friendShareCode.focus();
+    }
+
+    async function copyShareCode() {
+      if (!stickers.length) {
+        setSaveStatus("Ainda não há cromos para partilhar");
+        return;
+      }
+
+      const code = encodeShareCode();
+      friendShareCode.value = code;
+      toggleSharePanel(true);
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(code);
+        } else {
+          friendShareCode.select();
+          document.execCommand("copy");
+        }
+        setSaveStatus("Código da coleção copiado");
+      } catch {
+        friendShareCode.select();
+        setSaveStatus("Código pronto para copiar");
+      }
+    }
+
+    async function pasteShareCodeFromClipboard() {
+      toggleSharePanel(true);
+      try {
+        if (!navigator.clipboard || !navigator.clipboard.readText) throw new Error("Sem clipboard");
+        friendShareCode.value = await navigator.clipboard.readText();
+        compareFriendCode();
+      } catch {
+        friendShareCode.focus();
+        setSaveStatus("Cola o código do teu amigo na caixa");
+      }
+    }
+
+    function compactComparisonLines(list, formatter = stickerExportNumber) {
+      const ids = new Set(list.map(sticker => sticker.id));
+      return albumCountries()
+        .map(country => {
+          const countryStickers = stickers
+            .filter(sticker => sticker.pais === country && ids.has(sticker.id))
+            .sort((a, b) => stickerNumber(a) - stickerNumber(b));
+          if (!countryStickers.length) return "";
+          return `${exportGroupLabel(country)}: ${countryStickers.map(formatter).join(", ")}`;
+        })
+        .filter(Boolean);
+    }
+
+    function renderComparisonLines(list, emptyText) {
+      const lines = compactComparisonLines(list);
+      if (!lines.length) return `<div class="comparison-empty">${escapeHTML(emptyText)}</div>`;
+      return `<div class="comparison-lines">${lines.map(escapeHTML).join("<br>")}</div>`;
+    }
+
+    function compareFriendCode() {
+      let payload;
+      try {
+        payload = decodeShareCode(friendShareCode.value);
+      } catch {
+        shareComparison.innerHTML = `<div class="comparison-empty">Código inválido. Confirma se copiaste tudo.</div>`;
+        setSaveStatus("Código inválido");
+        return;
+      }
+
+      const friendOwned = new Set(payload.o.map(String));
+      const mineOwned = new Set(stickers.filter(sticker => sticker.tenho).map(sticker => sticker.id));
+      const friendHasYouMiss = stickers.filter(sticker => friendOwned.has(sticker.id) && !mineOwned.has(sticker.id));
+      const youHaveFriendMisses = stickers.filter(sticker => mineOwned.has(sticker.id) && !friendOwned.has(sticker.id));
+
+      shareComparison.innerHTML = `
+        <div class="comparison-grid">
+          <div class="comparison-block">
+            <strong>O teu amigo tem e tu não tens (${friendHasYouMiss.length})</strong>
+            ${renderComparisonLines(friendHasYouMiss, "Não há diferenças deste lado")}
+          </div>
+          <div class="comparison-block">
+            <strong>Tu tens e o teu amigo não tem (${youHaveFriendMisses.length})</strong>
+            ${renderComparisonLines(youHaveFriendMisses, "Não há diferenças deste lado")}
+          </div>
+        </div>
+      `;
+      setSaveStatus("Comparação feita com sucesso");
+    }
+
+    function clearFriendComparison() {
+      friendShareCode.value = "";
+      shareComparison.innerHTML = "";
+      friendShareCode.focus();
+    }
+
+    function updateSearchControls() {
+      const hasSearch = Boolean(search.value.trim());
+      clearSearchButton.classList.toggle("is-visible", hasSearch);
+      clearSearchButton.disabled = !hasSearch;
+    }
+
+    function clearSearch() {
+      if (!search.value) return;
+      search.value = "";
+      render();
+      search.focus();
+    }
+
+    function updateExportSummary() {
+      const missing = stickers.filter(sticker => !sticker.tenho).length;
+      const duplicates = stickers.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
+      exportSummary.textContent = `${missing} faltam · ${duplicates} rep.`;
+      exportListButton.disabled = !stickers.length;
+    }
+
+    function currentCountryLabel() {
+      if (selectedCountry === "all") return "todas as seleções";
+      const name = countryFullName(selectedCountry);
+      return name ? `${name} (${exportGroupLabel(selectedCountry)})` : selectedCountry;
+    }
+
+    function updateResultSummary(list) {
+      const term = search.value.trim();
+      const view = viewTitleText(currentView).toLowerCase();
+      const pieces = [`${list.length} cromos`, view, currentCountryLabel()];
+      if (term) pieces.push(`pesquisa: ${term}`);
+      resultSummary.textContent = pieces.join(" · ");
+    }
+
+    function emptyActionButtons() {
+      const actions = [];
+      if (search.value.trim()) actions.push(`<button class="empty-action-btn" type="button" onclick="clearSearch()">Limpar pesquisa</button>`);
+      if (selectedCountry !== "all") actions.push(`<button class="empty-action-btn" type="button" onclick="setCountry('all')">Ver todas as seleções</button>`);
+      if (currentView !== "all") actions.push(`<button class="empty-action-btn" type="button" onclick="setView('all')">Ver todos</button>`);
+      return actions.length ? `<div class="empty-actions">${actions.join("")}</div>` : "";
+    }
+
+    function renderEmptyState(message) {
+      return `<div class="empty"><strong>${escapeHTML(message)}</strong>${emptyActionButtons()}</div>`;
+    }
+    function updateStats() {
+      const total = stickers.length;
+      const owned = stickers.filter(s => s.tenho).length;
+      const missing = total - owned;
+      const duplicates = stickers.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
+
+      totalCount.textContent = total;
+      ownedCount.textContent = owned;
+      missingCount.textContent = missing;
+      duplicatesCount.textContent = duplicates;
+      updateExportSummary();
+    }
+
+    function toggleStickerOwned(stickerId) {
+      const sticker = stickers.find(s => s.id === stickerId);
+      if (!sticker) return;
+      changeOwned(stickerId, !sticker.tenho);
+    }
+
+    function handleStickerCardKey(event, stickerId) {
+      const target = event.target;
+      if (target && target.closest && target.closest("input, button, .duplicate-controls")) return;
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      toggleStickerOwned(stickerId);
+    }
+    function changeOwned(stickerId, checked) {
+      const sticker = stickers.find(s => s.id === stickerId);
+      if (!sticker) return;
+
+      if (!checked && !confirm(`Confirmas que queres remover o cromo ${sticker.codigo} dos obtidos?`)) {
+        render();
+        return;
+      }
+
+      sticker.tenho = checked;
+      if (!checked) sticker.repetidos = 0;
+      saveState();
+      render();
+    }
+
+    function changeDuplicates(stickerId, value) {
+      const sticker = stickers.find(s => s.id === stickerId);
+      if (!sticker || !sticker.tenho) return;
+
+      sticker.repetidos = normalizeDuplicates(value);
+      saveState();
+      render();
+    }
+
+    function adjustDuplicates(stickerId, delta) {
+      const sticker = stickers.find(s => s.id === stickerId);
+      if (!sticker || !sticker.tenho) return;
+
+      const currentDuplicates = sticker.repetidos || 0;
+      if (delta < 0 && currentDuplicates <= 0) return;
+      if (delta < 0 && currentDuplicates === 1 && !confirm(`Confirmas que queres remover o último repetido do cromo ${sticker.codigo}?`)) {
+        return;
+      }
+
+      sticker.repetidos = Math.max(0, currentDuplicates + delta);
+      saveState();
+      render();
+    }
+    function isTeamAlbumSticker(sticker) {
+      const name = sticker.nome.trim().toLowerCase();
+      return name === "cromo emblema" || name === "cromo equipa" || name === "team logo" || name === "team photo";
+    }
+
+    function stickerNumber(sticker) {
+      const match = String(sticker.codigo).match(/(\d+)\s*$/);
+      return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+    }
+
+    function renderStickerCard(sticker) {
+      return `
+        <div
+          class="sticker ${sticker.tenho ? "is-owned" : ""}"
+          style="${checkboxStyle(sticker.pais)}"
+          role="checkbox"
+          aria-checked="${sticker.tenho ? "true" : "false"}"
+          tabindex="0"
+          onclick="toggleStickerOwned('${sticker.id}')"
+          onkeydown="handleStickerCardKey(event, '${sticker.id}')"
+          title="${sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido"}"
+        >
+          <div class="sticker-state" aria-hidden="true"></div>
+          <div class="sticker-info">
+            <div class="code">
+              ${escapeHTML(sticker.codigo)}
+            </div>
+            <div class="name">${escapeHTML(sticker.nome)}</div>
+            ${sticker.tenho ? `
+              <div class="duplicate-row" onclick="event.stopPropagation()">
+                <div class="duplicate-summary">Repetidos: <span class="duplicate-summary-count">${sticker.repetidos || 0}</span></div>
+                <div class="duplicate-controls" style="${duplicateInputStyle(sticker.pais)}">
+                  <div class="duplicate-buttons">
+                    <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${sticker.id}', -1)" title="Remover repetido" ${sticker.repetidos ? "" : "disabled"}>-</button>
+                    <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${sticker.id}', 1)" title="Adicionar repetido">+</button>
+                  </div>
+                </div>
+              </div>
+            ` : ""}
+          </div>
+        </div>
+      `;
+    }
+    function render() {
+      updateStats();
+      updateSearchControls();
+      updateActiveStat();
+      renderCountryTabs();
+
+      const term = normalizeSearch(search.value);
+      const list = filteredStickers();
+      const grouped = groupByCountry(list);
+
+      if (!stickers.length) {
+        resultSummary.textContent = "";
+        content.innerHTML = renderEmptyState("Ainda não tens ficheiro carregado. Usei dados de exemplo até carregares o teu ficheiro.");
+        return;
+      }
+
+      if (!list.length) {
+        updateResultSummary(list);
+        content.innerHTML = renderEmptyState(emptyViewMessage());
+        return;
+      }
+
+      const albumOrder = new Map(albumCountries().map((country, index) => [country, index]));
+      const orderedCountries = albumCountries().filter(country => grouped[country]);
+      if (term) {
+        orderedCountries.sort((a, b) => {
+          const rank = countrySearchRank(a, grouped[a], term) - countrySearchRank(b, grouped[b], term);
+          if (rank) return rank;
+          return (albumOrder.get(a) ?? 0) - (albumOrder.get(b) ?? 0);
+        });
+      }
+
+      updateResultSummary(list);
+
+      content.innerHTML = orderedCountries.map(country => {
+        const countryStickers = grouped[country].sort((a, b) => {
+          const rank = term ? stickerSearchRank(a, term) - stickerSearchRank(b, term) : 0;
+          if (rank) return rank;
+          return a.codigo.localeCompare(b.codigo, "pt-PT", { numeric: true });
+        });
+        const ownedInCountry = stickers.filter(s => s.pais === country && s.tenho).length;
+        const totalInCountry = stickers.filter(s => s.pais === country).length;
+        const ownedPercent = totalInCountry ? Math.round((ownedInCountry / totalInCountry) * 100) : 0;
+
+        return `
+          <article class="country" style="${sectionStyle(country)}">
+            <div class="country-header" onclick="openCountryFromHeader('${escapeJS(country)}')">
+              <div class="country-heading">
+                <div class="country-title">${escapeHTML(countryFullName(country) || country)}</div>
+                ${countryFullName(country) ? `<div class="country-name">${escapeHTML(country)}</div>` : ""}
+              </div>
+              <div class="country-count">${ownedInCountry}/${totalInCountry} obtidos - ${ownedPercent}%</div>
+              <div class="country-progress" aria-hidden="true">
+                <div class="country-progress-bar" style="--progress-width:${ownedPercent}%"></div>
+              </div>
+            </div>
+
+            <div class="stickers">
+              ${(() => {
+                const teamStickers = countryStickers.filter(isTeamAlbumSticker);
+                const regularStickers = countryStickers.filter(sticker => !isTeamAlbumSticker(sticker));
+                const firstHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) <= 10);
+                const secondHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) >= 11);
+                return [
+                  teamStickers.length ? `<div class="sticker-section sticker-section-featured"><div class="sticker-grid">${teamStickers.map(renderStickerCard).join("")}</div></div>` : "",
+                  firstHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHalfStickers.map(renderStickerCard).join("")}</div></div>` : "",
+                  secondHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHalfStickers.map(renderStickerCard).join("")}</div></div>` : ""
+                ].join("");
+              })()}
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function escapeJS(value) {
+      return String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
+    function loadStickers(list, options = {}) {
+      const { useSavedState = false, persist = false } = options;
+      const cleaned = list.map(cleanSticker);
+      stickers = useSavedState ? mergeWithSavedState(cleaned) : cleaned;
+      if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
+      if (persist) saveState();
+      render();
+    }
+
+
+    function keepServerOpen() {
+      if (!serverAvailable) return;
+      fetch("/api/manter-aberto", { method: "POST", cache: "no-store", keepalive: true }).catch(() => {});
+    }
+
+    function closeServerWithPage() {
+      if (!serverAvailable) return;
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon("/api/fechar", "");
+        return;
+      }
+      fetch("/api/fechar", { method: "POST", keepalive: true }).catch(() => {});
+    }
+
+    search.addEventListener("input", render);
+
+    countryScrollLeft.addEventListener("mouseenter", () => startCountryScroll(-1));
+    countryScrollRight.addEventListener("mouseenter", () => startCountryScroll(1));
+    countryScrollLeft.addEventListener("mouseleave", stopCountryScroll);
+    countryScrollRight.addEventListener("mouseleave", stopCountryScroll);
+    countryScrollLeft.addEventListener("mouseover", () => startCountryScroll(-1));
+    countryScrollRight.addEventListener("mouseover", () => startCountryScroll(1));
+    countryScrollLeft.addEventListener("mouseout", stopCountryScroll);
+    countryScrollRight.addEventListener("mouseout", stopCountryScroll);
+    countryScrollLeft.addEventListener("focus", () => startCountryScroll(-1));
+    countryScrollRight.addEventListener("focus", () => startCountryScroll(1));
+    countryScrollLeft.addEventListener("blur", stopCountryScroll);
+    countryScrollRight.addEventListener("blur", stopCountryScroll);
+    window.addEventListener("resize", applyCountryTabsOffset);
+    window.addEventListener("pageshow", keepServerOpen);
+    window.addEventListener("pagehide", closeServerWithPage);
+
+
+    async function tryAutoLoad() {
+      try {
+        const response = await fetch("/api/cromos", { cache: "no-store" });
+        if (!response.ok) throw new Error("Sem cromos.txt");
+        serverAvailable = true;
+        keepServerOpen();
+        const text = await response.text();
+        const parsed = parseTextFile(text);
+        loadStickers(parsed);
+        setSaveStatus("Ficheiro lido com sucesso");
+      } catch {
+        try {
+          const response = await fetch("cromos.txt", { cache: "no-store" });
+          if (!response.ok) throw new Error("Sem cromos.txt");
+          const text = await response.text();
+          const parsed = parseTextFile(text);
+          loadStickers(parsed, { useSavedState: true });
+          setSaveStatus("Ficheiro lido com sucesso");
+        } catch {
+          loadStickers(demoStickers, { useSavedState: true });
+          setSaveStatus("Ficheiro lido com sucesso");
+        }
+      }
+    }
+
+    tryAutoLoad();
+  </script>
+</body>
+</html>
