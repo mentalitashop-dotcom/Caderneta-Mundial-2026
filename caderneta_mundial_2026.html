@@ -2273,15 +2273,29 @@
     }
 
     function stickerTradeLabel(sticker) {
-      return `${sticker.pais} ${sticker.codigo} - ${sticker.nome}`;
+      return `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)} - ${sticker.nome}`;
     }
 
     function possibleTradeGives() {
+      if (!hasSelectedFriend()) return [];
+      return stickers.filter(sticker => sticker.tenho && (sticker.repetidos || 0) > 0);
+    }
+
+    function possibleTradeGivesFriendNeeds() {
       if (!hasSelectedFriend()) return [];
       const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
       return stickers.filter(sticker => {
         const friendSticker = friendById.get(sticker.id);
         return sticker.tenho && (sticker.repetidos || 0) > 0 && friendSticker && !friendSticker.tenho;
+      });
+    }
+
+    function possibleTradeGivesFriendAlreadyHas() {
+      if (!hasSelectedFriend()) return [];
+      const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
+      return stickers.filter(sticker => {
+        const friendSticker = friendById.get(sticker.id);
+        return sticker.tenho && (sticker.repetidos || 0) > 0 && friendSticker && friendSticker.tenho;
       });
     }
 
@@ -2291,6 +2305,15 @@
       return friendStickers.filter(sticker => {
         const mine = mineById.get(sticker.id);
         return sticker.tenho && (sticker.repetidos || 0) > 0 && mine && !mine.tenho;
+      });
+    }
+
+    function friendRepeatedAlreadyOwned() {
+      if (!hasSelectedFriend()) return [];
+      const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
+      return friendStickers.filter(sticker => {
+        const mine = mineById.get(sticker.id);
+        return sticker.tenho && (sticker.repetidos || 0) > 0 && mine && mine.tenho;
       });
     }
 
@@ -2311,11 +2334,31 @@
       }
 
       const gives = possibleTradeGives();
+      const givesFriendNeeds = possibleTradeGivesFriendNeeds();
+      const givesFriendAlreadyHas = possibleTradeGivesFriendAlreadyHas();
       const receives = possibleTradeReceives();
-      if (!gives.length || !receives.length) {
+      const receivesAlreadyOwned = friendRepeatedAlreadyOwned();
+
+      if (!receives.length) {
+        tradeSuggestions.innerHTML = `
+          <div class="trade-select-grid">
+            <div class="trade-card">
+              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu precisas</div>
+              <div class="trade-lines">Não há troca possível, ${escapeHTML(friendProfile)} não tem nenhum cromo que tu precises.</div>
+            </div>
+            <div class="trade-card">
+              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu ja tens</div>
+              <div class="trade-lines">${tradeStickerList(receivesAlreadyOwned)}</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (!gives.length) {
         tradeSuggestions.innerHTML = `
           <div class="comparison-empty">
-            Nao ha troca direta disponivel com ${escapeHTML(friendProfile)}: e preciso tu teres um repetido que ele nao tem e ele ter um repetido que tu nao tens.
+            Não há troca possível, não tens nenhum cromo repetido para oferecer.
           </div>
         `;
         return;
@@ -2327,11 +2370,21 @@
           <div class="trade-select-grid">
             <div class="trade-card">
               <div class="trade-card-title">Os teus repetidos que ${escapeHTML(friendProfile)} precisa</div>
-              <div class="trade-lines">${tradeStickerList(gives)}</div>
+              <div class="trade-lines">${tradeStickerList(givesFriendNeeds)}</div>
             </div>
+            <div class="trade-card">
+              <div class="trade-card-title">Os teus repetidos que ${escapeHTML(friendProfile)} ja tem</div>
+              <div class="trade-lines">${tradeStickerList(givesFriendAlreadyHas)}</div>
+            </div>
+          </div>
+          <div class="trade-select-grid">
             <div class="trade-card">
               <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu precisas</div>
               <div class="trade-lines">${tradeStickerList(receives)}</div>
+            </div>
+            <div class="trade-card">
+              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu ja tens</div>
+              <div class="trade-lines">${tradeStickerList(receivesAlreadyOwned)}</div>
             </div>
           </div>
           <div class="trade-select-grid">
@@ -3160,7 +3213,7 @@
           <div class="sticker-state" aria-hidden="true"></div>
           <div class="sticker-info">
             <div class="code">
-              ${escapeHTML(sticker.codigo)}
+              ${escapeHTML(currentView === "duplicates" ? stickerExportNumber(sticker) : sticker.codigo)}
             </div>
             <div class="name">${escapeHTML(sticker.nome)}</div>
             ${sticker.tenho ? `

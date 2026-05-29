@@ -846,7 +846,14 @@ function publicTrade(doc, viewer) {
 }
 
 function tradeStickerLabel(sticker) {
-  return `${sticker.pais} ${sticker.codigo} - ${sticker.nome}`;
+  const country = String(sticker.pais || "").split(" ")[0];
+  const code = String(sticker.codigo || "").trim();
+  const prefixPattern = new RegExp(`^${country.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*`, "i");
+  const withoutPrefix = country ? code.replace(prefixPattern, "").trim() : code;
+  const displayCode = withoutPrefix === "00"
+    ? "00"
+    : (withoutPrefix.match(/(\d+)\s*$/) ? String(Number(withoutPrefix.match(/(\d+)\s*$/)[1])) : withoutPrefix || code);
+  return `${country} ${displayCode} - ${sticker.nome}`;
 }
 
 async function findUserById(db, userId) {
@@ -874,9 +881,6 @@ async function validateAcceptedTrade(db, trade, fromUser, toUser) {
     if (!fromSticker.tenho || normalizeDuplicates(fromSticker.repetidos) <= 0) {
       throw new HttpError(409, `${fromUser.username} ja nao tem ${tradeStickerLabel(fromSticker)} repetido.`);
     }
-    if (toSticker.tenho) {
-      throw new HttpError(409, `${toUser.username} ja tem ${tradeStickerLabel(toSticker)}.`);
-    }
   }
 
   for (const sticker of trade.receive || []) {
@@ -890,6 +894,8 @@ async function validateAcceptedTrade(db, trade, fromUser, toUser) {
       throw new HttpError(409, `${toUser.username} ja nao tem ${tradeStickerLabel(toSticker)} repetido.`);
     }
   }
+
+  return { fromById, toById };
 }
 
 async function applyAcceptedTrade(db, trade) {
@@ -897,7 +903,7 @@ async function applyAcceptedTrade(db, trade) {
   const toUser = await findUserById(db, trade.toUserId);
   if (!fromUser || !toUser) throw new HttpError(404, "Um dos users desta troca ja nao existe.");
 
-  await validateAcceptedTrade(db, trade, fromUser, toUser);
+  const tradeState = await validateAcceptedTrade(db, trade, fromUser, toUser);
 
   const now = new Date();
   const operations = [];
@@ -910,29 +916,35 @@ async function applyAcceptedTrade(db, trade) {
       }
     }
   });
-  const markOwned = (user, sticker) => operations.push({
-    updateOne: {
-      filter: { userId: user.id, stickerId: sticker.id },
-      update: {
-        $set: {
-          owned: true,
-          missing: false,
-          status: "obtido",
-          updatedAt: now,
-          tradeUpdatedAt: now
-        }
+  const addReceivedSticker = (user, sticker, alreadyOwned) => {
+    const update = {
+      $set: {
+        owned: true,
+        missing: false,
+        status: "obtido",
+        updatedAt: now,
+        tradeUpdatedAt: now
       }
-    }
-  });
+    };
+
+    if (alreadyOwned) update.$inc = { duplicates: 1 };
+
+    operations.push({
+      updateOne: {
+        filter: { userId: user.id, stickerId: sticker.id },
+        update
+      }
+    });
+  };
 
   (trade.give || []).forEach(sticker => {
     decrementDuplicate(fromUser, sticker);
-    markOwned(toUser, sticker);
+    addReceivedSticker(toUser, sticker, Boolean(tradeState.toById.get(sticker.id)?.tenho));
   });
 
   (trade.receive || []).forEach(sticker => {
     decrementDuplicate(toUser, sticker);
-    markOwned(fromUser, sticker);
+    addReceivedSticker(fromUser, sticker, Boolean(tradeState.fromById.get(sticker.id)?.tenho));
   });
 
   if (operations.length) {
@@ -976,9 +988,6 @@ async function createTradeProposal(db, user, payload) {
     if (!mine || !friend) throw new HttpError(400, "Um dos cromos para dar nao existe.");
     if (!mine.tenho || normalizeDuplicates(mine.repetidos) <= 0) {
       throw new HttpError(400, `${tradeStickerLabel(mine)} nao esta nos teus repetidos.`);
-    }
-    if (friend.tenho) {
-      throw new HttpError(400, `${targetUser.username} ja tem ${tradeStickerLabel(mine)}.`);
     }
     return publicTradeSticker(mine);
   });
