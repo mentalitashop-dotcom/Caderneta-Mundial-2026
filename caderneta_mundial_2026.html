@@ -565,6 +565,79 @@
       margin-top: 2px;
     }
 
+    .trade-panel {
+      display: grid;
+      gap: 12px;
+    }
+
+    .trade-builder,
+    .trade-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #f9fafb;
+    }
+
+    .trade-builder {
+      display: grid;
+      gap: 10px;
+    }
+
+    .trade-select-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .trade-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .trade-field label,
+    .trade-card-title {
+      color: var(--main);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .trade-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .trade-card {
+      display: grid;
+      gap: 8px;
+    }
+
+    .trade-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .trade-status {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .trade-lines {
+      color: #4b5563;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .trade-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .result-summary {
       min-height: 21px;
       margin: -2px 0 14px;
@@ -801,6 +874,15 @@
       filter: brightness(1.02);
     }
 
+    .sticker.is-readonly {
+      cursor: default;
+    }
+
+    .sticker.is-readonly:hover {
+      transform: none;
+      filter: none;
+    }
+
     .sticker:focus-visible {
       outline: 3px solid var(--sticker-focus, rgba(17, 24, 39, .24));
       outline-offset: 2px;
@@ -1017,6 +1099,10 @@
       .comparison-grid {
         grid-template-columns: 1fr;
       }
+
+      .trade-select-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 520px) {
@@ -1103,7 +1189,9 @@
             <span>Utilizador</span>
             <strong id="userMenuProfile">Conta</strong>
           </div>
-          <button type="button" role="menuitem" onclick="toggleFriendsPanel()">Amigos</button>
+          <button type="button" role="menuitem" onclick="showMyAlbum(); closeUserMenu();">A minha caderneta</button>
+          <button type="button" role="menuitem" onclick="openFriendsPage()">Amigos</button>
+          <button type="button" role="menuitem" onclick="openTradesPanel()">Trocas</button>
           <button type="button" role="menuitem" onclick="refreshFromUserMenu()">Atualizar online</button>
           <button class="danger" type="button" role="menuitem" onclick="logoutLiveAccount()">Logout</button>
         </div>
@@ -1136,7 +1224,7 @@
       <div class="share-panel-head">
         <div class="share-panel-title">
           <strong>Amigos</strong>
-          <span>Compara a tua caderneta com outros users online.</span>
+          <span>Escolhe um user para ver a caderneta dele.</span>
           <span id="liveStatusText" class="hidden"></span>
         </div>
         <button class="share-close" type="button" onclick="toggleFriendsPanel(false)" aria-label="Fechar amigos">x</button>
@@ -1152,14 +1240,29 @@
         <button id="liveLogoutButton" class="secondary hidden" type="button" onclick="logoutLiveAccount()">Sair</button>
       </div>
       <div class="live-controls">
-        <select id="liveFriendSelect" class="live-input">
+        <select id="liveFriendSelect" class="live-input" onchange="selectLiveFriend(this.value)">
           <option value="">Escolhe um amigo</option>
         </select>
-        <button type="button" onclick="compareLiveFriend()">Comparar</button>
+        <button type="button" onclick="showMyAlbum()">A minha caderneta</button>
         <button class="secondary" type="button" onclick="refreshLiveNow()">Atualizar</button>
-        <button class="secondary" type="button" onclick="clearLiveComparison()">Limpar</button>
       </div>
       <div id="liveComparison" class="share-comparison" aria-live="polite"></div>
+    </section>
+
+    <section id="tradePanel" class="share-panel trade-panel hidden" aria-label="Trocas">
+      <div class="share-panel-head">
+        <div class="share-panel-title">
+          <strong>Trocas</strong>
+          <span>Propostas entre users com base nos repetidos e nos cromos em falta.</span>
+        </div>
+        <button class="share-close" type="button" onclick="toggleTradesPanel(false)" aria-label="Fechar trocas">x</button>
+      </div>
+      <div id="tradeSuggestions" aria-live="polite"></div>
+      <div class="share-panel-title">
+        <strong>Propostas</strong>
+        <span>Recebidas e enviadas por ti.</span>
+      </div>
+      <div id="tradeList" class="trade-list" aria-live="polite"></div>
     </section>
 
     <section class="country-tabs-wrap" aria-label="Países da caderneta">
@@ -1190,6 +1293,10 @@
     let liveEnabled = false;
     let liveProfile = "";
     let liveUpdatedAt = "";
+    let friendProfile = "";
+    let friendStickers = [];
+    let friendUpdatedAt = "";
+    let tradeRequests = [];
     let liveRefreshTimer = null;
     let idleLogoutTimer = null;
     let authRequestLocked = false;
@@ -1212,6 +1319,9 @@
     const liveStatusText = document.getElementById("liveStatusText");
     const liveFriendSelect = document.getElementById("liveFriendSelect");
     const liveComparison = document.getElementById("liveComparison");
+    const tradePanel = document.getElementById("tradePanel");
+    const tradeSuggestions = document.getElementById("tradeSuggestions");
+    const tradeList = document.getElementById("tradeList");
     const liveLogoutButton = document.getElementById("liveLogoutButton");
     const liveLoginButton = document.getElementById("liveLoginButton");
     const liveRegisterButton = document.getElementById("liveRegisterButton");
@@ -1576,6 +1686,17 @@
       saveStatus.textContent = text;
     }
 
+    function isFriendView() {
+      return Boolean(friendProfile);
+    }
+
+    function currentAlbumStickers() {
+      return isFriendView() ? friendStickers : stickers;
+    }
+
+    function currentAlbumLabel() {
+      return isFriendView() ? friendProfile : "a tua caderneta";
+    }
 
     function saveState() {
       const state = {};
@@ -1614,6 +1735,12 @@
       }[view] || "Cromos Todos";
     }
 
+    function updateViewTitle() {
+      currentViewTitle.textContent = isFriendView()
+        ? `${friendProfile} - ${viewTitleText(currentView)}`
+        : viewTitleText(currentView);
+    }
+
     function updateActiveStat() {
       document.querySelectorAll(".stat[data-view]").forEach(stat => {
         stat.classList.toggle("active", stat.dataset.view === currentView);
@@ -1628,7 +1755,7 @@
 
     function setView(view) {
       currentView = view;
-      currentViewTitle.textContent = viewTitleText(view);
+      updateViewTitle();
       updateActiveStat();
       pulseViewTitle();
       render();
@@ -1639,7 +1766,7 @@
       const countries = [];
       const seen = new Set();
 
-      stickers.forEach(sticker => {
+      currentAlbumStickers().forEach(sticker => {
         if (seen.has(sticker.pais)) return;
         seen.add(sticker.pais);
         countries.push(sticker.pais);
@@ -1705,7 +1832,7 @@
     function filteredStickers() {
       const term = normalizeSearch(search.value);
 
-      return stickers.filter(sticker => {
+      return currentAlbumStickers().filter(sticker => {
         const matchesView =
           currentView === "all" ||
           (currentView === "missing" && !sticker.tenho) ||
@@ -1914,9 +2041,9 @@
       if (normalizeSearch(search.value)) return "Não há cromos para mostrar nesta pesquisa.";
 
       if (selectedCountry === "all") {
-        if (currentView === "missing") return "Já completaste a caderneta.";
-        if (currentView === "owned") return "Ainda não tens nenhum cromo obtido.";
-        if (currentView === "duplicates") return "Não tens nenhum cromo repetido.";
+        if (currentView === "missing") return isFriendView() ? `${friendProfile} ja completou a caderneta.` : "Já completaste a caderneta.";
+        if (currentView === "owned") return isFriendView() ? `${friendProfile} ainda nao tem nenhum cromo obtido.` : "Ainda não tens nenhum cromo obtido.";
+        if (currentView === "duplicates") return isFriendView() ? `${friendProfile} nao tem nenhum cromo repetido.` : "Não tens nenhum cromo repetido.";
         return "Não há cromos para mostrar nesta vista.";
       }
 
@@ -1939,17 +2066,20 @@
     }
 
     function exportMissingAndDuplicates() {
-      if (!stickers.length) {
+      const album = currentAlbumStickers();
+      if (!album.length) {
         setSaveStatus("Sem cromos para exportar");
         return;
       }
 
-      const missing = stickers.filter(sticker => !sticker.tenho);
-      const duplicates = stickers.filter(sticker => sticker.tenho && (sticker.repetidos || 0) > 0);
+      const missing = album.filter(sticker => !sticker.tenho);
+      const duplicates = album.filter(sticker => sticker.tenho && (sticker.repetidos || 0) > 0);
       const duplicateTotal = duplicates.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
       const missingLines = exportGroupedLines(missing, sticker => stickerExportNumber(sticker));
       const duplicateLines = exportGroupedLines(duplicates, sticker => `${stickerExportNumber(sticker)} (x${sticker.repetidos || 0})`);
       const lines = [
+        isFriendView() ? `Caderneta de ${friendProfile}` : "A minha caderneta",
+        "",
         `Cromos em Falta (${missing.length}):`,
         "",
         ...(missingLines.length ? missingLines : ["Sem cromos em falta"]),
@@ -1963,12 +2093,12 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "Mundial Cromos em Falta.txt";
+      link.download = isFriendView() ? `Mundial ${friendProfile} Cromos em Falta.txt` : "Mundial Cromos em Falta.txt";
       document.body.appendChild(link);
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 500);
-      setSaveStatus("Lista exportada com sucesso");
+      setSaveStatus(isFriendView() ? `Lista de ${friendProfile} exportada` : "Lista exportada com sucesso");
     }
 
 
@@ -1976,7 +2106,7 @@
       const ids = new Set(list.map(sticker => sticker.id));
       return albumCountries()
         .map(country => {
-          const countryStickers = stickers
+          const countryStickers = currentAlbumStickers()
             .filter(sticker => sticker.pais === country && ids.has(sticker.id))
             .sort((a, b) => stickerNumber(a) - stickerNumber(b));
           if (!countryStickers.length) return "";
@@ -2029,8 +2159,268 @@
 
       if (shouldOpen) {
         loadLiveProfiles().catch(() => {});
+        liveComparison.innerHTML = isFriendView()
+          ? `<div class="comparison-empty">A ver a caderneta de ${escapeHTML(friendProfile)}.</div>`
+          : `<div class="comparison-empty">Escolhe um user para abrir a caderneta dele.</div>`;
         setTimeout(() => liveFriendSelect?.focus(), 0);
       }
+    }
+
+    function openFriendsPage() {
+      toggleFriendsPanel(true);
+    }
+
+    function showMyAlbum() {
+      friendProfile = "";
+      friendStickers = [];
+      friendUpdatedAt = "";
+      if (liveFriendSelect) liveFriendSelect.value = "";
+      if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
+      liveComparison.innerHTML = `<div class="comparison-empty">Voltaste a tua caderneta.</div>`;
+      setSaveStatus("A ver a tua caderneta");
+      render();
+      renderTradePanel();
+    }
+
+    async function selectLiveFriend(profile) {
+      const friend = String(profile || "").trim();
+      if (!friend) {
+        showMyAlbum();
+        return;
+      }
+
+      if (!liveEnabled || !liveProfile) {
+        setSaveStatus("Entra primeiro para ver amigos");
+        return;
+      }
+
+      livePanel.classList.remove("hidden");
+      liveComparison.innerHTML = `<div class="comparison-empty">A carregar a caderneta de ${escapeHTML(friend)}...</div>`;
+      setSaveStatus(`A carregar ${friend}`);
+
+      try {
+        const data = await fetchLiveState(friend);
+        friendProfile = friend;
+        friendUpdatedAt = data.updatedAt || "";
+        friendStickers = data.exists && data.csv ? parseTextFile(data.csv) : [];
+        if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
+        liveComparison.innerHTML = friendStickers.length
+          ? `<div class="comparison-empty">Estás a ver a caderneta de ${escapeHTML(friend)}. Esta vista é só de leitura.</div>`
+          : `<div class="comparison-empty">${escapeHTML(friend)} ainda nao tem caderneta online.</div>`;
+        setSaveStatus(`A ver caderneta de ${friend}`);
+        render();
+        renderTradePanel();
+      } catch (error) {
+        liveComparison.innerHTML = `<div class="comparison-empty">Nao foi possivel abrir a caderneta deste user.</div>`;
+        setSaveStatus("Erro ao abrir amigo");
+        console.error(error);
+      }
+    }
+
+    function stickerTradeLabel(sticker) {
+      return `${sticker.pais} ${sticker.codigo} - ${sticker.nome}`;
+    }
+
+    function possibleTradeGives() {
+      if (!isFriendView()) return [];
+      const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
+      return stickers.filter(sticker => {
+        const friendSticker = friendById.get(sticker.id);
+        return sticker.tenho && (sticker.repetidos || 0) > 0 && friendSticker && !friendSticker.tenho;
+      });
+    }
+
+    function possibleTradeReceives() {
+      if (!isFriendView()) return [];
+      const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
+      return friendStickers.filter(sticker => {
+        const mine = mineById.get(sticker.id);
+        return sticker.tenho && (sticker.repetidos || 0) > 0 && mine && !mine.tenho;
+      });
+    }
+
+    function tradeOption(sticker) {
+      return `<option value="${escapeHTML(sticker.id)}">${escapeHTML(stickerTradeLabel(sticker))}</option>`;
+    }
+
+    function renderTradeSuggestions() {
+      if (!tradeSuggestions) return;
+
+      if (!isFriendView()) {
+        tradeSuggestions.innerHTML = `
+          <div class="comparison-empty">
+            Abre a caderneta de um amigo para veres trocas possiveis.
+          </div>
+        `;
+        return;
+      }
+
+      const gives = possibleTradeGives();
+      const receives = possibleTradeReceives();
+      if (!gives.length || !receives.length) {
+        tradeSuggestions.innerHTML = `
+          <div class="comparison-empty">
+            Nao ha troca direta disponivel com ${escapeHTML(friendProfile)}: e preciso tu teres um repetido que ele nao tem e ele ter um repetido que tu nao tens.
+          </div>
+        `;
+        return;
+      }
+
+      tradeSuggestions.innerHTML = `
+        <div class="trade-builder">
+          <div class="trade-card-title">Nova proposta para ${escapeHTML(friendProfile)}</div>
+          <div class="trade-select-grid">
+            <div class="trade-field">
+              <label for="tradeGiveSelect">Tu das</label>
+              <select id="tradeGiveSelect" class="live-input">${gives.map(tradeOption).join("")}</select>
+            </div>
+            <div class="trade-field">
+              <label for="tradeReceiveSelect">Tu recebes</label>
+              <select id="tradeReceiveSelect" class="live-input">${receives.map(tradeOption).join("")}</select>
+            </div>
+          </div>
+          <div class="trade-actions">
+            <button type="button" onclick="proposeTrade()">Propor troca</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function tradeStatusText(status) {
+      return {
+        pending: "pendente",
+        accepted: "aceite",
+        rejected: "recusada",
+        cancelled: "cancelada"
+      }[status] || status || "pendente";
+    }
+
+    function tradeStickerList(list) {
+      if (!list || !list.length) return "Sem cromos";
+      return list.map(sticker => escapeHTML(stickerTradeLabel(sticker))).join("<br>");
+    }
+
+    function tradeActionButtons(trade) {
+      if (trade.status !== "pending") return "";
+      if (trade.direction === "incoming") {
+        return `
+          <div class="trade-actions">
+            <button type="button" onclick="updateTradeStatus('${escapeJS(trade.id)}', 'accepted')">Aceitar</button>
+            <button class="secondary" type="button" onclick="updateTradeStatus('${escapeJS(trade.id)}', 'rejected')">Recusar</button>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="trade-actions">
+          <button class="secondary" type="button" onclick="updateTradeStatus('${escapeJS(trade.id)}', 'cancelled')">Cancelar</button>
+        </div>
+      `;
+    }
+
+    function renderTradeRequests() {
+      if (!tradeList) return;
+      if (!tradeRequests.length) {
+        tradeList.innerHTML = `<div class="comparison-empty">Ainda nao ha propostas de troca.</div>`;
+        return;
+      }
+
+      tradeList.innerHTML = tradeRequests.map(trade => {
+        const title = trade.direction === "incoming"
+          ? `${trade.fromUser} propos uma troca`
+          : `Proposta enviada a ${trade.toUser}`;
+        const giveLabel = trade.direction === "incoming" ? "Recebes" : "Das";
+        const receiveLabel = trade.direction === "incoming" ? "Das" : "Recebes";
+        return `
+          <div class="trade-card">
+            <div class="trade-card-head">
+              <div class="trade-card-title">${escapeHTML(title)}</div>
+              <div class="trade-status">${escapeHTML(tradeStatusText(trade.status))}</div>
+            </div>
+            <div class="trade-lines"><strong>${giveLabel}:</strong><br>${tradeStickerList(trade.give)}</div>
+            <div class="trade-lines"><strong>${receiveLabel}:</strong><br>${tradeStickerList(trade.receive)}</div>
+            ${tradeActionButtons(trade)}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTradePanel() {
+      renderTradeSuggestions();
+      renderTradeRequests();
+    }
+
+    async function loadTradeRequests() {
+      if (!liveEnabled || !liveProfile) return;
+      const response = await fetch("/api/live/trades", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json().catch(() => ({}));
+      tradeRequests = Array.isArray(data.trades) ? data.trades : [];
+      renderTradeRequests();
+    }
+
+    async function proposeTrade() {
+      if (!isFriendView()) {
+        setSaveStatus("Escolhe primeiro um amigo");
+        return;
+      }
+
+      const giveId = document.getElementById("tradeGiveSelect")?.value || "";
+      const receiveId = document.getElementById("tradeReceiveSelect")?.value || "";
+      if (!giveId || !receiveId) {
+        setSaveStatus("Escolhe os dois cromos da troca");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/live/trades", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            toUser: friendProfile,
+            giveStickerIds: [giveId],
+            receiveStickerIds: [receiveId]
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Nao foi possivel propor troca");
+        setSaveStatus(`Troca proposta a ${friendProfile}`);
+        await loadTradeRequests();
+        renderTradePanel();
+      } catch (error) {
+        setSaveStatus(error.message);
+      }
+    }
+
+    async function updateTradeStatus(tradeId, status) {
+      try {
+        const response = await fetch("/api/live/trades/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tradeId, status })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Nao foi possivel atualizar troca");
+        setSaveStatus("Troca atualizada");
+        await loadTradeRequests();
+      } catch (error) {
+        setSaveStatus(error.message);
+      }
+    }
+
+    function toggleTradesPanel(forceOpen) {
+      if (!tradePanel) return;
+      const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : tradePanel.classList.contains("hidden");
+      tradePanel.classList.toggle("hidden", !shouldOpen);
+      closeUserMenu();
+      if (shouldOpen) {
+        renderTradePanel();
+        loadTradeRequests().catch(() => {});
+      }
+    }
+
+    function openTradesPanel() {
+      toggleTradesPanel(true);
     }
 
     function refreshFromUserMenu() {
@@ -2186,7 +2576,7 @@
     async function loadLiveProfiles() {
       if (!liveEnabled || !liveFriendSelect || !liveProfile) return;
 
-      const selected = liveFriendSelect.value;
+      const selected = friendProfile || liveFriendSelect.value;
       const response = await fetch("/api/live/profiles", { cache: "no-store" });
       if (!response.ok) return;
 
@@ -2266,6 +2656,9 @@
 
       try {
         liveProfile = user.username;
+        friendProfile = "";
+        friendStickers = [];
+        friendUpdatedAt = "";
         liveUsernameInput.value = user.username;
         localStorage.setItem("caderneta_live_profile", user.username);
         liveStatusText.textContent = "A carregar caderneta online...";
@@ -2286,6 +2679,7 @@
         startLiveRefresh();
         resetIdleLogoutTimer();
         await loadLiveProfiles();
+        await loadTradeRequests();
       } catch (error) {
         liveProfile = previousProfile || "";
         updateLiveLoginUI();
@@ -2366,10 +2760,17 @@
 
       liveProfile = "";
       liveUpdatedAt = "";
+      friendProfile = "";
+      friendStickers = [];
+      friendUpdatedAt = "";
+      tradeRequests = [];
       if (liveRefreshTimer) clearInterval(liveRefreshTimer);
       liveRefreshTimer = null;
       stopIdleLogoutTimer();
       liveComparison.innerHTML = "";
+      if (tradeList) tradeList.innerHTML = "";
+      if (tradeSuggestions) tradeSuggestions.innerHTML = "";
+      if (tradePanel) tradePanel.classList.add("hidden");
       liveFriendSelect.innerHTML = `<option value="">Escolhe um amigo</option>`;
       closeUserMenu();
       liveStatusText.textContent = reason === "idle"
@@ -2390,13 +2791,28 @@
       }
 
       try {
-        const data = await fetchLiveState();
-        if (data.exists && data.csv && data.updatedAt && data.updatedAt !== liveUpdatedAt) {
-          loadStickers(parseTextFile(data.csv));
-          liveUpdatedAt = data.updatedAt;
-          setSaveStatus("Online atualizado");
+        if (isFriendView()) {
+          const activeFriend = friendProfile;
+          const data = await fetchLiveState(activeFriend);
+          friendUpdatedAt = data.updatedAt || friendUpdatedAt;
+          friendStickers = data.exists && data.csv ? parseTextFile(data.csv) : [];
+          if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
+          render();
+          renderTradePanel();
+          liveComparison.innerHTML = friendStickers.length
+            ? `<div class="comparison-empty">Caderneta de ${escapeHTML(activeFriend)} atualizada.</div>`
+            : `<div class="comparison-empty">${escapeHTML(activeFriend)} ainda nao tem caderneta online.</div>`;
+          setSaveStatus(`Caderneta de ${activeFriend} atualizada`);
+        } else {
+          const data = await fetchLiveState();
+          if (data.exists && data.csv && data.updatedAt && data.updatedAt !== liveUpdatedAt) {
+            loadStickers(parseTextFile(data.csv));
+            liveUpdatedAt = data.updatedAt;
+            setSaveStatus("Online atualizado");
+          }
         }
         await loadLiveProfiles();
+        await loadTradeRequests();
       } catch (error) {
         setSaveStatus("Erro ao atualizar live");
         console.error(error);
@@ -2404,54 +2820,11 @@
     }
 
     async function compareLiveFriend() {
-      if (!liveEnabled) return;
-      if (!liveProfile) {
-        setSaveStatus("Entra no modo online primeiro");
-        return;
-      }
-
-      const friend = liveFriendSelect.value;
-      if (!friend) {
-        setSaveStatus("Escolhe um amigo para comparar");
-        return;
-      }
-
-      try {
-        const data = await fetchLiveState(friend);
-        if (!data.exists || !data.csv) {
-          liveComparison.innerHTML = `<div class="comparison-empty">Este amigo ainda nao tem colecao live.</div>`;
-          return;
-        }
-
-        const friendStickers = parseTextFile(data.csv);
-        const friendOwned = new Set(friendStickers.filter(sticker => sticker.tenho).map(sticker => sticker.id));
-        const mineOwned = new Set(stickers.filter(sticker => sticker.tenho).map(sticker => sticker.id));
-        const friendHasYouMiss = stickers.filter(sticker => friendOwned.has(sticker.id) && !mineOwned.has(sticker.id));
-        const youHaveFriendMisses = stickers.filter(sticker => mineOwned.has(sticker.id) && !friendOwned.has(sticker.id));
-
-        liveComparison.innerHTML = `
-          <div class="comparison-grid">
-            <div class="comparison-block">
-              <strong>${escapeHTML(friend)} tem e tu nao tens (${friendHasYouMiss.length})</strong>
-              ${renderComparisonLines(friendHasYouMiss, "Nao ha diferencas deste lado")}
-            </div>
-            <div class="comparison-block">
-              <strong>Tu tens e ${escapeHTML(friend)} nao tem (${youHaveFriendMisses.length})</strong>
-              ${renderComparisonLines(youHaveFriendMisses, "Nao ha diferencas deste lado")}
-            </div>
-          </div>
-        `;
-        setSaveStatus("Comparacao live feita com sucesso");
-      } catch (error) {
-        liveComparison.innerHTML = `<div class="comparison-empty">Nao foi possivel comparar este amigo.</div>`;
-        setSaveStatus("Erro na comparacao live");
-        console.error(error);
-      }
+      await selectLiveFriend(liveFriendSelect.value);
     }
 
     function clearLiveComparison() {
-      liveComparison.innerHTML = "";
-      liveFriendSelect.value = "";
+      showMyAlbum();
     }
 
     async function initLiveMode() {
@@ -2535,10 +2908,11 @@
     }
 
     function updateExportSummary() {
-      const missing = stickers.filter(sticker => !sticker.tenho).length;
-      const duplicates = stickers.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
-      exportSummary.textContent = `${missing} faltam · ${duplicates} rep.`;
-      exportListButton.disabled = !stickers.length;
+      const album = currentAlbumStickers();
+      const missing = album.filter(sticker => !sticker.tenho).length;
+      const duplicates = album.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
+      exportSummary.textContent = `${missing} faltam - ${duplicates} rep.`;
+      exportListButton.disabled = !album.length;
     }
 
     function currentCountryLabel() {
@@ -2550,9 +2924,9 @@
     function updateResultSummary(list) {
       const term = search.value.trim();
       const view = viewTitleText(currentView).toLowerCase();
-      const pieces = [`${list.length} cromos`, view, currentCountryLabel()];
+      const pieces = [currentAlbumLabel(), `${list.length} cromos`, view, currentCountryLabel()];
       if (term) pieces.push(`pesquisa: ${term}`);
-      resultSummary.textContent = pieces.join(" · ");
+      resultSummary.textContent = pieces.join(" - ");
     }
 
     function emptyActionButtons() {
@@ -2567,10 +2941,11 @@
       return `<div class="empty"><strong>${escapeHTML(message)}</strong>${emptyActionButtons()}</div>`;
     }
     function updateStats() {
-      const total = stickers.length;
-      const owned = stickers.filter(s => s.tenho).length;
+      const album = currentAlbumStickers();
+      const total = album.length;
+      const owned = album.filter(s => s.tenho).length;
       const missing = total - owned;
-      const duplicates = stickers.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
+      const duplicates = album.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
 
       totalCount.textContent = total;
       ownedCount.textContent = owned;
@@ -2580,6 +2955,10 @@
     }
 
     function toggleStickerOwned(stickerId) {
+      if (isFriendView()) {
+        setSaveStatus(`Estas a ver a caderneta de ${friendProfile}`);
+        return;
+      }
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker) return;
       changeOwned(stickerId, !sticker.tenho);
@@ -2593,6 +2972,10 @@
       toggleStickerOwned(stickerId);
     }
     function changeOwned(stickerId, checked) {
+      if (isFriendView()) {
+        setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
+        return;
+      }
       if (!requireLiveLogin()) return;
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker) return;
@@ -2609,6 +2992,10 @@
     }
 
     function changeDuplicates(stickerId, value) {
+      if (isFriendView()) {
+        setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
+        return;
+      }
       if (!requireLiveLogin()) return;
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker || !sticker.tenho) return;
@@ -2619,6 +3006,10 @@
     }
 
     function adjustDuplicates(stickerId, delta) {
+      if (isFriendView()) {
+        setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
+        return;
+      }
       if (!requireLiveLogin()) return;
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker || !sticker.tenho) return;
@@ -2645,16 +3036,14 @@
 
     function renderStickerCard(sticker) {
       const stickerId = escapeJS(sticker.id);
+      const readonly = isFriendView();
       return `
         <div
-          class="sticker ${sticker.tenho ? "is-owned" : ""}"
+          class="sticker ${sticker.tenho ? "is-owned" : ""} ${readonly ? "is-readonly" : ""}"
           style="${checkboxStyle(sticker.pais)}"
-          role="checkbox"
-          aria-checked="${sticker.tenho ? "true" : "false"}"
-          tabindex="0"
-          onclick="toggleStickerOwned('${stickerId}')"
-          onkeydown="handleStickerCardKey(event, '${stickerId}')"
-          title="${sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido"}"
+          role="${readonly ? "group" : "checkbox"}"
+          ${readonly ? `aria-label="Cromo de ${escapeHTML(friendProfile)}"` : `aria-checked="${sticker.tenho ? "true" : "false"}" tabindex="0" onclick="toggleStickerOwned('${stickerId}')" onkeydown="handleStickerCardKey(event, '${stickerId}')"`}
+          title="${readonly ? `Cromo de ${escapeHTML(friendProfile)}` : (sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido")}"
         >
           <div class="sticker-state" aria-hidden="true"></div>
           <div class="sticker-info">
@@ -2665,12 +3054,12 @@
             ${sticker.tenho ? `
               <div class="duplicate-row" onclick="event.stopPropagation()">
                 <div class="duplicate-summary">Repetidos: <span class="duplicate-summary-count">${sticker.repetidos || 0}</span></div>
-                <div class="duplicate-controls" style="${duplicateInputStyle(sticker.pais)}">
+                ${readonly ? "" : `<div class="duplicate-controls" style="${duplicateInputStyle(sticker.pais)}">
                   <div class="duplicate-buttons">
                     <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido" ${sticker.repetidos ? "" : "disabled"}>-</button>
                     <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', 1)" title="Adicionar repetido">+</button>
                   </div>
-                </div>
+                </div>`}
               </div>
             ` : ""}
           </div>
@@ -2678,18 +3067,20 @@
       `;
     }
     function render() {
+      const album = currentAlbumStickers();
       updateStats();
       updateSearchControls();
       updateActiveStat();
       renderCountryTabs();
+      updateViewTitle();
 
       const term = normalizeSearch(search.value);
       const list = filteredStickers();
       const grouped = groupByCountry(list);
 
-      if (!stickers.length) {
+      if (!album.length) {
         resultSummary.textContent = "";
-        content.innerHTML = renderEmptyState("Ainda não tens ficheiro carregado. Usei dados de exemplo até carregares o teu ficheiro.");
+        content.innerHTML = renderEmptyState(isFriendView() ? `${friendProfile} ainda nao tem caderneta online.` : "Ainda não tens ficheiro carregado. Usei dados de exemplo até carregares o teu ficheiro.");
         return;
       }
 
@@ -2717,8 +3108,8 @@
           if (rank) return rank;
           return a.codigo.localeCompare(b.codigo, "pt-PT", { numeric: true });
         });
-        const ownedInCountry = stickers.filter(s => s.pais === country && s.tenho).length;
-        const totalInCountry = stickers.filter(s => s.pais === country).length;
+        const ownedInCountry = album.filter(s => s.pais === country && s.tenho).length;
+        const totalInCountry = album.filter(s => s.pais === country).length;
         const ownedPercent = totalInCountry ? Math.round((ownedInCountry / totalInCountry) * 100) : 0;
 
         return `
