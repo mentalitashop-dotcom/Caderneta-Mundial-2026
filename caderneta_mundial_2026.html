@@ -478,16 +478,6 @@
       font-weight: 700;
     }
 
-    .share-close {
-      width: 32px;
-      height: 32px;
-      padding: 0;
-      background: #f3f4f6;
-      color: var(--main);
-      font-size: 18px;
-      line-height: 1;
-    }
-
     .share-comparison {
       display: grid;
       gap: 10px;
@@ -1189,7 +1179,7 @@
             <span>Utilizador</span>
             <strong id="userMenuProfile">Conta</strong>
           </div>
-          <button type="button" role="menuitem" onclick="showMyAlbum(); closeUserMenu();">A minha caderneta</button>
+          <button type="button" role="menuitem" onclick="showMyAlbum()">A minha caderneta</button>
           <button type="button" role="menuitem" onclick="openFriendsPage()">Amigos</button>
           <button type="button" role="menuitem" onclick="openTradesPanel()">Trocas</button>
           <button type="button" role="menuitem" onclick="refreshFromUserMenu()">Atualizar online</button>
@@ -1201,14 +1191,14 @@
 
   <main>
 
-    <section class="stats">
+    <section id="albumStats" class="stats">
       <div class="stat active" data-view="all" role="button" tabindex="0" onclick="setView('all')" onkeydown="activateStat(event, 'all')"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
       <div class="stat" data-view="missing" role="button" tabindex="0" onclick="setView('missing')" onkeydown="activateStat(event, 'missing')"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
       <div class="stat" data-view="owned" role="button" tabindex="0" onclick="setView('owned')" onkeydown="activateStat(event, 'owned')"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
       <div class="stat" data-view="duplicates" role="button" tabindex="0" onclick="setView('duplicates')" onkeydown="activateStat(event, 'duplicates')"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
     </section>
 
-    <section class="toolbar">
+    <section id="albumToolbar" class="toolbar">
       <div class="search-shell">
         <input id="search" class="search" type="search" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
         <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
@@ -1227,7 +1217,6 @@
           <span>Escolhe um user para ver a caderneta dele.</span>
           <span id="liveStatusText" class="hidden"></span>
         </div>
-        <button class="share-close" type="button" onclick="toggleFriendsPanel(false)" aria-label="Fechar amigos">x</button>
       </div>
       <div class="live-controls account-controls">
         <input id="liveUsernameInput" class="live-input" type="text" maxlength="24" placeholder="Utilizador" autocomplete="username" />
@@ -1255,7 +1244,12 @@
           <strong>Trocas</strong>
           <span>Propostas entre users com base nos repetidos e nos cromos em falta.</span>
         </div>
-        <button class="share-close" type="button" onclick="toggleTradesPanel(false)" aria-label="Fechar trocas">x</button>
+      </div>
+      <div class="live-controls">
+        <select id="tradeFriendSelect" class="live-input" onchange="selectTradeFriend(this.value)">
+          <option value="">Escolhe um amigo</option>
+        </select>
+        <button class="secondary" type="button" onclick="refreshLiveNow()">Atualizar</button>
       </div>
       <div id="tradeSuggestions" aria-live="polite"></div>
       <div class="share-panel-title">
@@ -1265,7 +1259,7 @@
       <div id="tradeList" class="trade-list" aria-live="polite"></div>
     </section>
 
-    <section class="country-tabs-wrap" aria-label="Países da caderneta">
+    <section id="countryTabsWrap" class="country-tabs-wrap" aria-label="Países da caderneta">
       <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver países anteriores">‹</button>
       <div class="country-tabs-viewport">
         <div id="countryTabs" class="country-tabs"></div>
@@ -1285,6 +1279,7 @@
     const AUTH_LOCK_MS = 1200;
 
     let stickers = [];
+    let activePage = "album";
     let currentView = "all";
     let selectedCountry = "all";
     let saveTimer = null;
@@ -1305,6 +1300,9 @@
     let inviteFromCurrentLink = false;
 
     const content = document.getElementById("content");
+    const albumStats = document.getElementById("albumStats");
+    const albumToolbar = document.getElementById("albumToolbar");
+    const countryTabsWrap = document.getElementById("countryTabsWrap");
     const countryTabs = document.getElementById("countryTabs");
     const countryScrollLeft = document.getElementById("countryScrollLeft");
     const countryScrollRight = document.getElementById("countryScrollRight");
@@ -1320,6 +1318,7 @@
     const liveFriendSelect = document.getElementById("liveFriendSelect");
     const liveComparison = document.getElementById("liveComparison");
     const tradePanel = document.getElementById("tradePanel");
+    const tradeFriendSelect = document.getElementById("tradeFriendSelect");
     const tradeSuggestions = document.getElementById("tradeSuggestions");
     const tradeList = document.getElementById("tradeList");
     const liveLogoutButton = document.getElementById("liveLogoutButton");
@@ -1686,12 +1685,17 @@
       saveStatus.textContent = text;
     }
 
-    function isFriendView() {
+    function hasSelectedFriend() {
       return Boolean(friendProfile);
     }
 
+    function isFriendView() {
+      return activePage === "friends" && hasSelectedFriend();
+    }
+
     function currentAlbumStickers() {
-      return isFriendView() ? friendStickers : stickers;
+      if (activePage === "friends") return hasSelectedFriend() ? friendStickers : [];
+      return stickers;
     }
 
     function currentAlbumLabel() {
@@ -1736,9 +1740,38 @@
     }
 
     function updateViewTitle() {
-      currentViewTitle.textContent = isFriendView()
-        ? `${friendProfile} - ${viewTitleText(currentView)}`
-        : viewTitleText(currentView);
+      if (activePage === "friends") {
+        currentViewTitle.textContent = hasSelectedFriend()
+          ? `${friendProfile} - ${viewTitleText(currentView)}`
+          : "Amigos";
+        return;
+      }
+
+      if (activePage === "trades") {
+        currentViewTitle.textContent = "Trocas";
+        return;
+      }
+
+      currentViewTitle.textContent = viewTitleText(currentView);
+    }
+
+    function updatePageVisibility() {
+      const showAlbum = activePage === "album" || (activePage === "friends" && hasSelectedFriend());
+      albumStats?.classList.toggle("hidden", !showAlbum);
+      albumToolbar?.classList.toggle("hidden", !showAlbum);
+      resultSummary?.classList.toggle("hidden", !showAlbum);
+      countryTabsWrap?.classList.toggle("hidden", !showAlbum);
+      content?.classList.toggle("hidden", !showAlbum);
+      livePanel?.classList.toggle("hidden", activePage !== "friends");
+      tradePanel?.classList.toggle("hidden", activePage !== "trades");
+      updateViewTitle();
+    }
+
+    function setActivePage(page) {
+      activePage = page;
+      closeUserMenu();
+      updatePageVisibility();
+      pulseViewTitle();
     }
 
     function updateActiveStat() {
@@ -2150,42 +2183,54 @@
       if (userMenuInitial) userMenuInitial.textContent = userInitial(name);
     }
 
+    function syncFriendSelects(value = friendProfile) {
+      if (liveFriendSelect) liveFriendSelect.value = value || "";
+      if (tradeFriendSelect) tradeFriendSelect.value = value || "";
+    }
+
     function toggleFriendsPanel(forceOpen) {
-      if (!livePanel) return;
-
-      const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : livePanel.classList.contains("hidden");
-      livePanel.classList.toggle("hidden", !shouldOpen);
-      closeUserMenu();
-
-      if (shouldOpen) {
-        loadLiveProfiles().catch(() => {});
-        liveComparison.innerHTML = isFriendView()
-          ? `<div class="comparison-empty">A ver a caderneta de ${escapeHTML(friendProfile)}.</div>`
-          : `<div class="comparison-empty">Escolhe um user para abrir a caderneta dele.</div>`;
-        setTimeout(() => liveFriendSelect?.focus(), 0);
+      if (forceOpen === false) {
+        showMyAlbum();
+        return;
       }
+
+      openFriendsPage();
     }
 
     function openFriendsPage() {
-      toggleFriendsPanel(true);
+      activePage = "friends";
+      closeUserMenu();
+      loadLiveProfiles().catch(() => {});
+      liveComparison.innerHTML = hasSelectedFriend()
+        ? `<div class="comparison-empty">A ver a caderneta de ${escapeHTML(friendProfile)}.</div>`
+        : `<div class="comparison-empty">Escolhe um user para abrir a caderneta dele.</div>`;
+      render();
+      setTimeout(() => liveFriendSelect?.focus(), 0);
     }
 
     function showMyAlbum() {
+      activePage = "album";
       friendProfile = "";
       friendStickers = [];
       friendUpdatedAt = "";
-      if (liveFriendSelect) liveFriendSelect.value = "";
+      syncFriendSelects("");
       if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
       liveComparison.innerHTML = `<div class="comparison-empty">Voltaste a tua caderneta.</div>`;
       setSaveStatus("A ver a tua caderneta");
+      closeUserMenu();
       render();
       renderTradePanel();
     }
 
-    async function selectLiveFriend(profile) {
+    async function loadFriendAlbum(profile, page = activePage) {
       const friend = String(profile || "").trim();
       if (!friend) {
-        showMyAlbum();
+        friendProfile = "";
+        friendStickers = [];
+        friendUpdatedAt = "";
+        syncFriendSelects("");
+        render();
+        renderTradePanel();
         return;
       }
 
@@ -2194,7 +2239,9 @@
         return;
       }
 
-      livePanel.classList.remove("hidden");
+      activePage = page;
+      updatePageVisibility();
+      syncFriendSelects(friend);
       liveComparison.innerHTML = `<div class="comparison-empty">A carregar a caderneta de ${escapeHTML(friend)}...</div>`;
       setSaveStatus(`A carregar ${friend}`);
 
@@ -2217,12 +2264,20 @@
       }
     }
 
+    async function selectLiveFriend(profile) {
+      await loadFriendAlbum(profile, "friends");
+    }
+
+    async function selectTradeFriend(profile) {
+      await loadFriendAlbum(profile, "trades");
+    }
+
     function stickerTradeLabel(sticker) {
       return `${sticker.pais} ${sticker.codigo} - ${sticker.nome}`;
     }
 
     function possibleTradeGives() {
-      if (!isFriendView()) return [];
+      if (!hasSelectedFriend()) return [];
       const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
       return stickers.filter(sticker => {
         const friendSticker = friendById.get(sticker.id);
@@ -2231,7 +2286,7 @@
     }
 
     function possibleTradeReceives() {
-      if (!isFriendView()) return [];
+      if (!hasSelectedFriend()) return [];
       const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
       return friendStickers.filter(sticker => {
         const mine = mineById.get(sticker.id);
@@ -2246,10 +2301,10 @@
     function renderTradeSuggestions() {
       if (!tradeSuggestions) return;
 
-      if (!isFriendView()) {
+      if (!hasSelectedFriend()) {
         tradeSuggestions.innerHTML = `
           <div class="comparison-empty">
-            Abre a caderneta de um amigo para veres trocas possiveis.
+            Escolhe um amigo para veres apenas os repetidos que podem entrar numa troca.
           </div>
         `;
         return;
@@ -2269,6 +2324,16 @@
       tradeSuggestions.innerHTML = `
         <div class="trade-builder">
           <div class="trade-card-title">Nova proposta para ${escapeHTML(friendProfile)}</div>
+          <div class="trade-select-grid">
+            <div class="trade-card">
+              <div class="trade-card-title">Os teus repetidos que ${escapeHTML(friendProfile)} precisa</div>
+              <div class="trade-lines">${tradeStickerList(gives)}</div>
+            </div>
+            <div class="trade-card">
+              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu precisas</div>
+              <div class="trade-lines">${tradeStickerList(receives)}</div>
+            </div>
+          </div>
           <div class="trade-select-grid">
             <div class="trade-field">
               <label for="tradeGiveSelect">Tu das</label>
@@ -2360,7 +2425,7 @@
     }
 
     async function proposeTrade() {
-      if (!isFriendView()) {
+      if (!hasSelectedFriend()) {
         setSaveStatus("Escolhe primeiro um amigo");
         return;
       }
@@ -2409,18 +2474,22 @@
     }
 
     function toggleTradesPanel(forceOpen) {
-      if (!tradePanel) return;
-      const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : tradePanel.classList.contains("hidden");
-      tradePanel.classList.toggle("hidden", !shouldOpen);
-      closeUserMenu();
-      if (shouldOpen) {
-        renderTradePanel();
-        loadTradeRequests().catch(() => {});
+      if (forceOpen === false) {
+        showMyAlbum();
+        return;
       }
+
+      openTradesPanel();
     }
 
     function openTradesPanel() {
-      toggleTradesPanel(true);
+      activePage = "trades";
+      closeUserMenu();
+      updatePageVisibility();
+      syncFriendSelects();
+      loadLiveProfiles().catch(() => {});
+      renderTradePanel();
+      loadTradeRequests().catch(() => {});
     }
 
     function refreshFromUserMenu() {
@@ -2526,6 +2595,7 @@
       liveRegisterButton.disabled = true;
       liveLogoutButton.classList.toggle("hidden", !loggedIn);
       liveFriendSelect.disabled = !loggedIn;
+      if (tradeFriendSelect) tradeFriendSelect.disabled = !loggedIn;
 
       authLoginUsernameInput.disabled = loggedIn || !liveEnabled;
       authLoginPasswordInput.disabled = loggedIn || !liveEnabled;
@@ -2534,8 +2604,13 @@
       authRegisterPasswordInput.disabled = loggedIn || !liveEnabled || !inviteValid;
       authCreateAccountButton.disabled = !liveEnabled || !inviteValid;
 
-      if (!loggedIn && livePanel) livePanel.classList.add("hidden");
+      if (!loggedIn) {
+        activePage = "album";
+        if (livePanel) livePanel.classList.add("hidden");
+        if (tradePanel) tradePanel.classList.add("hidden");
+      }
       updateUserMenu();
+      updatePageVisibility();
     }
 
     async function validateInviteToken(token) {
@@ -2574,9 +2649,9 @@
     }
 
     async function loadLiveProfiles() {
-      if (!liveEnabled || !liveFriendSelect || !liveProfile) return;
+      if (!liveEnabled || !liveProfile) return;
 
-      const selected = friendProfile || liveFriendSelect.value;
+      const selected = friendProfile || liveFriendSelect?.value || tradeFriendSelect?.value || "";
       const response = await fetch("/api/live/profiles", { cache: "no-store" });
       if (!response.ok) return;
 
@@ -2585,12 +2660,14 @@
         .map(item => typeof item === "string" ? { profile: item } : item)
         .filter(item => item && item.profile && item.profile !== liveProfile);
 
-      liveFriendSelect.innerHTML = [
+      const options = [
         `<option value="">${profiles.length ? "Escolhe um amigo" : "Ainda nao ha amigos live"}</option>`,
         ...profiles.map(item => `<option value="${escapeHTML(item.profile)}">${escapeHTML(item.profile)}</option>`)
       ].join("");
 
-      if (profiles.some(item => item.profile === selected)) liveFriendSelect.value = selected;
+      if (liveFriendSelect) liveFriendSelect.innerHTML = options;
+      if (tradeFriendSelect) tradeFriendSelect.innerHTML = options;
+      if (profiles.some(item => item.profile === selected)) syncFriendSelects(selected);
     }
 
     async function writeLiveStateNow() {
@@ -2791,7 +2868,7 @@
       }
 
       try {
-        if (isFriendView()) {
+        if (hasSelectedFriend() && activePage !== "album") {
           const activeFriend = friendProfile;
           const data = await fetchLiveState(activeFriend);
           friendUpdatedAt = data.updatedAt || friendUpdatedAt;
@@ -2799,9 +2876,11 @@
           if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
           render();
           renderTradePanel();
-          liveComparison.innerHTML = friendStickers.length
-            ? `<div class="comparison-empty">Caderneta de ${escapeHTML(activeFriend)} atualizada.</div>`
-            : `<div class="comparison-empty">${escapeHTML(activeFriend)} ainda nao tem caderneta online.</div>`;
+          if (activePage === "friends") {
+            liveComparison.innerHTML = friendStickers.length
+              ? `<div class="comparison-empty">Caderneta de ${escapeHTML(activeFriend)} atualizada.</div>`
+              : `<div class="comparison-empty">${escapeHTML(activeFriend)} ainda nao tem caderneta online.</div>`;
+          }
           setSaveStatus(`Caderneta de ${activeFriend} atualizada`);
         } else {
           const data = await fetchLiveState();
@@ -3073,6 +3152,7 @@
       updateActiveStat();
       renderCountryTabs();
       updateViewTitle();
+      updatePageVisibility();
 
       const term = normalizeSearch(search.value);
       const list = filteredStickers();
