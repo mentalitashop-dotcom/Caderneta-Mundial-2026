@@ -284,11 +284,22 @@ function userProgressDoc(user, sticker, now, source = "base") {
   };
 }
 
+async function ensureUsernameIndex(db) {
+  const users = db.collection(COLLECTIONS.users);
+  const indexes = await users.indexes();
+  const existing = indexes.find(index => {
+    const keys = Object.keys(index.key || {});
+    return keys.length === 1 && index.key.usernameLower === 1;
+  });
+
+  if (existing?.unique) return;
+  if (existing?.name) await users.dropIndex(existing.name);
+
+  await users.createIndex({ usernameLower: 1 }, { unique: true });
+}
+
 async function ensureIndexes(db) {
-  await db.collection(COLLECTIONS.users).createIndex(
-    { usernameLower: 1 },
-    { unique: true, partialFilterExpression: { usernameLower: { $type: "string" } } }
-  );
+  await ensureUsernameIndex(db);
   await db.collection(COLLECTIONS.users).createIndex({ role: 1, verified: 1 });
   await db.collection(COLLECTIONS.sessions).createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
   await db.collection(COLLECTIONS.sessions).createIndex({ userId: 1 });
