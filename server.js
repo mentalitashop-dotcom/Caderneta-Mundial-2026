@@ -15,6 +15,7 @@ const SESSION_DAYS = 30;
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
+const APP_VERSION = "1.0.1";
 const IS_RENDER = process.env.RENDER === "true";
 const IS_PRODUCTION = process.env.NODE_ENV === "production" || IS_RENDER;
 const ONLINE_REQUIRED = process.env.ONLINE_REQUIRED !== "false";
@@ -1046,6 +1047,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, healthy ? 200 : 503, {
         ok: healthy,
         service: "caderneta-mundial-2026",
+        version: APP_VERSION,
         onlineReady: config.ok,
         onlineRequired: config.onlineRequired,
         missingConfig: config.missing,
@@ -1102,7 +1104,7 @@ const server = http.createServer(async (req, res) => {
 assertOnlineConfig();
 
 server.listen(PORT, () => {
-  console.log(`Caderneta Mundial 2026 online na porta ${PORT}`);
+  console.log(`Caderneta Mundial 2026 v${APP_VERSION} online na porta ${PORT}`);
   console.log(`Base de dados MongoDB: ${MONGODB_DB}`);
 });
 
