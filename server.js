@@ -15,7 +15,7 @@ const SESSION_DAYS = 30;
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.0.2";
 const IS_RENDER = process.env.RENDER === "true";
 const IS_PRODUCTION = process.env.NODE_ENV === "production" || IS_RENDER;
 const ONLINE_REQUIRED = process.env.ONLINE_REQUIRED !== "false";
@@ -1042,10 +1042,26 @@ const server = http.createServer(async (req, res) => {
 
     if (url.pathname === "/api/health" || url.pathname === "/healthz") {
       if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
+      const config = onlineConfigStatus();
+      return sendJson(res, 200, {
+        ok: true,
+        service: "caderneta-mundial-2026",
+        version: APP_VERSION,
+        onlineConfigured: config.ok,
+        onlineRequired: config.onlineRequired,
+        missingConfig: config.missing,
+        databaseName: config.databaseName,
+        registrationConfigured: config.registrationConfigured,
+        uptimeSeconds: Math.round(process.uptime())
+      });
+    }
+
+    if (url.pathname === "/api/ready") {
+      if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
       const config = await onlineHealthStatus();
-      const healthy = config.ok || !ONLINE_REQUIRED;
-      return sendJson(res, healthy ? 200 : 503, {
-        ok: healthy,
+      const ready = config.ok || !ONLINE_REQUIRED;
+      return sendJson(res, ready ? 200 : 503, {
+        ok: ready,
         service: "caderneta-mundial-2026",
         version: APP_VERSION,
         onlineReady: config.ok,
