@@ -4,8 +4,7 @@ Caderneta Mundial 2026
 Como abrir:
 1. Extrai o zip todo para uma pasta.
 2. Abre o ficheiro abrir_caderneta.bat.
-3. A app abre no browser em http://localhost:1312.
-4. Quando fechares a pagina da app, a janela do servidor fecha sozinha.
+3. Quando fechares a pagina da app, a janela do servidor fecha sozinha.
 
 Importante:
 - Nao precisas de instalar Node.js. Esta pasta ja leva um Node portatil em runtime\node.exe.
