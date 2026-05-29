@@ -285,7 +285,10 @@ function userProgressDoc(user, sticker, now, source = "base") {
 }
 
 async function ensureIndexes(db) {
-  await db.collection(COLLECTIONS.users).createIndex({ usernameLower: 1 }, { unique: true });
+  await db.collection(COLLECTIONS.users).createIndex(
+    { usernameLower: 1 },
+    { unique: true, partialFilterExpression: { usernameLower: { $type: "string" } } }
+  );
   await db.collection(COLLECTIONS.users).createIndex({ role: 1, verified: 1 });
   await db.collection(COLLECTIONS.sessions).createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
   await db.collection(COLLECTIONS.sessions).createIndex({ userId: 1 });
@@ -337,12 +340,21 @@ async function getMongoDb() {
       const db = client.db(MONGODB_DB);
       await normalizeExistingUsersForIndexes(db);
       await ensureIndexes(db);
-      await syncBaseAlbum(db);
       return db;
     })();
   }
 
   return mongoDbPromise;
+}
+
+async function openMongoDbForRequest(res) {
+  try {
+    return await getMongoDb();
+  } catch (error) {
+    console.error("Erro ao ligar a MongoDB:", error);
+    sendJson(res, 503, { error: "Nao foi possivel ligar a MongoDB. Confirma a variavel MONGODB_URI no Render." });
+    return null;
+  }
 }
 
 function loadBaseStickersFromFile() {
@@ -443,7 +455,14 @@ async function getAuthUser(req) {
   const token = parseCookies(req)[COOKIE_NAME];
   if (!token) return null;
 
-  const db = await getMongoDb();
+  let db;
+  try {
+    db = await getMongoDb();
+  } catch (error) {
+    console.error("Erro ao validar sessao MongoDB:", error);
+    return null;
+  }
+
   const session = await db.collection(COLLECTIONS.sessions).findOne({ _id: tokenHash(token) });
   if (!session || new Date(session.expiresAt) <= new Date()) return null;
 
@@ -658,8 +677,6 @@ async function handleAuthRoute(req, res, url) {
   if (!url.pathname.startsWith("/api/auth/")) return false;
   if (!MONGODB_URI) return sendJson(res, 503, { error: "Login online nao configurado" });
 
-  const db = await getMongoDb();
-
   if (url.pathname === "/api/auth/register" && req.method === "POST") {
     const payload = await readJson(req);
     const username = cleanUsername(payload.username);
@@ -683,6 +700,9 @@ async function handleAuthRoute(req, res, url) {
       return sendJson(res, 400, { error: "A password deve ter entre 4 e 72 caracteres." });
     }
 
+    const db = await openMongoDbForRequest(res);
+    if (!db) return;
+
     const salt = crypto.randomBytes(16).toString("hex");
     const now = new Date();
     const user = {
@@ -700,9 +720,6 @@ async function handleAuthRoute(req, res, url) {
 
     try {
       await db.collection(COLLECTIONS.users).insertOne(user);
-      await ensureUserStickerRows(db, publicUser(user));
-      const stickers = await getUserStickerState(db, publicUser(user));
-      await saveSnapshot(db, publicUser(user), stickers, now.toISOString());
     } catch (error) {
       if (error && error.code === 11000) {
         return sendJson(res, 409, { error: "Esse utilizador ja existe." });
@@ -720,6 +737,9 @@ async function handleAuthRoute(req, res, url) {
     const payload = await readJson(req);
     const username = cleanUsername(payload.username);
     const password = String(payload.password || "");
+    const db = await openMongoDbForRequest(res);
+    if (!db) return;
+
     let user = await db.collection(COLLECTIONS.users).findOne({ _id: userKey(username) });
     user = await normalizeUserAccount(db, user);
 
@@ -740,6 +760,8 @@ async function handleAuthRoute(req, res, url) {
   }
 
   if (url.pathname === "/api/auth/logout" && req.method === "POST") {
+    const db = await openMongoDbForRequest(res);
+    if (!db) return;
     const token = parseCookies(req)[COOKIE_NAME];
     if (token) await db.collection(COLLECTIONS.sessions).deleteOne({ _id: tokenHash(token) });
     return sendJson(res, 200, { ok: true }, { "Set-Cookie": clearSessionCookie() });
@@ -765,7 +787,8 @@ async function handleLiveRoute(req, res, url) {
   const user = await requireVerifiedUser(req, res);
   if (!user) return;
 
-  const db = await getMongoDb();
+  const db = await openMongoDbForRequest(res);
+  if (!db) return;
 
   if (url.pathname === "/api/live/profiles") {
     const users = await db.collection(COLLECTIONS.users)
@@ -851,7 +874,8 @@ const server = http.createServer(async (req, res) => {
       if (!user) return;
 
       if (req.method === "GET") {
-        const db = await getMongoDb();
+        const db = await openMongoDbForRequest(res);
+        if (!db) return;
         const stickers = await getAlbumStickers(db);
         return send(res, 200, stickersToCSV(stickers), "text/plain; charset=utf-8");
       }

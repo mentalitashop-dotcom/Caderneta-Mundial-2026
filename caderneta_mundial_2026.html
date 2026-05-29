@@ -202,6 +202,41 @@
       box-shadow: 0 0 0 4px rgba(17,24,39,.08);
     }
 
+    .password-field {
+      position: relative;
+      width: 100%;
+    }
+
+    .password-field .auth-input,
+    .password-field .live-input {
+      width: 100%;
+      min-width: 0;
+      padding-right: 48px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      top: 50%;
+      right: 6px;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      transform: translateY(-50%);
+      display: grid;
+      place-items: center;
+      background: #f3f4f6;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .password-toggle:hover,
+    .password-toggle.is-visible {
+      background: #111827;
+      color: #fff;
+    }
+
     .auth-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -426,6 +461,17 @@
     .live-input:focus {
       border-color: var(--main);
       box-shadow: 0 0 0 4px rgba(17, 24, 39, .08);
+    }
+
+    .live-controls .password-field {
+      min-width: 210px;
+      flex: 1 1 210px;
+    }
+
+    .live-controls .password-toggle {
+      width: 32px;
+      height: 32px;
+      right: 5px;
     }
 
     .live-panel .share-comparison {
@@ -878,7 +924,10 @@
         <p id="authLoginStatusText" class="auth-copy">Entra com o teu username e password.</p>
         <div class="auth-form">
           <input id="authLoginUsernameInput" class="auth-input" type="text" maxlength="24" placeholder="Username" autocomplete="username" />
-          <input id="authLoginPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" />
+          <div class="password-field">
+            <input id="authLoginPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" />
+            <button class="password-toggle" type="button" onclick="togglePasswordVisibility('authLoginPasswordInput', this)" aria-label="Mostrar password" title="Mostrar password">&#128065;</button>
+          </div>
           <div class="auth-actions auth-actions-single">
             <button id="authLoginButton" type="button" onclick="loginLiveAccount()">Login</button>
           </div>
@@ -886,12 +935,15 @@
         </div>
       </div>
       <div class="auth-view auth-register">
-        <div class="auth-kicker">Convite aceite</div>
+        <div class="auth-kicker">Caderneta Mundial 2026</div>
         <h1 class="auth-title">Registo</h1>
-        <p id="authRegisterStatusText" class="auth-copy">Cria a tua conta. Depois voltas ao login para entrar.</p>
+        <p id="authRegisterStatusText" class="auth-copy">Convite aceite. Cria a tua conta. Depois voltas ao login para entrar.</p>
         <div class="auth-form">
           <input id="authRegisterUsernameInput" class="auth-input" type="text" maxlength="24" placeholder="Username" autocomplete="username" />
-          <input id="authRegisterPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="new-password" />
+          <div class="password-field">
+            <input id="authRegisterPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="new-password" />
+            <button class="password-toggle" type="button" onclick="togglePasswordVisibility('authRegisterPasswordInput', this)" aria-label="Mostrar password" title="Mostrar password">&#128065;</button>
+          </div>
           <div class="auth-actions auth-actions-single">
             <button id="authCreateAccountButton" type="button" onclick="registerLiveAccount()">Criar conta</button>
           </div>
@@ -954,7 +1006,10 @@
       </div>
       <div class="live-controls">
         <input id="liveUsernameInput" class="live-input" type="text" maxlength="24" placeholder="Utilizador" autocomplete="username" />
-        <input id="livePasswordInput" class="live-input" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" />
+        <div class="password-field">
+          <input id="livePasswordInput" class="live-input" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" />
+          <button class="password-toggle" type="button" onclick="togglePasswordVisibility('livePasswordInput', this)" aria-label="Mostrar password" title="Mostrar password">&#128065;</button>
+        </div>
         <button id="liveLoginButton" type="button" onclick="loginLiveAccount()">Entrar</button>
         <button id="liveRegisterButton" class="secondary" type="button" onclick="registerLiveAccount()">Criar conta</button>
         <button id="liveLogoutButton" class="secondary hidden" type="button" onclick="logoutLiveAccount()">Sair</button>
@@ -1944,6 +1999,20 @@
       };
     }
 
+    function togglePasswordVisibility(inputId, button) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+
+      const showPassword = input.type === "password";
+      input.type = showPassword ? "text" : "password";
+
+      const label = showPassword ? "Esconder password" : "Mostrar password";
+      button.setAttribute("aria-label", label);
+      button.title = label;
+      button.classList.toggle("is-visible", showPassword);
+      input.focus();
+    }
+
     function updateLiveLoginUI() {
       const loggedIn = Boolean(liveProfile);
 
@@ -1951,6 +2020,7 @@
       livePasswordInput.disabled = !liveEnabled;
       livePasswordInput.value = loggedIn ? "" : livePasswordInput.value;
       livePasswordInput.classList.toggle("hidden", loggedIn);
+      livePasswordInput.closest(".password-field")?.classList.toggle("hidden", loggedIn);
       liveLoginButton.classList.toggle("hidden", loggedIn);
       liveRegisterButton.classList.toggle("hidden", true);
       liveLoginButton.disabled = !liveEnabled;
@@ -2267,7 +2337,7 @@
         liveProfile = "";
         if (inviteValid) {
           setAuthMode("register");
-          authRegisterStatusText.textContent = "Convite aceite. Cria a tua conta.";
+          authRegisterStatusText.textContent = "Convite aceite. Cria a tua conta. Depois voltas ao login para entrar.";
           setAuthMessage("", "register");
           setSaveStatus("Registo por convite");
         } else {
