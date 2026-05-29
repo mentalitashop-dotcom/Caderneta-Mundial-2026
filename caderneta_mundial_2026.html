@@ -110,7 +110,109 @@
       background: var(--danger);
     }
 
-    main {
+
+    body.auth-locked header,
+    body.auth-locked main,
+    body.auth-locked footer {
+      display: none;
+    }
+
+    .auth-screen {
+      min-height: 100vh;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: #111827;
+      color: #ffffff;
+    }
+
+    body.auth-locked .auth-screen {
+      display: grid;
+    }
+
+    .auth-card {
+      width: min(440px, 100%);
+      background: #ffffff;
+      color: #111827;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 28px 70px rgba(0,0,0,.34);
+    }
+
+    .auth-view {
+      display: none;
+      gap: 14px;
+    }
+
+    body.auth-mode-login .auth-login,
+    body.auth-mode-denied .auth-denied {
+      display: grid;
+    }
+
+    .auth-kicker {
+      color: #6b7280;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .auth-title {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .auth-title.denied {
+      font-size: clamp(30px, 7vw, 54px);
+      text-align: center;
+    }
+
+    .auth-copy {
+      margin: 0;
+      color: #4b5563;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .auth-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .auth-input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 13px 15px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      outline: none;
+      color: #111827;
+      background: #fff;
+    }
+
+    .auth-input:focus {
+      border-color: #111827;
+      box-shadow: 0 0 0 4px rgba(17,24,39,.08);
+    }
+
+    .auth-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .auth-message {
+      min-height: 20px;
+      color: #4b5563;
+      font-size: 13px;
+      font-weight: 800;
+    }    main {
       max-width: 1150px;
       margin: 0 auto;
       padding: 22px 18px 60px;
@@ -764,7 +866,28 @@
       }
     }  </style>
 </head>
-<body>
+<body class="auth-locked auth-mode-login">
+  <section id="authGate" class="auth-screen" aria-live="polite">
+    <div class="auth-card">
+      <div class="auth-view auth-login">
+        <div class="auth-kicker">Caderneta Mundial 2026</div>
+        <h1 class="auth-title">Entrar na caderneta</h1>
+        <p id="authStatusText" class="auth-copy">Usa o teu utilizador e password. O convite fica guardado pelo link.</p>
+        <div class="auth-form">
+          <input id="authUsernameInput" class="auth-input" type="text" maxlength="24" placeholder="Username" autocomplete="username" />
+          <input id="authPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" />
+          <div class="auth-actions">
+            <button id="authLoginButton" type="button" onclick="loginLiveAccount()">Entrar</button>
+            <button id="authRegisterButton" class="secondary" type="button" onclick="registerLiveAccount()">Criar conta</button>
+          </div>
+          <div id="authMessage" class="auth-message"></div>
+        </div>
+      </div>
+      <div class="auth-view auth-denied">
+        <h1 class="auth-title denied">ESTA APP NÃO FOI CRIADA PARA SI</h1>
+      </div>
+    </div>
+  </section>
   <header>
     <div class="topbar">
       <div class="brand">Caderneta Mundial 2026</div>
@@ -810,7 +933,7 @@
     <section id="livePanel" class="share-panel live-panel hidden" aria-label="Login e modo live">
       <div class="share-panel-head">
         <div class="share-panel-title">
-          <strong>Modo live</strong>
+          <strong>Modo online</strong>
           <span id="liveStatusText">Cria conta ou entra para sincronizar com os teus amigos.</span>
         </div>
       </div>
@@ -865,6 +988,8 @@
     let liveProfile = "";
     let liveUpdatedAt = "";
     let liveRefreshTimer = null;
+    let inviteToken = "";
+    let inviteValid = false;
 
     const content = document.getElementById("content");
     const countryTabs = document.getElementById("countryTabs");
@@ -887,7 +1012,13 @@
     const liveLogoutButton = document.getElementById("liveLogoutButton");
     const liveLoginButton = document.getElementById("liveLoginButton");
     const liveRegisterButton = document.getElementById("liveRegisterButton");
-    const saveStatus = document.getElementById("saveStatus");
+    const authGate = document.getElementById("authGate");
+    const authStatusText = document.getElementById("authStatusText");
+    const authMessage = document.getElementById("authMessage");
+    const authUsernameInput = document.getElementById("authUsernameInput");
+    const authPasswordInput = document.getElementById("authPasswordInput");
+    const authLoginButton = document.getElementById("authLoginButton");
+    const authRegisterButton = document.getElementById("authRegisterButton");    const saveStatus = document.getElementById("saveStatus");
 
     const currentViewTitle = document.getElementById("currentViewTitle");
 
@@ -1221,20 +1352,7 @@
     }
 
     async function writeTxtFileNow() {
-      if (!serverAvailable) {
-        setSaveStatus("Ficheiro lido com sucesso");
-        return;
-      }
-
-      setSaveStatus("A gravar alterações...");
-      const response = await fetch("/api/cromos", {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: stickersToCSV()
-      });
-
-      if (!response.ok) throw new Error("Nao foi possivel gravar cromos.txt");
-      setSaveStatus("Ficheiro lido com sucesso");
+      setSaveStatus("O modo local foi desativado. Entra para sincronizar online.");
     }
 
     function saveState() {
@@ -1250,7 +1368,7 @@
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         persistStateNow().catch(error => {
-          setSaveStatus(liveEnabled && liveProfile ? "Erro ao sincronizar live" : "Erro ao gravar alteracoes");
+          setSaveStatus(liveEnabled && liveProfile ? "Erro ao sincronizar online" : "Erro ao gravar alteracoes");
           console.error(error);
         });
       }, 150);
@@ -1747,21 +1865,76 @@
       return String(value || "").trim().replace(/\s+/g, "").slice(0, 24);
     }
 
+    function readInviteToken() {
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = params.get("convite") || params.get("invite") || params.get("pin") || "";
+
+      if (fromUrl) {
+        localStorage.setItem("caderneta_invite_token", fromUrl);
+        params.delete("convite");
+        params.delete("invite");
+        params.delete("pin");
+        const cleanQuery = params.toString();
+        const cleanUrl = `${window.location.pathname}${cleanQuery ? `?${cleanQuery}` : ""}${window.location.hash}`;
+        window.history.replaceState({}, "", cleanUrl);
+        return fromUrl;
+      }
+
+      return localStorage.getItem("caderneta_invite_token") || "";
+    }
+
+    function setAuthMode(mode) {
+      document.body.classList.toggle("auth-locked", mode !== "app");
+      document.body.classList.toggle("auth-mode-login", mode === "login");
+      document.body.classList.toggle("auth-mode-denied", mode === "denied");
+      if (authGate) authGate.setAttribute("aria-hidden", mode === "app" ? "true" : "false");
+    }
+
+    function setAuthMessage(text) {
+      if (authMessage) authMessage.textContent = text || "";
+      if (authStatusText && text) authStatusText.textContent = text;
+    }
+
     function liveCredentials() {
+      const useGate = document.body.classList.contains("auth-locked");
+      const usernameInput = useGate ? authUsernameInput : liveUsernameInput;
+      const passwordInput = useGate ? authPasswordInput : livePasswordInput;
+
       return {
-        username: cleanLiveProfileName(liveUsernameInput.value),
-        password: livePasswordInput.value
+        username: cleanLiveProfileName(usernameInput.value),
+        password: passwordInput.value,
+        inviteToken
       };
     }
 
     function updateLiveLoginUI() {
       const loggedIn = Boolean(liveProfile);
+      const canUseInvite = Boolean(inviteValid || loggedIn);
+
+      liveUsernameInput.disabled = loggedIn || !liveEnabled;
+      livePasswordInput.disabled = !liveEnabled;
       livePasswordInput.value = loggedIn ? "" : livePasswordInput.value;
       livePasswordInput.classList.toggle("hidden", loggedIn);
+      liveLoginButton.classList.toggle("hidden", loggedIn);
+      liveRegisterButton.classList.toggle("hidden", loggedIn);
+      liveLoginButton.disabled = !liveEnabled;
+      liveRegisterButton.disabled = !liveEnabled || !canUseInvite;
       liveLogoutButton.classList.toggle("hidden", !loggedIn);
       liveFriendSelect.disabled = !loggedIn;
+
+      authUsernameInput.disabled = loggedIn || !liveEnabled || !canUseInvite;
+      authPasswordInput.disabled = loggedIn || !liveEnabled || !canUseInvite;
+      authLoginButton.disabled = !liveEnabled || !canUseInvite;
+      authRegisterButton.disabled = !liveEnabled || !canUseInvite;
     }
 
+    async function validateInviteToken(token) {
+      if (!token) return false;
+
+      const response = await fetch(`/api/auth/invite?convite=${encodeURIComponent(token)}`, { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      return Boolean(response.ok && data.valid);
+    }
     async function authRequest(path, payload = {}) {
       const response = await fetch(path, {
         method: "POST",
@@ -1814,21 +1987,22 @@
 
       if (!response.ok) throw new Error(data.error || "Nao foi possivel sincronizar live");
       liveUpdatedAt = data.updatedAt || liveUpdatedAt;
-      liveStatusText.textContent = `Ligado como ${liveProfile}. Sincronizacao live ativa.`;
-      setSaveStatus("Live sincronizado");
+      liveStatusText.textContent = `Ligado como ${liveProfile}. Sincronizacao online ativa.`;
+      setSaveStatus("Online sincronizado");
       loadLiveProfiles().catch(() => {});
     }
 
     async function persistStateNow() {
-      if (liveEnabled) {
-        if (liveProfile) return writeLiveStateNow();
-        setSaveStatus("Entra para sincronizar live");
-        return;
-      }
-
-      return writeTxtFileNow();
+      if (liveEnabled && liveProfile) return writeLiveStateNow();
+      setSaveStatus(liveEnabled ? "Entra para sincronizar online" : "Modo online indisponivel");
     }
 
+    function requireLiveLogin() {
+      if (liveProfile) return true;
+      setSaveStatus(liveEnabled ? "Entra para alterar a caderneta" : "Modo online indisponivel");
+      if (liveUsernameInput && !liveUsernameInput.disabled) liveUsernameInput.focus();
+      return false;
+    }
     function startLiveRefresh() {
       if (liveRefreshTimer) clearInterval(liveRefreshTimer);
       liveRefreshTimer = setInterval(refreshLiveNow, 4000);
@@ -1849,8 +2023,8 @@
         await writeLiveStateNow();
       }
 
-      liveStatusText.textContent = `Ligado como ${user.username}. Sincronizacao live ativa.`;
-      setSaveStatus("Live ligado com sucesso");
+      liveStatusText.textContent = `Ligado como ${user.username}. Sincronizacao online ativa.`;
+      setSaveStatus("Online ligado com sucesso");
       startLiveRefresh();
       await loadLiveProfiles();
     }
@@ -1906,15 +2080,16 @@
       liveRefreshTimer = null;
       liveComparison.innerHTML = "";
       liveFriendSelect.innerHTML = `<option value="">Escolhe um amigo</option>`;
-      liveStatusText.textContent = "Sessao terminada. Entra para voltar ao modo live.";
+      liveStatusText.textContent = "Sessao terminada. Entra para voltar ao modo online.";
       updateLiveLoginUI();
       setSaveStatus("Sessao terminada");
+      loadBaseAlbum().catch(() => {});
     }
 
     async function refreshLiveNow() {
       if (!liveEnabled) return;
       if (!liveProfile) {
-        setSaveStatus("Entra no live primeiro");
+        setSaveStatus("Entra no modo online primeiro");
         liveUsernameInput.focus();
         return;
       }
@@ -1924,7 +2099,7 @@
         if (data.exists && data.csv && data.updatedAt && data.updatedAt !== liveUpdatedAt) {
           loadStickers(parseTextFile(data.csv));
           liveUpdatedAt = data.updatedAt;
-          setSaveStatus("Live atualizado");
+          setSaveStatus("Online atualizado");
         }
         await loadLiveProfiles();
       } catch (error) {
@@ -1936,7 +2111,7 @@
     async function compareLiveFriend() {
       if (!liveEnabled) return;
       if (!liveProfile) {
-        setSaveStatus("Entra no live primeiro");
+        setSaveStatus("Entra no modo online primeiro");
         return;
       }
 
@@ -1987,25 +2162,60 @@
     async function initLiveMode() {
       if (!livePanel) return;
 
+      livePanel.classList.remove("hidden");
+      inviteToken = readInviteToken();
+
       try {
         const response = await fetch("/api/auth/status", { cache: "no-store" });
-        if (!response.ok) throw new Error("Sem modo live");
+        if (!response.ok) throw new Error("Sem modo online");
         const data = await response.json();
         liveEnabled = Boolean(data.enabled);
-        livePanel.classList.toggle("hidden", !liveEnabled);
-        if (!liveEnabled) return;
 
-        liveUsernameInput.value = localStorage.getItem("caderneta_live_profile") || "";
-        if (data.loggedIn && data.user) {
-          await finishLiveLogin(data.user);
-        } else {
+        const rememberedUser = localStorage.getItem("caderneta_live_profile") || "";
+        liveUsernameInput.value = rememberedUser;
+        authUsernameInput.value = rememberedUser;
+
+        if (!liveEnabled) {
           liveProfile = "";
-          liveStatusText.textContent = "Cria conta ou entra para sincronizar com os teus amigos.";
+          inviteValid = false;
+          setAuthMode("denied");
+          liveStatusText.textContent = "Modo online indisponivel. Confirma a variavel MONGODB_URI no Render.";
           updateLiveLoginUI();
+          setSaveStatus("Modo online indisponivel");
+          return;
         }
+
+        if (data.loggedIn && data.user) {
+          inviteValid = true;
+          await finishLiveLogin(data.user);
+          return;
+        }
+
+        inviteValid = await validateInviteToken(inviteToken);
+        if (!inviteValid) {
+          localStorage.removeItem("caderneta_invite_token");
+          inviteToken = "";
+          liveProfile = "";
+          setAuthMode("denied");
+          updateLiveLoginUI();
+          setSaveStatus("Acesso bloqueado");
+          return;
+        }
+
+        liveProfile = "";
+        setAuthMode("login");
+        authStatusText.textContent = "Convite aceite. Entra ou cria a tua conta.";
+        setAuthMessage("");
+        updateLiveLoginUI();
+        setSaveStatus("Entra para sincronizar online");
       } catch {
         liveEnabled = false;
-        livePanel.classList.add("hidden");
+        liveProfile = "";
+        inviteValid = false;
+        setAuthMode("denied");
+        liveStatusText.textContent = "Nao foi possivel ligar ao modo online.";
+        updateLiveLoginUI();
+        setSaveStatus("Modo online indisponivel");
       }
     }
     function updateSearchControls() {
@@ -2080,6 +2290,7 @@
       toggleStickerOwned(stickerId);
     }
     function changeOwned(stickerId, checked) {
+      if (!requireLiveLogin()) return;
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker) return;
 
@@ -2095,6 +2306,7 @@
     }
 
     function changeDuplicates(stickerId, value) {
+      if (!requireLiveLogin()) return;
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker || !sticker.tenho) return;
 
@@ -2104,6 +2316,7 @@
     }
 
     function adjustDuplicates(stickerId, delta) {
+      if (!requireLiveLogin()) return;
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker || !sticker.tenho) return;
 
@@ -2275,6 +2488,11 @@
     }
 
     search.addEventListener("input", render);
+    authUsernameInput.addEventListener("input", () => liveUsernameInput.value = authUsernameInput.value);
+    authPasswordInput.addEventListener("input", () => livePasswordInput.value = authPasswordInput.value);
+    authPasswordInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") loginLiveAccount();
+    });
 
     countryScrollLeft.addEventListener("mouseenter", () => startCountryScroll(-1));
     countryScrollRight.addEventListener("mouseenter", () => startCountryScroll(1));
@@ -2293,28 +2511,20 @@
     window.addEventListener("pagehide", closeServerWithPage);
 
 
+    async function loadBaseAlbum() {
+      const response = await fetch("/api/base-cromos", { cache: "no-store" });
+      if (!response.ok) throw new Error("Sem caderneta base");
+      const text = await response.text();
+      loadStickers(parseTextFile(text));
+      setSaveStatus("Caderneta online pronta");
+    }
+
     async function tryAutoLoad() {
       try {
-        const response = await fetch("/api/cromos", { cache: "no-store" });
-        if (!response.ok) throw new Error("Sem cromos.txt");
-        serverAvailable = true;
-        keepServerOpen();
-        const text = await response.text();
-        const parsed = parseTextFile(text);
-        loadStickers(parsed);
-        setSaveStatus("Ficheiro lido com sucesso");
+        await loadBaseAlbum();
       } catch {
-        try {
-          const response = await fetch("cromos.txt", { cache: "no-store" });
-          if (!response.ok) throw new Error("Sem cromos.txt");
-          const text = await response.text();
-          const parsed = parseTextFile(text);
-          loadStickers(parsed, { useSavedState: true });
-          setSaveStatus("Ficheiro lido com sucesso");
-        } catch {
-          loadStickers(demoStickers, { useSavedState: true });
-          setSaveStatus("Ficheiro lido com sucesso");
-        }
+        loadStickers(demoStickers);
+        setSaveStatus("Nao foi possivel carregar a caderneta base");
       }
     }
 

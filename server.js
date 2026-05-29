@@ -6,14 +6,13 @@ const crypto = require("crypto");
 const PORT = Number(process.env.PORT || 1312);
 const ROOT = __dirname;
 const HTML_FILE = path.join(ROOT, "caderneta_mundial_2026.html");
-const CROMOS_FILE = path.join(ROOT, "cromos.txt");
 const BASE_FILE = path.join(ROOT, "cromos_base.txt");
-const BACKUP_FILE = path.join(ROOT, "backup_cromos.txt");
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
 const IS_HOSTED = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || MONGODB_URI);
 const COOKIE_NAME = "caderneta_session";
 const SESSION_DAYS = 30;
+const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 
 let shutdownTimer = null;
 let mongoDbPromise = null;
@@ -22,13 +21,9 @@ const emptyAlbum = [
   "pais,codigo,nome,tenho"
 ];
 
-function ensureCromosFile() {
-  if (!fs.existsSync(CROMOS_FILE)) {
-    const initialData = fs.existsSync(BASE_FILE)
-      ? fs.readFileSync(BASE_FILE, "utf8")
-      : emptyAlbum.join("\n") + "\n";
-    fs.writeFileSync(CROMOS_FILE, initialData.endsWith("\n") ? initialData : `${initialData}\n`, "utf8");
-  }
+function readBaseAlbum() {
+  if (fs.existsSync(BASE_FILE)) return fs.readFileSync(BASE_FILE, "utf8");
+  return emptyAlbum.join("\n") + "\n";
 }
 
 function cancelShutdown() {
@@ -210,13 +205,29 @@ async function handleAuthRoute(req, res, url) {
     const user = await getAuthUser(req);
     return sendJson(res, 200, {
       enabled: Boolean(MONGODB_URI),
+      registrationEnabled: Boolean(REGISTER_PIN),
       loggedIn: Boolean(user),
       user
     });
   }
 
+  if (url.pathname === "/api/auth/invite") {
+    const inviteToken = String(
+      url.searchParams.get("convite") ||
+      url.searchParams.get("invite") ||
+      url.searchParams.get("pin") ||
+      ""
+    ).trim();
+
+    return sendJson(res, 200, {
+      enabled: Boolean(MONGODB_URI),
+      registrationEnabled: Boolean(REGISTER_PIN),
+      valid: Boolean(REGISTER_PIN && inviteToken === REGISTER_PIN)
+    });
+  }
+
   if (!url.pathname.startsWith("/api/auth/")) return false;
-  if (!MONGODB_URI) return sendJson(res, 503, { error: "Login nao configurado" });
+  if (!MONGODB_URI) return sendJson(res, 503, { error: "Login online nao configurado" });
 
   const db = await getMongoDb();
 
@@ -225,6 +236,15 @@ async function handleAuthRoute(req, res, url) {
     const username = cleanUsername(payload.username);
     const usernameLower = userKey(username);
     const password = String(payload.password || "");
+    const inviteToken = String(payload.inviteToken || payload.registerPin || payload.pin || "").trim();
+
+    if (!REGISTER_PIN) {
+      return sendJson(res, 503, { error: "Registo fechado. Define REGISTER_PIN no Render." });
+    }
+
+    if (inviteToken !== REGISTER_PIN) {
+      return sendJson(res, 403, { error: "PIN de registo errado." });
+    }
 
     if (!validateUsername(username)) {
       return sendJson(res, 400, { error: "O utilizador deve ter 3 a 24 letras, numeros, _ ou -." });
@@ -292,13 +312,14 @@ async function handleLiveRoute(req, res, url) {
     const user = await getAuthUser(req);
     return sendJson(res, 200, {
       enabled: Boolean(MONGODB_URI),
+      registrationEnabled: Boolean(REGISTER_PIN),
       loggedIn: Boolean(user),
       user
     });
   }
 
   if (!url.pathname.startsWith("/api/live/")) return false;
-  if (!MONGODB_URI) return sendJson(res, 503, { error: "Modo live nao configurado" });
+  if (!MONGODB_URI) return sendJson(res, 503, { error: "Modo online nao configurado" });
 
   const user = await getAuthUser(req);
   if (!user) return sendJson(res, 401, { error: "Precisas de iniciar sessao." });
@@ -378,22 +399,12 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, fs.readFileSync(HTML_FILE, "utf8"), "text/html; charset=utf-8");
     }
 
-    if (url.pathname === "/cromos.txt" || url.pathname === "/api/cromos") {
+    if (url.pathname === "/api/base-cromos" || url.pathname === "/api/cromos" || url.pathname === "/cromos.txt") {
       if (req.method === "GET") {
         cancelShutdown();
-        ensureCromosFile();
-        return send(res, 200, fs.readFileSync(CROMOS_FILE, "utf8"), "text/plain; charset=utf-8");
+        return send(res, 200, readBaseAlbum(), "text/plain; charset=utf-8");
       }
-
-      if (req.method === "POST") {
-        cancelShutdown();
-        const body = await readBody(req);
-        if (fs.existsSync(CROMOS_FILE)) {
-          fs.copyFileSync(CROMOS_FILE, BACKUP_FILE);
-        }
-        fs.writeFileSync(CROMOS_FILE, body.endsWith("\n") ? body : `${body}\n`, "utf8");
-        return send(res, 200, "ok");
-      }
+      return sendJson(res, 410, { error: "O modo local foi desativado. As alteracoes gravam apenas online." });
     }
 
     return send(res, 404, "Nao encontrado");
@@ -406,6 +417,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  ensureCromosFile();
-  console.log(`Caderneta pronta em http://localhost:${PORT}`);
+  console.log(`Caderneta online pronta em http://localhost:${PORT}`);
 });
