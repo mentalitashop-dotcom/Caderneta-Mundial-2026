@@ -146,6 +146,7 @@
     }
 
     body.auth-mode-login .auth-login,
+    body.auth-mode-register .auth-register,
     body.auth-mode-denied .auth-denied {
       display: grid;
     }
@@ -994,7 +995,6 @@
     let stickers = [];
     let currentView = "all";
     let selectedCountry = "all";
-    let serverAvailable = false;
     let saveTimer = null;
     let countryScrollFrame = null;
     let countryTabsOffset = 0;
@@ -1371,9 +1371,6 @@
       saveStatus.textContent = text;
     }
 
-    async function writeTxtFileNow() {
-      setSaveStatus("O modo local foi desativado. Entra para sincronizar online.");
-    }
 
     function saveState() {
       const state = {};
@@ -2061,6 +2058,7 @@
         loadStickers(parseTextFile(data.csv));
         liveUpdatedAt = data.updatedAt || "";
       } else {
+        await loadBaseAlbum();
         await writeLiveStateNow();
       }
 
@@ -2544,19 +2542,6 @@
     }
 
 
-    function keepServerOpen() {
-      if (!serverAvailable) return;
-      fetch("/api/manter-aberto", { method: "POST", cache: "no-store", keepalive: true }).catch(() => {});
-    }
-
-    function closeServerWithPage() {
-      if (!serverAvailable) return;
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon("/api/fechar", "");
-        return;
-      }
-      fetch("/api/fechar", { method: "POST", keepalive: true }).catch(() => {});
-    }
 
     search.addEventListener("input", render);
     authLoginUsernameInput.addEventListener("input", () => liveUsernameInput.value = authLoginUsernameInput.value);
@@ -2582,8 +2567,6 @@
     countryScrollLeft.addEventListener("blur", stopCountryScroll);
     countryScrollRight.addEventListener("blur", stopCountryScroll);
     window.addEventListener("resize", applyCountryTabsOffset);
-    window.addEventListener("pageshow", keepServerOpen);
-    window.addEventListener("pagehide", closeServerWithPage);
 
 
     async function loadBaseAlbum() {
@@ -2594,14 +2577,6 @@
       setSaveStatus("Caderneta online pronta");
     }
 
-    async function tryAutoLoad() {
-      try {
-        await loadBaseAlbum();
-      } catch {
-        loadStickers(demoStickers);
-        setSaveStatus("Nao foi possivel carregar a caderneta base");
-      }
-    }
 
     initLiveMode().catch(() => {});
   </script>

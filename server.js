@@ -9,37 +9,29 @@ const HTML_FILE = path.join(ROOT, "caderneta_mundial_2026.html");
 const BASE_FILE = path.join(ROOT, "cromos_base.txt");
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
-const IS_HOSTED = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || MONGODB_URI);
 const COOKIE_NAME = "caderneta_session";
 const SESSION_DAYS = 30;
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 
-let shutdownTimer = null;
-let mongoDbPromise = null;
+const COLLECTIONS = {
+  users: "users",
+  sessions: "sessions",
+  album: "album_stickers",
+  userStickers: "user_stickers",
+  snapshots: "collection_snapshots",
+  legacyCollections: "colecoes"
+};
 
 const emptyAlbum = [
-  "pais,codigo,nome,tenho"
+  "pais,codigo,nome,tenho,repetidos"
 ];
+
+let mongoDbPromise = null;
+let baseSyncPromise = null;
 
 function readBaseAlbum() {
   if (fs.existsSync(BASE_FILE)) return fs.readFileSync(BASE_FILE, "utf8");
   return emptyAlbum.join("\n") + "\n";
-}
-
-function cancelShutdown() {
-  if (!shutdownTimer) return;
-  clearTimeout(shutdownTimer);
-  shutdownTimer = null;
-}
-
-function scheduleShutdown() {
-  if (IS_HOSTED) return;
-  cancelShutdown();
-  shutdownTimer = setTimeout(() => {
-    server.close(() => process.exit(0));
-    setTimeout(() => process.exit(0), 700).unref();
-  }, 3500);
-  shutdownTimer.unref();
 }
 
 function send(res, status, body, type = "text/plain; charset=utf-8", extraHeaders = {}) {
@@ -144,6 +136,190 @@ function tokenHash(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+function normalizeOwned(value) {
+  if (typeof value === "boolean") return value;
+  const v = String(value || "").trim().toLowerCase();
+  return ["sim", "s", "yes", "y", "true", "1", "obtido", "tenho"].includes(v);
+}
+
+function normalizeDuplicates(value) {
+  const parsed = Number.parseInt(String(value ?? "0").trim(), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = "";
+  let insideQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === "\"" && next === "\"") {
+      current += "\"";
+      i++;
+    } else if (char === "\"") {
+      insideQuotes = !insideQuotes;
+    } else if ((char === "," || char === ";") && !insideQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  result.push(current.trim());
+  return result;
+}
+
+function makeStickerId(sticker) {
+  return `${sticker.pais}__${sticker.codigo}`.toLowerCase().replace(/\s+/g, "_");
+}
+
+function cleanSticker(item, albumOrder = 0) {
+  const sticker = {
+    pais: String(item.pais || item.country || "SEM").trim(),
+    codigo: String(item.codigo || item.code || item.id || "").trim(),
+    nome: String(item.nome || item.name || item.jogador || item.player || "").trim(),
+    tenho: normalizeOwned(item.tenho ?? item.owned ?? item.obtido ?? item.have),
+    repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount),
+    albumOrder
+  };
+
+  if (!sticker.codigo) sticker.codigo = `${sticker.pais}-${albumOrder + 1}`;
+  if (!sticker.nome) sticker.nome = "Sem nome definido";
+
+  sticker.id = makeStickerId(sticker);
+  return sticker;
+}
+
+function parseTextFile(text) {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) return [];
+
+  if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    const json = JSON.parse(trimmed);
+    const arr = Array.isArray(json) ? json : json.cromos || json.stickers || [];
+    return arr.map((item, index) => cleanSticker(item, index));
+  }
+
+  const lines = trimmed.split(/\r?\n/).filter(Boolean);
+  const firstLine = parseCSVLine(lines[0]);
+  const knownHeaders = ["pais", "country", "codigo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates"];
+  const hasHeader = firstLine.some(header => knownHeaders.includes(header.trim().toLowerCase()));
+
+  let headers = ["pais", "codigo", "nome", "tenho", "repetidos"];
+  let start = 0;
+
+  if (hasHeader) {
+    headers = firstLine.map(header => header.trim().toLowerCase());
+    start = 1;
+  }
+
+  return lines.slice(start).map((line, index) => {
+    const values = parseCSVLine(line);
+    const item = {};
+    headers.forEach((header, headerIndex) => item[header] = values[headerIndex] || "");
+    return cleanSticker(item, index);
+  });
+}
+
+function csvEscape(value) {
+  return `"${String(value ?? "").replaceAll("\"", "\"\"")}"`;
+}
+
+function stickersToCSV(stickers) {
+  const header = "pais,codigo,nome,tenho,repetidos";
+  const rows = stickers.map(sticker => [
+    sticker.pais,
+    sticker.codigo,
+    sticker.nome,
+    sticker.tenho ? "sim" : "nao",
+    sticker.repetidos || 0
+  ].map(csvEscape).join(","));
+
+  return [header, ...rows].join("\n");
+}
+
+function countStickerState(stickers) {
+  return stickers.reduce((counts, sticker) => {
+    counts.total += 1;
+    if (sticker.tenho) counts.owned += 1;
+    if (!sticker.tenho) counts.missing += 1;
+    counts.duplicates += sticker.repetidos || 0;
+    return counts;
+  }, { total: 0, owned: 0, missing: 0, duplicates: 0 });
+}
+
+function baseDocToSticker(doc) {
+  return cleanSticker({
+    pais: doc.countryCode || doc.pais,
+    codigo: doc.code || doc.codigo,
+    nome: doc.name || doc.nome,
+    tenho: false,
+    repetidos: 0
+  }, doc.albumOrder || 0);
+}
+
+function userProgressDoc(user, sticker, now, source = "base") {
+  const owned = Boolean(sticker.tenho);
+  const duplicates = normalizeDuplicates(sticker.repetidos);
+  return {
+    _id: `${user.id}:${sticker.id}`,
+    userId: user.id,
+    username: user.username,
+    stickerId: sticker.id,
+    countryCode: sticker.pais,
+    code: sticker.codigo,
+    name: sticker.nome,
+    albumOrder: sticker.albumOrder || 0,
+    owned,
+    missing: !owned,
+    duplicates,
+    status: owned ? "obtido" : "em_falta",
+    source,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+async function ensureIndexes(db) {
+  await db.collection(COLLECTIONS.users).createIndex({ usernameLower: 1 }, { unique: true });
+  await db.collection(COLLECTIONS.users).createIndex({ role: 1, verified: 1 });
+  await db.collection(COLLECTIONS.sessions).createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  await db.collection(COLLECTIONS.sessions).createIndex({ userId: 1 });
+  await db.collection(COLLECTIONS.album).createIndex({ active: 1, albumOrder: 1 });
+  await db.collection(COLLECTIONS.album).createIndex({ countryCode: 1, code: 1 });
+  await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, stickerId: 1 }, { unique: true });
+  await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, owned: 1 });
+  await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, missing: 1 });
+  await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, duplicates: 1 });
+  await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, countryCode: 1, albumOrder: 1 });
+  await db.collection(COLLECTIONS.snapshots).createIndex({ updatedAt: -1 });
+}
+
+async function normalizeExistingUsersForIndexes(db) {
+  await db.collection(COLLECTIONS.users).updateMany(
+    { usernameLower: { $exists: false }, username: { $type: "string" } },
+    [
+      {
+        $set: {
+          usernameLower: { $toLower: "$username" },
+          role: { $ifNull: ["$role", "verificado"] },
+          verified: { $ifNull: ["$verified", true] },
+          verifiedByLegacyUpgrade: true
+        }
+      }
+    ]
+  );
+
+  await db.collection(COLLECTIONS.users).updateMany(
+    { $or: [{ role: { $exists: false } }, { verified: { $exists: false } }] },
+    { $set: { role: "verificado", verified: true, verifiedByLegacyUpgrade: true } }
+  );
+}
+
 async function getMongoDb() {
   if (!MONGODB_URI) return null;
 
@@ -159,14 +335,75 @@ async function getMongoDb() {
       const client = new MongoClient(MONGODB_URI);
       await client.connect();
       const db = client.db(MONGODB_DB);
-      await db.collection("users").createIndex({ usernameLower: 1 }, { unique: true });
-      await db.collection("sessions").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-      await db.collection("colecoes").createIndex({ updatedAt: -1 });
+      await normalizeExistingUsersForIndexes(db);
+      await ensureIndexes(db);
+      await syncBaseAlbum(db);
       return db;
     })();
   }
 
   return mongoDbPromise;
+}
+
+function loadBaseStickersFromFile() {
+  return parseTextFile(readBaseAlbum()).map((sticker, index) => ({
+    ...sticker,
+    tenho: false,
+    repetidos: 0,
+    albumOrder: index
+  }));
+}
+
+async function syncBaseAlbum(db) {
+  if (baseSyncPromise) return baseSyncPromise;
+
+  baseSyncPromise = (async () => {
+    const stickers = loadBaseStickersFromFile();
+    if (!stickers.length) return stickers;
+
+    const now = new Date();
+    const ids = stickers.map(sticker => sticker.id);
+    const operations = stickers.map(sticker => ({
+      updateOne: {
+        filter: { _id: sticker.id },
+        update: {
+          $set: {
+            stickerId: sticker.id,
+            countryCode: sticker.pais,
+            code: sticker.codigo,
+            name: sticker.nome,
+            albumOrder: sticker.albumOrder,
+            active: true,
+            updatedAt: now
+          },
+          $setOnInsert: { createdAt: now }
+        },
+        upsert: true
+      }
+    }));
+
+    await db.collection(COLLECTIONS.album).bulkWrite(operations, { ordered: false });
+    await db.collection(COLLECTIONS.album).updateMany(
+      { _id: { $nin: ids } },
+      { $set: { active: false, updatedAt: now } }
+    );
+
+    return stickers;
+  })();
+
+  return baseSyncPromise;
+}
+
+async function getAlbumStickers(db) {
+  await syncBaseAlbum(db);
+
+  const docs = await db.collection(COLLECTIONS.album)
+    .find({ active: true })
+    .sort({ albumOrder: 1 })
+    .toArray();
+
+  if (!docs.length) return loadBaseStickersFromFile();
+  return docs.map(baseDocToSticker);
 }
 
 function publicUser(user) {
@@ -179,22 +416,38 @@ function publicUser(user) {
   };
 }
 
+async function normalizeUserAccount(db, user) {
+  if (!user) return null;
+  const changes = {};
+  if (!user.role) changes.role = "verificado";
+  if (user.verified === undefined) changes.verified = true;
+  if (!Object.keys(changes).length) return user;
+
+  await db.collection(COLLECTIONS.users).updateOne({ _id: user._id }, { $set: changes });
+  return { ...user, ...changes };
+}
+
+async function findVerifiedUser(db, username) {
+  let user = await db.collection(COLLECTIONS.users).findOne(
+    { _id: userKey(username) },
+    { projection: { username: 1, usernameLower: 1, role: 1, verified: 1 } }
+  );
+
+  user = await normalizeUserAccount(db, user);
+  if (!user || user.role !== "verificado" || user.verified !== true) return null;
+  return publicUser(user);
+}
+
 async function getAuthUser(req) {
   if (!MONGODB_URI) return null;
   const token = parseCookies(req)[COOKIE_NAME];
   if (!token) return null;
 
   const db = await getMongoDb();
-  const session = await db.collection("sessions").findOne({ _id: tokenHash(token) });
+  const session = await db.collection(COLLECTIONS.sessions).findOne({ _id: tokenHash(token) });
   if (!session || new Date(session.expiresAt) <= new Date()) return null;
 
-  const user = await db.collection("users").findOne(
-    { _id: session.userId },
-    { projection: { username: 1, role: 1, verified: 1 } }
-  );
-
-  if (!user || user.role !== "verificado" || user.verified !== true) return null;
-  return publicUser(user);
+  return findVerifiedUser(db, session.userId);
 }
 
 async function createSession(db, user) {
@@ -202,9 +455,9 @@ async function createSession(db, user) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
 
-  await db.collection("sessions").insertOne({
+  await db.collection(COLLECTIONS.sessions).insertOne({
     _id: tokenHash(token),
-    userId: user._id,
+    userId: user._id || user.id,
     username: user.username,
     role: user.role,
     createdAt: now,
@@ -221,6 +474,158 @@ async function requireVerifiedUser(req, res) {
     return null;
   }
   return user;
+}
+
+async function migrateLegacyCollectionIfNeeded(db, user) {
+  const existingCount = await db.collection(COLLECTIONS.userStickers).countDocuments({ userId: user.id }, { limit: 1 });
+  if (existingCount > 0) return;
+
+  const legacy = await db.collection(COLLECTIONS.legacyCollections).findOne(
+    { _id: user.id },
+    { projection: { csv: 1, updatedAt: 1, profile: 1 } }
+  );
+
+  if (!legacy || !legacy.csv) return;
+
+  const now = new Date();
+  const stickers = parseTextFile(legacy.csv);
+  if (!stickers.length) return;
+
+  const operations = stickers.map((sticker, index) => {
+    const normalizedSticker = { ...sticker, albumOrder: sticker.albumOrder ?? index };
+    return {
+      updateOne: {
+        filter: { userId: user.id, stickerId: normalizedSticker.id },
+        update: {
+          $setOnInsert: userProgressDoc(user, normalizedSticker, now, "legacy_csv")
+        },
+        upsert: true
+      }
+    };
+  });
+
+  await db.collection(COLLECTIONS.userStickers).bulkWrite(operations, { ordered: false });
+}
+
+async function ensureUserStickerRows(db, user) {
+  await migrateLegacyCollectionIfNeeded(db, user);
+
+  const album = await getAlbumStickers(db);
+  const existing = await db.collection(COLLECTIONS.userStickers)
+    .find({ userId: user.id }, { projection: { stickerId: 1 } })
+    .toArray();
+  const existingIds = new Set(existing.map(item => item.stickerId));
+  const missing = album.filter(sticker => !existingIds.has(sticker.id));
+
+  if (!missing.length) return;
+
+  const now = new Date();
+  await db.collection(COLLECTIONS.userStickers).bulkWrite(
+    missing.map(sticker => ({
+      updateOne: {
+        filter: { userId: user.id, stickerId: sticker.id },
+        update: {
+          $setOnInsert: userProgressDoc(user, sticker, now, "album_base")
+        },
+        upsert: true
+      }
+    })),
+    { ordered: false }
+  );
+}
+
+async function getUserStickerState(db, user) {
+  await ensureUserStickerRows(db, user);
+
+  const album = await getAlbumStickers(db);
+  const progressDocs = await db.collection(COLLECTIONS.userStickers)
+    .find({ userId: user.id })
+    .toArray();
+  const progressByStickerId = new Map(progressDocs.map(doc => [doc.stickerId, doc]));
+
+  return album.map(sticker => {
+    const progress = progressByStickerId.get(sticker.id);
+    return {
+      ...sticker,
+      tenho: Boolean(progress?.owned),
+      repetidos: normalizeDuplicates(progress?.duplicates),
+      albumOrder: sticker.albumOrder
+    };
+  });
+}
+
+async function saveSnapshot(db, user, stickers, updatedAt = new Date().toISOString()) {
+  await db.collection(COLLECTIONS.snapshots).updateOne(
+    { _id: user.id },
+    {
+      $set: {
+        userId: user.id,
+        profile: user.username,
+        csv: stickersToCSV(stickers),
+        counts: countStickerState(stickers),
+        updatedAt
+      },
+      $setOnInsert: { createdAt: new Date() }
+    },
+    { upsert: true }
+  );
+}
+
+async function updateUserStickerRowsFromCsv(db, user, csv) {
+  const incoming = parseTextFile(csv);
+  if (!incoming.length) return { stickers: [], updatedAt: new Date().toISOString() };
+
+  const now = new Date();
+  const updatedAt = now.toISOString();
+  const album = await getAlbumStickers(db);
+  const albumById = new Map(album.map(sticker => [sticker.id, sticker]));
+
+  await db.collection(COLLECTIONS.userStickers).bulkWrite(
+    incoming.map((incomingSticker, index) => {
+      const baseSticker = albumById.get(incomingSticker.id) || incomingSticker;
+      const sticker = {
+        ...baseSticker,
+        tenho: Boolean(incomingSticker.tenho),
+        repetidos: normalizeDuplicates(incomingSticker.repetidos),
+        albumOrder: baseSticker.albumOrder ?? index
+      };
+      const owned = Boolean(sticker.tenho);
+      const duplicates = normalizeDuplicates(sticker.repetidos);
+
+      return {
+        updateOne: {
+          filter: { userId: user.id, stickerId: sticker.id },
+          update: {
+            $set: {
+              username: user.username,
+              countryCode: sticker.pais,
+              code: sticker.codigo,
+              name: sticker.nome,
+              albumOrder: sticker.albumOrder,
+              owned,
+              missing: !owned,
+              duplicates,
+              status: owned ? "obtido" : "em_falta",
+              source: "online_app",
+              updatedAt: now
+            },
+            $setOnInsert: {
+              _id: `${user.id}:${sticker.id}`,
+              userId: user.id,
+              stickerId: sticker.id,
+              createdAt: now
+            }
+          },
+          upsert: true
+        }
+      };
+    }),
+    { ordered: false }
+  );
+
+  const stickers = await getUserStickerState(db, user);
+  await saveSnapshot(db, user, stickers, updatedAt);
+  return { stickers, updatedAt };
 }
 
 async function handleAuthRoute(req, res, url) {
@@ -294,7 +699,10 @@ async function handleAuthRoute(req, res, url) {
     };
 
     try {
-      await db.collection("users").insertOne(user);
+      await db.collection(COLLECTIONS.users).insertOne(user);
+      await ensureUserStickerRows(db, publicUser(user));
+      const stickers = await getUserStickerState(db, publicUser(user));
+      await saveSnapshot(db, publicUser(user), stickers, now.toISOString());
     } catch (error) {
       if (error && error.code === 11000) {
         return sendJson(res, 409, { error: "Esse utilizador ja existe." });
@@ -312,7 +720,8 @@ async function handleAuthRoute(req, res, url) {
     const payload = await readJson(req);
     const username = cleanUsername(payload.username);
     const password = String(payload.password || "");
-    const user = await db.collection("users").findOne({ _id: userKey(username) });
+    let user = await db.collection(COLLECTIONS.users).findOne({ _id: userKey(username) });
+    user = await normalizeUserAccount(db, user);
 
     if (!user || !passwordMatches(password, user.salt, user.passwordHash)) {
       return sendJson(res, 401, { error: "Utilizador ou password errados." });
@@ -322,6 +731,7 @@ async function handleAuthRoute(req, res, url) {
       return sendJson(res, 403, { error: "Esta conta ainda nao esta verificada." });
     }
 
+    await ensureUserStickerRows(db, publicUser(user));
     const token = await createSession(db, user);
     return sendJson(res, 200, {
       ok: true,
@@ -331,7 +741,7 @@ async function handleAuthRoute(req, res, url) {
 
   if (url.pathname === "/api/auth/logout" && req.method === "POST") {
     const token = parseCookies(req)[COOKIE_NAME];
-    if (token) await db.collection("sessions").deleteOne({ _id: tokenHash(token) });
+    if (token) await db.collection(COLLECTIONS.sessions).deleteOne({ _id: tokenHash(token) });
     return sendJson(res, 200, { ok: true }, { "Set-Cookie": clearSessionCookie() });
   }
 
@@ -356,31 +766,48 @@ async function handleLiveRoute(req, res, url) {
   if (!user) return;
 
   const db = await getMongoDb();
-  const collection = db.collection("colecoes");
 
   if (url.pathname === "/api/live/profiles") {
-    const profiles = await collection
-      .find({}, { projection: { _id: 0, profile: 1, updatedAt: 1 } })
-      .sort({ profile: 1 })
+    const users = await db.collection(COLLECTIONS.users)
+      .find(
+        { role: "verificado", verified: true },
+        { projection: { _id: 0, username: 1 } }
+      )
+      .sort({ usernameLower: 1 })
       .limit(100)
       .toArray();
-    return sendJson(res, 200, { profiles });
+    return sendJson(res, 200, { profiles: users.map(item => ({ profile: item.username || item.profile })) });
   }
 
   if (url.pathname === "/api/live/state") {
     if (req.method === "GET") {
       const requestedProfile = cleanUsername(url.searchParams.get("profile")) || user.username;
-      const doc = await collection.findOne(
-        { _id: userKey(requestedProfile) },
-        { projection: { _id: 0, profile: 1, csv: 1, updatedAt: 1 } }
-      );
+      const profileUser = await findVerifiedUser(db, requestedProfile);
+
+      if (!profileUser) {
+        return sendJson(res, 200, {
+          enabled: true,
+          exists: false,
+          profile: requestedProfile,
+          csv: "",
+          updatedAt: ""
+        });
+      }
+
+      const stickers = await getUserStickerState(db, profileUser);
+      let snapshot = await db.collection(COLLECTIONS.snapshots).findOne({ _id: profileUser.id });
+      if (!snapshot) {
+        await saveSnapshot(db, profileUser, stickers);
+        snapshot = await db.collection(COLLECTIONS.snapshots).findOne({ _id: profileUser.id });
+      }
 
       return sendJson(res, 200, {
         enabled: true,
-        exists: Boolean(doc),
-        profile: requestedProfile,
-        csv: doc?.csv || "",
-        updatedAt: doc?.updatedAt || ""
+        exists: true,
+        profile: profileUser.username,
+        csv: stickersToCSV(stickers),
+        counts: countStickerState(stickers),
+        updatedAt: snapshot?.updatedAt || ""
       });
     }
 
@@ -391,14 +818,14 @@ async function handleLiveRoute(req, res, url) {
       if (!csv.trim()) return sendJson(res, 400, { error: "Caderneta vazia" });
       if (csv.length > 5_000_000) return sendJson(res, 413, { error: "Pedido demasiado grande" });
 
-      const updatedAt = new Date().toISOString();
-      await collection.updateOne(
-        { _id: user.id },
-        { $set: { profile: user.username, userId: user.id, csv, updatedAt } },
-        { upsert: true }
-      );
+      const result = await updateUserStickerRowsFromCsv(db, user, csv);
 
-      return sendJson(res, 200, { ok: true, profile: user.username, updatedAt });
+      return sendJson(res, 200, {
+        ok: true,
+        profile: user.username,
+        counts: countStickerState(result.stickers),
+        updatedAt: result.updatedAt
+      });
     }
   }
 
@@ -415,29 +842,20 @@ const server = http.createServer(async (req, res) => {
     const liveHandled = await handleLiveRoute(req, res, url);
     if (liveHandled !== false) return;
 
-    if (url.pathname === "/api/manter-aberto") {
-      cancelShutdown();
-      return send(res, 200, "ok");
-    }
-
-    if (url.pathname === "/api/fechar") {
-      scheduleShutdown();
-      return send(res, 200, "ok");
-    }
-
     if (url.pathname === "/" || url.pathname === "/caderneta_mundial_2026.html") {
-      cancelShutdown();
       return send(res, 200, fs.readFileSync(HTML_FILE, "utf8"), "text/html; charset=utf-8");
     }
 
-    if (url.pathname === "/api/base-cromos" || url.pathname === "/api/cromos" || url.pathname === "/cromos.txt") {
+    if (url.pathname === "/api/base-cromos") {
       const user = await requireVerifiedUser(req, res);
       if (!user) return;
 
       if (req.method === "GET") {
-        cancelShutdown();
-        return send(res, 200, readBaseAlbum(), "text/plain; charset=utf-8");
+        const db = await getMongoDb();
+        const stickers = await getAlbumStickers(db);
+        return send(res, 200, stickersToCSV(stickers), "text/plain; charset=utf-8");
       }
+
       return sendJson(res, 410, { error: "O modo local foi desativado. As alteracoes gravam apenas online." });
     }
 
