@@ -15,7 +15,7 @@ const SESSION_DAYS = 30;
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.0.3";
 const IS_RENDER = process.env.RENDER === "true";
 const IS_PRODUCTION = process.env.NODE_ENV === "production" || IS_RENDER;
 const ONLINE_REQUIRED = process.env.ONLINE_REQUIRED !== "false";
@@ -147,7 +147,8 @@ async function onlineHealthStatus() {
   const status = {
     ...config,
     mongoConnected: false,
-    mongoError: config.ok ? "" : "MONGODB_URI em falta"
+    mongoError: config.ok ? "" : "MONGODB_URI em falta",
+    mongoHint: ""
   };
 
   if (!config.ok) return status;
@@ -159,6 +160,9 @@ async function onlineHealthStatus() {
     status.mongoError = "";
   } catch (error) {
     status.mongoError = error?.message || "Falha ao ligar ao MongoDB";
+    if (/bad auth|authentication failed/i.test(status.mongoError)) {
+      status.mongoHint = "Confirma username/password do Database Access. Se o URI tiver /caderneta, usa o URI do Atlas sem base no caminho e define MONGODB_DB=caderneta, ou acrescenta authSource=admin.";
+    }
   }
 
   status.ok = config.ok && status.mongoConnected;
@@ -1069,6 +1073,7 @@ const server = http.createServer(async (req, res) => {
         missingConfig: config.missing,
         mongoConnected: config.mongoConnected,
         mongoError: config.mongoError,
+        mongoHint: config.mongoHint,
         databaseName: config.databaseName,
         registrationConfigured: config.registrationConfigured,
         uptimeSeconds: Math.round(process.uptime())
