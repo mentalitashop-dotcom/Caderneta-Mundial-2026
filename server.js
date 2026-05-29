@@ -409,7 +409,14 @@ function userProgressDoc(user, sticker, now, source = "base") {
 
 async function ensureUsernameIndex(db) {
   const users = db.collection(COLLECTIONS.users);
-  const indexes = await users.indexes();
+  let indexes = [];
+
+  try {
+    indexes = await users.indexes();
+  } catch (error) {
+    if (error?.code !== 26 && error?.codeName !== "NamespaceNotFound") throw error;
+  }
+
   const existing = indexes.find(index => {
     const keys = Object.keys(index.key || {});
     return keys.length === 1 && index.key.usernameLower === 1;
