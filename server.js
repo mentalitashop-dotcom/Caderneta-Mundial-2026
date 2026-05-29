@@ -45,6 +45,7 @@ const COLLECTIONS = {
   sessions: "sessions",
   album: "album_stickers",
   userStickers: "user_stickers",
+  trades: "trade_proposals",
   snapshots: "collection_snapshots",
   legacyCollections: "colecoes"
 };
@@ -417,6 +418,9 @@ async function ensureIndexes(db) {
   await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, missing: 1 });
   await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, duplicates: 1 });
   await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, countryCode: 1, albumOrder: 1 });
+  await db.collection(COLLECTIONS.trades).createIndex({ fromUserId: 1, createdAt: -1 });
+  await db.collection(COLLECTIONS.trades).createIndex({ toUserId: 1, createdAt: -1 });
+  await db.collection(COLLECTIONS.trades).createIndex({ status: 1, updatedAt: -1 });
   await db.collection(COLLECTIONS.snapshots).createIndex({ updatedAt: -1 });
 }
 
@@ -805,6 +809,129 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
   return { stickers, updatedAt };
 }
 
+function cleanStickerIdList(value) {
+  const list = Array.isArray(value) ? value : [value];
+  return [...new Set(
+    list
+      .map(item => String(item || "").trim().slice(0, 160))
+      .filter(Boolean)
+  )].slice(0, 12);
+}
+
+function publicTradeSticker(sticker) {
+  return {
+    id: sticker.id,
+    pais: sticker.pais,
+    codigo: sticker.codigo,
+    nome: sticker.nome
+  };
+}
+
+function publicTrade(doc, viewer) {
+  return {
+    id: doc._id,
+    fromUser: doc.fromUser,
+    toUser: doc.toUser,
+    direction: doc.fromUserId === viewer.id ? "outgoing" : "incoming",
+    status: doc.status,
+    give: doc.give || [],
+    receive: doc.receive || [],
+    message: doc.message || "",
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt
+  };
+}
+
+function tradeStickerLabel(sticker) {
+  return `${sticker.pais} ${sticker.codigo} - ${sticker.nome}`;
+}
+
+async function createTradeProposal(db, user, payload) {
+  const targetUsername = cleanUsername(payload.toUser || payload.friend || payload.profile);
+  const targetUser = await findVerifiedUser(db, targetUsername);
+  if (!targetUser) throw new HttpError(404, "User nao encontrado.");
+  if (targetUser.id === user.id) throw new HttpError(400, "Nao podes propor uma troca a ti proprio.");
+
+  const giveIds = cleanStickerIdList(payload.giveStickerIds || payload.giveIds || payload.give);
+  const receiveIds = cleanStickerIdList(payload.receiveStickerIds || payload.receiveIds || payload.receive);
+  if (!giveIds.length || !receiveIds.length) throw new HttpError(400, "Escolhe pelo menos um cromo para dar e um para receber.");
+
+  const [myStickers, friendStickers] = await Promise.all([
+    getUserStickerState(db, user),
+    getUserStickerState(db, targetUser)
+  ]);
+  const mineById = new Map(myStickers.map(sticker => [sticker.id, sticker]));
+  const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
+
+  const give = giveIds.map(id => {
+    const mine = mineById.get(id);
+    const friend = friendById.get(id);
+    if (!mine || !friend) throw new HttpError(400, "Um dos cromos para dar nao existe.");
+    if (!mine.tenho || normalizeDuplicates(mine.repetidos) <= 0) {
+      throw new HttpError(400, `${tradeStickerLabel(mine)} nao esta nos teus repetidos.`);
+    }
+    if (friend.tenho) {
+      throw new HttpError(400, `${targetUser.username} ja tem ${tradeStickerLabel(mine)}.`);
+    }
+    return publicTradeSticker(mine);
+  });
+
+  const receive = receiveIds.map(id => {
+    const mine = mineById.get(id);
+    const friend = friendById.get(id);
+    if (!mine || !friend) throw new HttpError(400, "Um dos cromos para receber nao existe.");
+    if (mine.tenho) {
+      throw new HttpError(400, `Tu ja tens ${tradeStickerLabel(mine)}.`);
+    }
+    if (!friend.tenho || normalizeDuplicates(friend.repetidos) <= 0) {
+      throw new HttpError(400, `${targetUser.username} nao tem ${tradeStickerLabel(friend)} repetido.`);
+    }
+    return publicTradeSticker(friend);
+  });
+
+  const now = new Date();
+  const trade = {
+    _id: crypto.randomBytes(12).toString("hex"),
+    fromUserId: user.id,
+    fromUser: user.username,
+    toUserId: targetUser.id,
+    toUser: targetUser.username,
+    give,
+    receive,
+    message: String(payload.message || "").trim().slice(0, 300),
+    status: "pending",
+    createdAt: now,
+    updatedAt: now
+  };
+
+  await db.collection(COLLECTIONS.trades).insertOne(trade);
+  return trade;
+}
+
+async function updateTradeProposalStatus(db, user, payload) {
+  const tradeId = String(payload.tradeId || payload.id || "").trim();
+  const status = String(payload.status || "").trim().toLowerCase();
+  if (!tradeId) throw new HttpError(400, "Falta o id da troca.");
+  if (!["accepted", "rejected", "cancelled"].includes(status)) throw new HttpError(400, "Estado de troca invalido.");
+
+  const trade = await db.collection(COLLECTIONS.trades).findOne({ _id: tradeId });
+  if (!trade) throw new HttpError(404, "Troca nao encontrada.");
+  if (trade.status !== "pending") throw new HttpError(400, "Esta troca ja foi respondida.");
+
+  const isSender = trade.fromUserId === user.id;
+  const isReceiver = trade.toUserId === user.id;
+  if (status === "cancelled" && !isSender) throw new HttpError(403, "So quem criou a proposta pode cancelar.");
+  if ((status === "accepted" || status === "rejected") && !isReceiver) throw new HttpError(403, "So quem recebeu a proposta pode responder.");
+
+  const updatedAt = new Date();
+  await db.collection(COLLECTIONS.trades).updateOne(
+    { _id: tradeId },
+    { $set: { status, updatedAt, respondedBy: user.username } }
+  );
+
+  return db.collection(COLLECTIONS.trades).findOne({ _id: tradeId });
+}
+
 async function handleAuthRoute(req, res, url) {
   if (url.pathname === "/api/auth/status") {
     if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
@@ -971,6 +1098,38 @@ async function handleLiveRoute(req, res, url) {
       .limit(100)
       .toArray();
     return sendJson(res, 200, { profiles: users.map(item => ({ profile: item.username || item.profile })) });
+  }
+
+  if (url.pathname === "/api/live/trades") {
+    if (req.method === "GET") {
+      const docs = await db.collection(COLLECTIONS.trades)
+        .find({
+          $or: [
+            { fromUserId: user.id },
+            { toUserId: user.id }
+          ]
+        })
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .limit(100)
+        .toArray();
+
+      return sendJson(res, 200, { trades: docs.map(doc => publicTrade(doc, user)) });
+    }
+
+    if (req.method === "POST") {
+      const payload = await readJson(req);
+      const trade = await createTradeProposal(db, user, payload);
+      return sendJson(res, 201, { ok: true, trade: publicTrade(trade, user) });
+    }
+
+    return methodNotAllowed(res, ["GET", "POST"]);
+  }
+
+  if (url.pathname === "/api/live/trades/status") {
+    if (req.method !== "POST") return methodNotAllowed(res, ["POST"]);
+    const payload = await readJson(req);
+    const trade = await updateTradeProposalStatus(db, user, payload);
+    return sendJson(res, 200, { ok: true, trade: publicTrade(trade, user) });
   }
 
   if (url.pathname === "/api/live/state") {
