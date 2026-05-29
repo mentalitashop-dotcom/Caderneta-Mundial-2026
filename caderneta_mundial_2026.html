@@ -622,10 +622,34 @@
       line-height: 1.5;
     }
 
+    .trade-lines.is-scrollable {
+      max-height: 9em;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
     .trade-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+    }
+
+    .trade-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .trade-pagination span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .trade-pagination button {
+      padding: 8px 12px;
     }
 
     .result-summary {
@@ -1277,6 +1301,7 @@
     const LIVE_REFRESH_MS = 15000;
     const IDLE_LOGOUT_MS = 30 * 60 * 1000;
     const AUTH_LOCK_MS = 1200;
+    const TRADE_HISTORY_PAGE_SIZE = 5;
 
     let stickers = [];
     let activePage = "album";
@@ -1292,6 +1317,7 @@
     let friendStickers = [];
     let friendUpdatedAt = "";
     let tradeRequests = [];
+    let tradeHistoryPage = 1;
     let liveRefreshTimer = null;
     let idleLogoutTimer = null;
     let authRequestLocked = false;
@@ -2281,24 +2307,6 @@
       return stickers.filter(sticker => sticker.tenho && (sticker.repetidos || 0) > 0);
     }
 
-    function possibleTradeGivesFriendNeeds() {
-      if (!hasSelectedFriend()) return [];
-      const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
-      return stickers.filter(sticker => {
-        const friendSticker = friendById.get(sticker.id);
-        return sticker.tenho && (sticker.repetidos || 0) > 0 && friendSticker && !friendSticker.tenho;
-      });
-    }
-
-    function possibleTradeGivesFriendAlreadyHas() {
-      if (!hasSelectedFriend()) return [];
-      const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
-      return stickers.filter(sticker => {
-        const friendSticker = friendById.get(sticker.id);
-        return sticker.tenho && (sticker.repetidos || 0) > 0 && friendSticker && friendSticker.tenho;
-      });
-    }
-
     function possibleTradeReceives() {
       if (!hasSelectedFriend()) return [];
       const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
@@ -2334,8 +2342,6 @@
       }
 
       const gives = possibleTradeGives();
-      const givesFriendNeeds = possibleTradeGivesFriendNeeds();
-      const givesFriendAlreadyHas = possibleTradeGivesFriendAlreadyHas();
       const receives = possibleTradeReceives();
       const receivesAlreadyOwned = friendRepeatedAlreadyOwned();
 
@@ -2348,7 +2354,7 @@
             </div>
             <div class="trade-card">
               <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu ja tens</div>
-              <div class="trade-lines">${tradeStickerList(receivesAlreadyOwned)}</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(receivesAlreadyOwned)}</div>
             </div>
           </div>
         `;
@@ -2369,22 +2375,18 @@
           <div class="trade-card-title">Nova proposta para ${escapeHTML(friendProfile)}</div>
           <div class="trade-select-grid">
             <div class="trade-card">
-              <div class="trade-card-title">Os teus repetidos que ${escapeHTML(friendProfile)} precisa</div>
-              <div class="trade-lines">${tradeStickerList(givesFriendNeeds)}</div>
+              <div class="trade-card-title">Tu podes dar</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(gives)}</div>
             </div>
             <div class="trade-card">
-              <div class="trade-card-title">Os teus repetidos que ${escapeHTML(friendProfile)} ja tem</div>
-              <div class="trade-lines">${tradeStickerList(givesFriendAlreadyHas)}</div>
+              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu precisas</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(receives)}</div>
             </div>
           </div>
           <div class="trade-select-grid">
             <div class="trade-card">
-              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu precisas</div>
-              <div class="trade-lines">${tradeStickerList(receives)}</div>
-            </div>
-            <div class="trade-card">
               <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu ja tens</div>
-              <div class="trade-lines">${tradeStickerList(receivesAlreadyOwned)}</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(receivesAlreadyOwned)}</div>
             </div>
           </div>
           <div class="trade-select-grid">
@@ -2445,6 +2447,22 @@
       `;
     }
 
+    function setTradeHistoryPage(page) {
+      tradeHistoryPage = page;
+      renderTradeRequests();
+    }
+
+    function renderTradeHistoryPagination(totalPages) {
+      if (totalPages <= 1) return "";
+      return `
+        <div class="trade-pagination">
+          <button class="secondary" type="button" onclick="setTradeHistoryPage(${tradeHistoryPage - 1})" ${tradeHistoryPage <= 1 ? "disabled" : ""}>Anterior</button>
+          <span>Página ${tradeHistoryPage} de ${totalPages}</span>
+          <button class="secondary" type="button" onclick="setTradeHistoryPage(${tradeHistoryPage + 1})" ${tradeHistoryPage >= totalPages ? "disabled" : ""}>Seguinte</button>
+        </div>
+      `;
+    }
+
     function renderTradeCards(trades) {
       return trades.map(trade => {
         const title = trade.direction === "incoming"
@@ -2475,12 +2493,16 @@
 
       const pending = tradeRequests.filter(trade => trade.status === "pending");
       const history = tradeRequests.filter(trade => trade.status !== "pending");
+      const totalHistoryPages = Math.max(1, Math.ceil(history.length / TRADE_HISTORY_PAGE_SIZE));
+      tradeHistoryPage = Math.max(1, Math.min(tradeHistoryPage, totalHistoryPages));
+      const historyStart = (tradeHistoryPage - 1) * TRADE_HISTORY_PAGE_SIZE;
+      const visibleHistory = history.slice(historyStart, historyStart + TRADE_HISTORY_PAGE_SIZE);
 
       tradeList.innerHTML = `
         <div class="trade-card-title">Propostas atuais</div>
         ${pending.length ? renderTradeCards(pending) : `<div class="comparison-empty">Nao ha propostas pendentes.</div>`}
         <div class="trade-card-title">Historico de trocas</div>
-        ${history.length ? renderTradeCards(history) : `<div class="comparison-empty">Ainda nao ha historico.</div>`}
+        ${history.length ? renderTradeCards(visibleHistory) + renderTradeHistoryPagination(totalHistoryPages) : `<div class="comparison-empty">Ainda nao ha historico.</div>`}
       `;
     }
 
@@ -2495,6 +2517,7 @@
       if (!response.ok) return;
       const data = await response.json().catch(() => ({}));
       tradeRequests = Array.isArray(data.trades) ? data.trades : [];
+      tradeHistoryPage = Math.max(1, tradeHistoryPage);
       renderTradeRequests();
     }
 
