@@ -1,0 +1,16 @@
+{
+  "name": "caderneta-mundial-2026",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Caderneta Mundial 2026",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "mongodb": "^6.12.0"
+  }
+}

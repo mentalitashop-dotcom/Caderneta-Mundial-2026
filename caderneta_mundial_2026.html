@@ -296,7 +296,36 @@
       font-weight: 700;
       line-height: 1.55;
     }
-    .result-summary {
+
+    .live-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .live-input {
+      min-width: 210px;
+      flex: 1 1 210px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      outline: none;
+      background: #fff;
+      color: var(--main);
+    }
+
+    .live-input:focus {
+      border-color: var(--main);
+      box-shadow: 0 0 0 4px rgba(17, 24, 39, .08);
+    }
+
+    .live-panel .share-comparison {
+      margin-top: 2px;
+    }    .result-summary {
       min-height: 21px;
       margin: -2px 0 14px;
       color: #4b5563;
@@ -777,7 +806,28 @@
       </div>
       <div id="shareComparison" class="share-comparison" aria-live="polite"></div>
     </section>
-    <section class="stats">
+
+    <section id="livePanel" class="share-panel live-panel hidden" aria-label="Modo live">
+      <div class="share-panel-head">
+        <div class="share-panel-title">
+          <strong>Modo live</strong>
+          <span id="liveStatusText">Liga-te com o teu nome para sincronizar com os teus amigos.</span>
+        </div>
+      </div>
+      <div class="live-controls">
+        <input id="liveProfileInput" class="live-input" type="text" maxlength="40" placeholder="O teu nome" />
+        <button type="button" onclick="connectLiveProfile()">Entrar live</button>
+        <button class="secondary" type="button" onclick="refreshLiveNow()">Atualizar</button>
+      </div>
+      <div class="live-controls">
+        <select id="liveFriendSelect" class="live-input">
+          <option value="">Escolhe um amigo</option>
+        </select>
+        <button type="button" onclick="compareLiveFriend()">Comparar amigo</button>
+        <button class="secondary" type="button" onclick="clearLiveComparison()">Limpar</button>
+      </div>
+      <div id="liveComparison" class="share-comparison" aria-live="polite"></div>
+    </section>    <section class="stats">
       <div class="stat active" data-view="all" role="button" tabindex="0" onclick="setView('all')" onkeydown="activateStat(event, 'all')"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
       <div class="stat" data-view="missing" role="button" tabindex="0" onclick="setView('missing')" onkeydown="activateStat(event, 'missing')"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
       <div class="stat" data-view="owned" role="button" tabindex="0" onclick="setView('owned')" onkeydown="activateStat(event, 'owned')"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
@@ -807,6 +857,10 @@
     let saveTimer = null;
     let countryScrollFrame = null;
     let countryTabsOffset = 0;
+    let liveEnabled = false;
+    let liveProfile = "";
+    let liveUpdatedAt = "";
+    let liveRefreshTimer = null;
 
     const content = document.getElementById("content");
     const countryTabs = document.getElementById("countryTabs");
@@ -820,7 +874,11 @@
     const sharePanel = document.getElementById("sharePanel");
     const friendShareCode = document.getElementById("friendShareCode");
     const shareComparison = document.getElementById("shareComparison");
-    const saveStatus = document.getElementById("saveStatus");
+    const livePanel = document.getElementById("livePanel");
+    const liveProfileInput = document.getElementById("liveProfileInput");
+    const liveStatusText = document.getElementById("liveStatusText");
+    const liveFriendSelect = document.getElementById("liveFriendSelect");
+    const liveComparison = document.getElementById("liveComparison");    const saveStatus = document.getElementById("saveStatus");
 
     const currentViewTitle = document.getElementById("currentViewTitle");
 
@@ -1182,8 +1240,9 @@
 
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
-        writeTxtFileNow().catch(error => {
-          setSaveStatus("Erro ao gravar alterações");
+        const writer = liveEnabled && liveProfile ? writeLiveStateNow : writeTxtFileNow;
+        writer().catch(error => {
+          setSaveStatus(liveEnabled && liveProfile ? "Erro ao sincronizar live" : "Erro ao gravar altera\u00e7\u00f5es");
           console.error(error);
         });
       }, 150);
@@ -1675,6 +1734,187 @@
       friendShareCode.focus();
     }
 
+
+    function cleanLiveProfileName(value) {
+      return String(value || "").trim().replace(/\s+/g, " ").slice(0, 40);
+    }
+
+    async function fetchLiveState(profile) {
+      const response = await fetch(`/api/live/state?profile=${encodeURIComponent(profile)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Nao foi possivel ler o perfil live");
+      return response.json();
+    }
+
+    async function loadLiveProfiles() {
+      if (!liveEnabled || !liveFriendSelect) return;
+
+      const selected = liveFriendSelect.value;
+      const response = await fetch("/api/live/profiles", { cache: "no-store" });
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const profiles = (data.profiles || [])
+        .map(item => typeof item === "string" ? { profile: item } : item)
+        .filter(item => item && item.profile && item.profile !== liveProfile);
+
+      liveFriendSelect.innerHTML = [
+        `<option value="">${profiles.length ? "Escolhe um amigo" : "Ainda nao ha amigos live"}</option>`,
+        ...profiles.map(item => `<option value="${escapeHTML(item.profile)}">${escapeHTML(item.profile)}</option>`)
+      ].join("");
+
+      if (profiles.some(item => item.profile === selected)) liveFriendSelect.value = selected;
+    }
+
+    async function writeLiveStateNow() {
+      if (!liveEnabled || !liveProfile) return writeTxtFileNow();
+
+      setSaveStatus("A sincronizar live...");
+      const response = await fetch("/api/live/state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile: liveProfile, csv: stickersToCSV() })
+      });
+
+      if (!response.ok) throw new Error("Nao foi possivel sincronizar live");
+      const data = await response.json();
+      liveUpdatedAt = data.updatedAt || liveUpdatedAt;
+      liveStatusText.textContent = `Ligado como ${liveProfile}. Sincronizacao live ativa.`;
+      setSaveStatus("Live sincronizado");
+      loadLiveProfiles().catch(() => {});
+    }
+
+    function startLiveRefresh() {
+      if (liveRefreshTimer) clearInterval(liveRefreshTimer);
+      liveRefreshTimer = setInterval(refreshLiveNow, 4000);
+    }
+
+    async function connectLiveProfile() {
+      if (!liveEnabled) return;
+
+      const profile = cleanLiveProfileName(liveProfileInput.value);
+      if (!profile) {
+        setSaveStatus("Escreve o teu nome para entrar no live");
+        liveProfileInput.focus();
+        return;
+      }
+
+      liveProfile = profile;
+      localStorage.setItem("caderneta_live_profile", profile);
+      liveStatusText.textContent = `A ligar como ${profile}...`;
+
+      try {
+        const data = await fetchLiveState(profile);
+        if (data.exists && data.csv) {
+          loadStickers(parseTextFile(data.csv));
+          liveUpdatedAt = data.updatedAt || "";
+        } else {
+          await writeLiveStateNow();
+        }
+
+        liveStatusText.textContent = `Ligado como ${profile}. Sincronizacao live ativa.`;
+        setSaveStatus("Live ligado com sucesso");
+        startLiveRefresh();
+        await loadLiveProfiles();
+      } catch (error) {
+        liveStatusText.textContent = "Nao foi possivel ligar ao modo live.";
+        setSaveStatus("Erro ao ligar live");
+        console.error(error);
+      }
+    }
+
+    async function refreshLiveNow() {
+      if (!liveEnabled) return;
+      if (!liveProfile) {
+        setSaveStatus("Entra no live com o teu nome primeiro");
+        liveProfileInput.focus();
+        return;
+      }
+
+      try {
+        const data = await fetchLiveState(liveProfile);
+        if (data.exists && data.csv && data.updatedAt && data.updatedAt !== liveUpdatedAt) {
+          loadStickers(parseTextFile(data.csv));
+          liveUpdatedAt = data.updatedAt;
+          setSaveStatus("Live atualizado");
+        }
+        await loadLiveProfiles();
+      } catch (error) {
+        setSaveStatus("Erro ao atualizar live");
+        console.error(error);
+      }
+    }
+
+    async function compareLiveFriend() {
+      if (!liveEnabled) return;
+
+      const friend = liveFriendSelect.value;
+      if (!friend) {
+        setSaveStatus("Escolhe um amigo para comparar");
+        return;
+      }
+
+      try {
+        const data = await fetchLiveState(friend);
+        if (!data.exists || !data.csv) {
+          liveComparison.innerHTML = `<div class="comparison-empty">Este amigo ainda nao tem colecao live.</div>`;
+          return;
+        }
+
+        const friendStickers = parseTextFile(data.csv);
+        const friendOwned = new Set(friendStickers.filter(sticker => sticker.tenho).map(sticker => sticker.id));
+        const mineOwned = new Set(stickers.filter(sticker => sticker.tenho).map(sticker => sticker.id));
+        const friendHasYouMiss = stickers.filter(sticker => friendOwned.has(sticker.id) && !mineOwned.has(sticker.id));
+        const youHaveFriendMisses = stickers.filter(sticker => mineOwned.has(sticker.id) && !friendOwned.has(sticker.id));
+
+        liveComparison.innerHTML = `
+          <div class="comparison-grid">
+            <div class="comparison-block">
+              <strong>${escapeHTML(friend)} tem e tu nao tens (${friendHasYouMiss.length})</strong>
+              ${renderComparisonLines(friendHasYouMiss, "Nao ha diferencas deste lado")}
+            </div>
+            <div class="comparison-block">
+              <strong>Tu tens e ${escapeHTML(friend)} nao tem (${youHaveFriendMisses.length})</strong>
+              ${renderComparisonLines(youHaveFriendMisses, "Nao ha diferencas deste lado")}
+            </div>
+          </div>
+        `;
+        setSaveStatus("Comparacao live feita com sucesso");
+      } catch (error) {
+        liveComparison.innerHTML = `<div class="comparison-empty">Nao foi possivel comparar este amigo.</div>`;
+        setSaveStatus("Erro na comparacao live");
+        console.error(error);
+      }
+    }
+
+    function clearLiveComparison() {
+      liveComparison.innerHTML = "";
+      liveFriendSelect.value = "";
+    }
+
+    async function initLiveMode() {
+      if (!livePanel) return;
+
+      try {
+        const response = await fetch("/api/live/status", { cache: "no-store" });
+        if (!response.ok) throw new Error("Sem modo live");
+        const data = await response.json();
+        liveEnabled = Boolean(data.enabled);
+        livePanel.classList.toggle("hidden", !liveEnabled);
+        if (!liveEnabled) return;
+
+        const savedProfile = localStorage.getItem("caderneta_live_profile") || "";
+        liveProfileInput.value = savedProfile;
+        liveStatusText.textContent = savedProfile
+          ? `Perfil guardado: ${savedProfile}. A ligar live...`
+          : "Modo live disponivel. Escreve o teu nome para sincronizar.";
+
+        await loadLiveProfiles();
+        if (savedProfile) await connectLiveProfile();
+      } catch {
+        liveEnabled = false;
+        livePanel.classList.add("hidden");
+      }
+    }
     function updateSearchControls() {
       const hasSearch = Boolean(search.value.trim());
       clearSearchButton.classList.toggle("is-visible", hasSearch);
@@ -1985,7 +2225,9 @@
       }
     }
 
-    tryAutoLoad();
+    tryAutoLoad()
+      .then(() => initLiveMode())
+      .catch(() => initLiveMode().catch(() => {}));
   </script>
 </body>
 </html>
