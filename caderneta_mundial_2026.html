@@ -446,6 +446,61 @@
       flex: 1 1 154px;
     }
 
+    .legacy-import-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .legacy-import-copy {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .legacy-import-copy strong {
+      color: var(--main);
+      font-size: 13px;
+    }
+
+    .legacy-import-copy span,
+    .legacy-import-status {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .legacy-import-action {
+      position: relative;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: var(--main);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .legacy-import-action input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
     .share-panel {
       background: #fff;
       border: 1px solid var(--line);
@@ -863,17 +918,17 @@
 
     .sticker-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+      gap: 8px;
     }
 
     .sticker {
       border: 1px solid #111827;
-      border-radius: 14px;
-      padding: 12px;
+      border-radius: 10px;
+      padding: 9px 38px 9px 10px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       background: var(--sticker-bg, #fff);
       color: var(--sticker-text, var(--text));
       cursor: pointer;
@@ -909,10 +964,10 @@
 
     .sticker-state {
       position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 26px;
-      height: 26px;
+      top: 8px;
+      right: 8px;
+      width: 22px;
+      height: 22px;
       border: 2px solid var(--check-border, #111827);
       border-radius: 999px;
       background: rgba(255,255,255,.78);
@@ -926,8 +981,8 @@
 
     .sticker-state::before {
       content: "";
-      width: 11px;
-      height: 11px;
+      width: 9px;
+      height: 9px;
       transform: scale(0);
       clip-path: polygon(14% 44%, 0 59%, 40% 100%, 100% 16%, 84% 0, 37% 64%);
       background: currentColor;
@@ -954,12 +1009,13 @@
 
     .code {
       font-weight: 800;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
+      font-size: 13px;
     }
 
     .name {
       color: var(--sticker-muted, var(--muted));
-      font-size: 14px;
+      font-size: 12px;
       overflow-wrap: anywhere;
     }
 
@@ -978,12 +1034,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      margin-top: 8px;
+      gap: 6px;
+      margin-top: 6px;
     }
     .duplicate-summary {
       color: var(--sticker-muted, var(--muted));
-      font-size: 12px;
+      font-size: 11px;
       font-family: inherit;
       font-style: normal;
       overflow-wrap: anywhere;
@@ -1007,14 +1063,14 @@
     }
 
     .duplicate-control-btn {
-      width: 30px;
-      height: 30px;
+      width: 24px;
+      height: 24px;
       padding: 0;
       border: 2px solid var(--duplicate-color, var(--line));
       border-radius: 8px;
       background: var(--duplicate-color, var(--main));
       color: var(--duplicate-text, #fff);
-      font-size: 18px;
+      font-size: 15px;
       font-weight: 900;
       line-height: 1;
       display: inline-grid;
@@ -1085,6 +1141,15 @@
     @media (max-width: 760px) {
       .toolbar {
         grid-template-columns: 1fr;
+      }
+
+      .legacy-import-panel {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .legacy-import-action {
+        width: 100%;
       }
 
       .export-list-btn {
@@ -1232,6 +1297,17 @@
       </div>
     </section>
 
+    <section id="legacyImportPanel" class="legacy-import-panel">
+      <div class="legacy-import-copy">
+        <strong>Importar caderneta antiga</strong>
+        <span id="legacyImportStatus" class="legacy-import-status">Secção temporária para carregar o teu ficheiro antigo.</span>
+      </div>
+      <label class="legacy-import-action">
+        Importar ficheiro
+        <input id="legacyImportInput" type="file" accept=".txt,.csv,.json,text/plain,text/csv,application/json" onchange="importLegacyAlbumFile(this)" />
+      </label>
+    </section>
+
     <div id="resultSummary" class="result-summary" aria-live="polite"></div>
 
     <section id="livePanel" class="share-panel live-panel hidden" aria-label="Amigos">
@@ -1336,6 +1412,9 @@
     const clearSearchButton = document.getElementById("clearSearchButton");
     const exportListButton = document.getElementById("exportListButton");
     const exportSummary = document.getElementById("exportSummary");
+    const legacyImportPanel = document.getElementById("legacyImportPanel");
+    const legacyImportInput = document.getElementById("legacyImportInput");
+    const legacyImportStatus = document.getElementById("legacyImportStatus");
     const resultSummary = document.getElementById("resultSummary");
     const livePanel = document.getElementById("livePanel");
     const liveUsernameInput = document.getElementById("liveUsernameInput");
@@ -1785,6 +1864,7 @@
       const showAlbum = activePage === "album" || (activePage === "friends" && hasSelectedFriend());
       albumStats?.classList.toggle("hidden", !showAlbum);
       albumToolbar?.classList.toggle("hidden", !showAlbum);
+      legacyImportPanel?.classList.toggle("hidden", activePage !== "album");
       resultSummary?.classList.toggle("hidden", !showAlbum);
       countryTabsWrap?.classList.toggle("hidden", !showAlbum);
       content?.classList.toggle("hidden", !showAlbum);
@@ -2307,21 +2387,30 @@
       return stickers.filter(sticker => sticker.tenho && (sticker.repetidos || 0) > 0);
     }
 
+    function possibleTradeGivesFriendNeeds() {
+      if (!hasSelectedFriend()) return [];
+      const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
+      return stickers.filter(sticker => {
+        const friendSticker = friendById.get(sticker.id);
+        return sticker.tenho && (sticker.repetidos || 0) > 0 && friendSticker && !friendSticker.tenho;
+      });
+    }
+
+    function possibleTradeGivesFriendAlreadyHas() {
+      if (!hasSelectedFriend()) return [];
+      const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
+      return stickers.filter(sticker => {
+        const friendSticker = friendById.get(sticker.id);
+        return sticker.tenho && (sticker.repetidos || 0) > 0 && friendSticker && friendSticker.tenho;
+      });
+    }
+
     function possibleTradeReceives() {
       if (!hasSelectedFriend()) return [];
       const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
       return friendStickers.filter(sticker => {
         const mine = mineById.get(sticker.id);
         return sticker.tenho && (sticker.repetidos || 0) > 0 && mine && !mine.tenho;
-      });
-    }
-
-    function friendRepeatedAlreadyOwned() {
-      if (!hasSelectedFriend()) return [];
-      const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
-      return friendStickers.filter(sticker => {
-        const mine = mineById.get(sticker.id);
-        return sticker.tenho && (sticker.repetidos || 0) > 0 && mine && mine.tenho;
       });
     }
 
@@ -2342,19 +2431,24 @@
       }
 
       const gives = possibleTradeGives();
+      const givesFriendNeeds = possibleTradeGivesFriendNeeds();
+      const givesFriendAlreadyHas = possibleTradeGivesFriendAlreadyHas();
       const receives = possibleTradeReceives();
-      const receivesAlreadyOwned = friendRepeatedAlreadyOwned();
 
       if (!receives.length) {
         tradeSuggestions.innerHTML = `
           <div class="trade-select-grid">
             <div class="trade-card">
-              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu precisas</div>
-              <div class="trade-lines">Não há troca possível, ${escapeHTML(friendProfile)} não tem nenhum cromo que tu precises.</div>
+              <div class="trade-card-title">Repetidos que ${escapeHTML(friendProfile)} já tem</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendAlreadyHas)}</div>
             </div>
             <div class="trade-card">
-              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu ja tens</div>
-              <div class="trade-lines is-scrollable">${tradeStickerList(receivesAlreadyOwned)}</div>
+              <div class="trade-card-title">Meus cromos que ${escapeHTML(friendProfile)} precisa</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendNeeds)}</div>
+            </div>
+            <div class="trade-card">
+              <div class="trade-card-title">Cromos de ${escapeHTML(friendProfile)} que não tenho</div>
+              <div class="trade-lines">Não há troca possível, ${escapeHTML(friendProfile)} não tem nenhum cromo que tu precises.</div>
             </div>
           </div>
         `;
@@ -2375,27 +2469,27 @@
           <div class="trade-card-title">Nova proposta para ${escapeHTML(friendProfile)}</div>
           <div class="trade-select-grid">
             <div class="trade-card">
-              <div class="trade-card-title">Tu podes dar</div>
-              <div class="trade-lines is-scrollable">${tradeStickerList(gives)}</div>
+              <div class="trade-card-title">Repetidos que ${escapeHTML(friendProfile)} já tem</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendAlreadyHas)}</div>
             </div>
             <div class="trade-card">
-              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu precisas</div>
+              <div class="trade-card-title">Meus cromos que ${escapeHTML(friendProfile)} precisa</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendNeeds)}</div>
+            </div>
+          </div>
+          <div class="trade-select-grid">
+            <div class="trade-card">
+              <div class="trade-card-title">Cromos de ${escapeHTML(friendProfile)} que não tenho</div>
               <div class="trade-lines is-scrollable">${tradeStickerList(receives)}</div>
             </div>
           </div>
           <div class="trade-select-grid">
-            <div class="trade-card">
-              <div class="trade-card-title">Repetidos de ${escapeHTML(friendProfile)} que tu ja tens</div>
-              <div class="trade-lines is-scrollable">${tradeStickerList(receivesAlreadyOwned)}</div>
-            </div>
-          </div>
-          <div class="trade-select-grid">
             <div class="trade-field">
-              <label for="tradeGiveSelect">Tu das</label>
+              <label for="tradeGiveSelect">Cromos Repetidos</label>
               <select id="tradeGiveSelect" class="live-input">${gives.map(tradeOption).join("")}</select>
             </div>
             <div class="trade-field">
-              <label for="tradeReceiveSelect">Tu recebes</label>
+              <label for="tradeReceiveSelect">Cromo que recebes</label>
               <select id="tradeReceiveSelect" class="live-input">${receives.map(tradeOption).join("")}</select>
             </div>
           </div>
@@ -3358,6 +3452,78 @@
       if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
       if (persist) saveState();
       render();
+    }
+
+    function setLegacyImportStatus(text) {
+      if (legacyImportStatus) legacyImportStatus.textContent = text;
+    }
+
+    function applyImportedAlbumProgress(importedStickers) {
+      const importedById = new Map(importedStickers.map(sticker => [sticker.id, sticker]));
+      let matched = 0;
+      let updated = 0;
+      let owned = 0;
+      let duplicates = 0;
+
+      stickers.forEach(sticker => {
+        const imported = importedById.get(sticker.id);
+        if (!imported) return;
+
+        matched += 1;
+        const importedDuplicates = normalizeDuplicates(imported.repetidos);
+        const importedOwned = Boolean(imported.tenho || importedDuplicates > 0);
+
+        if (!importedOwned) return;
+
+        updated += 1;
+        sticker.tenho = true;
+        sticker.repetidos = importedDuplicates;
+
+        owned += 1;
+        duplicates += sticker.repetidos || 0;
+      });
+
+      return { matched, updated, owned, duplicates };
+    }
+
+    async function importLegacyAlbumFile(input) {
+      const file = input?.files?.[0];
+      if (!file) return;
+
+      try {
+        if (!requireLiveLogin()) return;
+
+        setLegacyImportStatus("A importar ficheiro...");
+        const imported = parseTextFile(await file.text());
+        if (!imported.length) {
+          setLegacyImportStatus("O ficheiro não tem cromos válidos.");
+          return;
+        }
+
+        const result = applyImportedAlbumProgress(imported);
+        if (!result.matched) {
+          setLegacyImportStatus("Nenhum cromo do ficheiro corresponde à caderneta atual.");
+          return;
+        }
+
+        if (!result.updated) {
+          setLegacyImportStatus("O ficheiro corresponde, mas não trouxe cromos obtidos ou repetidos.");
+          return;
+        }
+
+        saveState();
+        clearTimeout(saveTimer);
+        saveTimer = null;
+        render();
+        await persistStateNow();
+        setLegacyImportStatus(`Importados ${result.updated} cromos: ${result.owned} obtidos e ${result.duplicates} repetidos.`);
+      } catch (error) {
+        setLegacyImportStatus("Não foi possível importar esse ficheiro.");
+        setSaveStatus("Erro ao importar caderneta antiga");
+        console.error(error);
+      } finally {
+        if (input) input.value = "";
+      }
     }
 
 
