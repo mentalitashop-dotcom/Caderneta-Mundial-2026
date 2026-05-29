@@ -169,6 +169,16 @@ async function getMongoDb() {
   return mongoDbPromise;
 }
 
+function publicUser(user) {
+  if (!user) return null;
+  return {
+    id: user._id || user.id,
+    username: user.username,
+    role: user.role || "verificado",
+    verified: user.verified !== false
+  };
+}
+
 async function getAuthUser(req) {
   if (!MONGODB_URI) return null;
   const token = parseCookies(req)[COOKIE_NAME];
@@ -178,10 +188,13 @@ async function getAuthUser(req) {
   const session = await db.collection("sessions").findOne({ _id: tokenHash(token) });
   if (!session || new Date(session.expiresAt) <= new Date()) return null;
 
-  return {
-    id: session.userId,
-    username: session.username
-  };
+  const user = await db.collection("users").findOne(
+    { _id: session.userId },
+    { projection: { username: 1, role: 1, verified: 1 } }
+  );
+
+  if (!user || user.role !== "verificado" || user.verified !== true) return null;
+  return publicUser(user);
 }
 
 async function createSession(db, user) {
@@ -193,11 +206,21 @@ async function createSession(db, user) {
     _id: tokenHash(token),
     userId: user._id,
     username: user.username,
+    role: user.role,
     createdAt: now,
     expiresAt
   });
 
   return token;
+}
+
+async function requireVerifiedUser(req, res) {
+  const user = await getAuthUser(req);
+  if (!user) {
+    sendJson(res, 401, { error: "Acesso bloqueado. Inicia sessao com uma conta verificada." });
+    return null;
+  }
+  return user;
 }
 
 async function handleAuthRoute(req, res, url) {
@@ -222,7 +245,8 @@ async function handleAuthRoute(req, res, url) {
     return sendJson(res, 200, {
       enabled: Boolean(MONGODB_URI),
       registrationEnabled: Boolean(REGISTER_PIN),
-      valid: Boolean(REGISTER_PIN && inviteToken === REGISTER_PIN)
+      valid: Boolean(REGISTER_PIN && inviteToken === REGISTER_PIN),
+      role: REGISTER_PIN && inviteToken === REGISTER_PIN ? "verificado" : null
     });
   }
 
@@ -262,6 +286,10 @@ async function handleAuthRoute(req, res, url) {
       usernameLower,
       salt,
       passwordHash: hashPassword(password, salt),
+      role: "verificado",
+      verified: true,
+      verifiedAt: now,
+      verifiedByInvite: true,
       createdAt: now
     };
 
@@ -274,11 +302,10 @@ async function handleAuthRoute(req, res, url) {
       throw error;
     }
 
-    const token = await createSession(db, user);
     return sendJson(res, 200, {
       ok: true,
-      user: { id: user._id, username: user.username }
-    }, { "Set-Cookie": sessionCookie(token) });
+      user: publicUser(user)
+    });
   }
 
   if (url.pathname === "/api/auth/login" && req.method === "POST") {
@@ -291,10 +318,14 @@ async function handleAuthRoute(req, res, url) {
       return sendJson(res, 401, { error: "Utilizador ou password errados." });
     }
 
+    if (user.role !== "verificado" || user.verified !== true) {
+      return sendJson(res, 403, { error: "Esta conta ainda nao esta verificada." });
+    }
+
     const token = await createSession(db, user);
     return sendJson(res, 200, {
       ok: true,
-      user: { id: user._id, username: user.username }
+      user: publicUser(user)
     }, { "Set-Cookie": sessionCookie(token) });
   }
 
@@ -321,8 +352,8 @@ async function handleLiveRoute(req, res, url) {
   if (!url.pathname.startsWith("/api/live/")) return false;
   if (!MONGODB_URI) return sendJson(res, 503, { error: "Modo online nao configurado" });
 
-  const user = await getAuthUser(req);
-  if (!user) return sendJson(res, 401, { error: "Precisas de iniciar sessao." });
+  const user = await requireVerifiedUser(req, res);
+  if (!user) return;
 
   const db = await getMongoDb();
   const collection = db.collection("colecoes");
@@ -400,6 +431,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (url.pathname === "/api/base-cromos" || url.pathname === "/api/cromos" || url.pathname === "/cromos.txt") {
+      const user = await requireVerifiedUser(req, res);
+      if (!user) return;
+
       if (req.method === "GET") {
         cancelShutdown();
         return send(res, 200, readBaseAlbum(), "text/plain; charset=utf-8");
@@ -407,7 +441,11 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 410, { error: "O modo local foi desativado. As alteracoes gravam apenas online." });
     }
 
-    return send(res, 404, "Nao encontrado");
+    if (url.pathname.startsWith("/api/")) {
+      return sendJson(res, 404, { error: "Nao encontrado" });
+    }
+
+    return send(res, 404, "ESTA APP NAO FOI CRIADA PARA SI");
   } catch (error) {
     console.error(error);
     const wantsJson = req.url && req.url.startsWith("/api/");

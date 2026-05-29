@@ -212,7 +212,9 @@
       color: #4b5563;
       font-size: 13px;
       font-weight: 800;
-    }    main {
+    }
+
+    main {
       max-width: 1150px;
       margin: 0 auto;
       padding: 22px 18px 60px;
@@ -871,16 +873,28 @@
     <div class="auth-card">
       <div class="auth-view auth-login">
         <div class="auth-kicker">Caderneta Mundial 2026</div>
-        <h1 class="auth-title">Entrar na caderneta</h1>
-        <p id="authStatusText" class="auth-copy">Usa o teu utilizador e password. O convite fica guardado pelo link.</p>
+        <h1 class="auth-title">Login apenas</h1>
+        <p id="authLoginStatusText" class="auth-copy">Entra com o teu username e password.</p>
         <div class="auth-form">
-          <input id="authUsernameInput" class="auth-input" type="text" maxlength="24" placeholder="Username" autocomplete="username" />
-          <input id="authPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" />
-          <div class="auth-actions">
-            <button id="authLoginButton" type="button" onclick="loginLiveAccount()">Entrar</button>
-            <button id="authRegisterButton" class="secondary" type="button" onclick="registerLiveAccount()">Criar conta</button>
+          <input id="authLoginUsernameInput" class="auth-input" type="text" maxlength="24" placeholder="Username" autocomplete="username" />
+          <input id="authLoginPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" />
+          <div class="auth-actions auth-actions-single">
+            <button id="authLoginButton" type="button" onclick="loginLiveAccount()">Login</button>
           </div>
-          <div id="authMessage" class="auth-message"></div>
+          <div id="authLoginMessage" class="auth-message"></div>
+        </div>
+      </div>
+      <div class="auth-view auth-register">
+        <div class="auth-kicker">Convite aceite</div>
+        <h1 class="auth-title">Registo</h1>
+        <p id="authRegisterStatusText" class="auth-copy">Cria a tua conta. Depois voltas ao login para entrar.</p>
+        <div class="auth-form">
+          <input id="authRegisterUsernameInput" class="auth-input" type="text" maxlength="24" placeholder="Username" autocomplete="username" />
+          <input id="authRegisterPasswordInput" class="auth-input" type="password" maxlength="72" placeholder="Password" autocomplete="new-password" />
+          <div class="auth-actions auth-actions-single">
+            <button id="authCreateAccountButton" type="button" onclick="registerLiveAccount()">Criar conta</button>
+          </div>
+          <div id="authRegisterMessage" class="auth-message"></div>
         </div>
       </div>
       <div class="auth-view auth-denied">
@@ -990,6 +1004,7 @@
     let liveRefreshTimer = null;
     let inviteToken = "";
     let inviteValid = false;
+    let inviteFromCurrentLink = false;
 
     const content = document.getElementById("content");
     const countryTabs = document.getElementById("countryTabs");
@@ -1013,12 +1028,17 @@
     const liveLoginButton = document.getElementById("liveLoginButton");
     const liveRegisterButton = document.getElementById("liveRegisterButton");
     const authGate = document.getElementById("authGate");
-    const authStatusText = document.getElementById("authStatusText");
-    const authMessage = document.getElementById("authMessage");
-    const authUsernameInput = document.getElementById("authUsernameInput");
-    const authPasswordInput = document.getElementById("authPasswordInput");
+    const authLoginStatusText = document.getElementById("authLoginStatusText");
+    const authRegisterStatusText = document.getElementById("authRegisterStatusText");
+    const authLoginMessage = document.getElementById("authLoginMessage");
+    const authRegisterMessage = document.getElementById("authRegisterMessage");
+    const authLoginUsernameInput = document.getElementById("authLoginUsernameInput");
+    const authLoginPasswordInput = document.getElementById("authLoginPasswordInput");
+    const authRegisterUsernameInput = document.getElementById("authRegisterUsernameInput");
+    const authRegisterPasswordInput = document.getElementById("authRegisterPasswordInput");
     const authLoginButton = document.getElementById("authLoginButton");
-    const authRegisterButton = document.getElementById("authRegisterButton");    const saveStatus = document.getElementById("saveStatus");
+    const authCreateAccountButton = document.getElementById("authCreateAccountButton");
+    const saveStatus = document.getElementById("saveStatus");
 
     const currentViewTitle = document.getElementById("currentViewTitle");
 
@@ -1868,9 +1888,10 @@
     function readInviteToken() {
       const params = new URLSearchParams(window.location.search);
       const fromUrl = params.get("convite") || params.get("invite") || params.get("pin") || "";
+      inviteFromCurrentLink = Boolean(fromUrl);
 
       if (fromUrl) {
-        localStorage.setItem("caderneta_invite_token", fromUrl);
+        sessionStorage.setItem("caderneta_invite_token", fromUrl);
         params.delete("convite");
         params.delete("invite");
         params.delete("pin");
@@ -1880,25 +1901,44 @@
         return fromUrl;
       }
 
-      return localStorage.getItem("caderneta_invite_token") || "";
+      localStorage.removeItem("caderneta_invite_token");
+      return sessionStorage.getItem("caderneta_invite_token") || "";
+    }
+
+    function currentAuthMode() {
+      if (document.body.classList.contains("auth-mode-register")) return "register";
+      if (document.body.classList.contains("auth-mode-login")) return "login";
+      return "app";
     }
 
     function setAuthMode(mode) {
       document.body.classList.toggle("auth-locked", mode !== "app");
       document.body.classList.toggle("auth-mode-login", mode === "login");
+      document.body.classList.toggle("auth-mode-register", mode === "register");
       document.body.classList.toggle("auth-mode-denied", mode === "denied");
       if (authGate) authGate.setAttribute("aria-hidden", mode === "app" ? "true" : "false");
     }
 
-    function setAuthMessage(text) {
-      if (authMessage) authMessage.textContent = text || "";
-      if (authStatusText && text) authStatusText.textContent = text;
+    function setAuthMessage(text, mode = currentAuthMode()) {
+      if (mode === "register") {
+        authRegisterMessage.textContent = text || "";
+        return;
+      }
+      authLoginMessage.textContent = text || "";
     }
 
-    function liveCredentials() {
+    function liveCredentials(mode = currentAuthMode()) {
+      if (mode === "register") {
+        return {
+          username: cleanLiveProfileName(authRegisterUsernameInput.value),
+          password: authRegisterPasswordInput.value,
+          inviteToken
+        };
+      }
+
       const useGate = document.body.classList.contains("auth-locked");
-      const usernameInput = useGate ? authUsernameInput : liveUsernameInput;
-      const passwordInput = useGate ? authPasswordInput : livePasswordInput;
+      const usernameInput = useGate ? authLoginUsernameInput : liveUsernameInput;
+      const passwordInput = useGate ? authLoginPasswordInput : livePasswordInput;
 
       return {
         username: cleanLiveProfileName(usernameInput.value),
@@ -1909,23 +1949,24 @@
 
     function updateLiveLoginUI() {
       const loggedIn = Boolean(liveProfile);
-      const canUseInvite = Boolean(inviteValid || loggedIn);
 
       liveUsernameInput.disabled = loggedIn || !liveEnabled;
       livePasswordInput.disabled = !liveEnabled;
       livePasswordInput.value = loggedIn ? "" : livePasswordInput.value;
       livePasswordInput.classList.toggle("hidden", loggedIn);
       liveLoginButton.classList.toggle("hidden", loggedIn);
-      liveRegisterButton.classList.toggle("hidden", loggedIn);
+      liveRegisterButton.classList.toggle("hidden", true);
       liveLoginButton.disabled = !liveEnabled;
-      liveRegisterButton.disabled = !liveEnabled || !canUseInvite;
+      liveRegisterButton.disabled = true;
       liveLogoutButton.classList.toggle("hidden", !loggedIn);
       liveFriendSelect.disabled = !loggedIn;
 
-      authUsernameInput.disabled = loggedIn || !liveEnabled || !canUseInvite;
-      authPasswordInput.disabled = loggedIn || !liveEnabled || !canUseInvite;
-      authLoginButton.disabled = !liveEnabled || !canUseInvite;
-      authRegisterButton.disabled = !liveEnabled || !canUseInvite;
+      authLoginUsernameInput.disabled = loggedIn || !liveEnabled;
+      authLoginPasswordInput.disabled = loggedIn || !liveEnabled;
+      authLoginButton.disabled = !liveEnabled;
+      authRegisterUsernameInput.disabled = loggedIn || !liveEnabled || !inviteValid;
+      authRegisterPasswordInput.disabled = loggedIn || !liveEnabled || !inviteValid;
+      authCreateAccountButton.disabled = !liveEnabled || !inviteValid;
     }
 
     async function validateInviteToken(token) {
@@ -2032,17 +2073,20 @@
     async function loginLiveAccount() {
       if (!liveEnabled) return;
 
-      const credentials = liveCredentials();
+      const credentials = liveCredentials("login");
       if (!credentials.username || !credentials.password) {
-        setSaveStatus("Escreve utilizador e password");
+        setAuthMessage("Escreve username e password", "login");
+        setSaveStatus("Escreve username e password");
         return;
       }
 
       try {
-        liveStatusText.textContent = "A iniciar sessao...";
+        setAuthMessage("A iniciar login...", "login");
+        liveStatusText.textContent = "A iniciar login...";
         const data = await authRequest("/api/auth/login", credentials);
         await finishLiveLogin(data.user);
       } catch (error) {
+        setAuthMessage(error.message, "login");
         liveStatusText.textContent = error.message;
         setSaveStatus("Erro no login");
       }
@@ -2050,18 +2094,37 @@
 
     async function registerLiveAccount() {
       if (!liveEnabled) return;
+      if (!inviteValid || !inviteToken) {
+        setAuthMessage("Abre o link de convite para criar conta", "register");
+        return;
+      }
 
-      const credentials = liveCredentials();
+      const credentials = liveCredentials("register");
       if (!credentials.username || !credentials.password) {
-        setSaveStatus("Escolhe utilizador e password");
+        setAuthMessage("Escolhe username e password", "register");
+        setSaveStatus("Escolhe username e password");
         return;
       }
 
       try {
+        setAuthMessage("A criar conta...", "register");
         liveStatusText.textContent = "A criar conta...";
-        const data = await authRequest("/api/auth/register", credentials);
-        await finishLiveLogin(data.user);
+        await authRequest("/api/auth/register", credentials);
+        localStorage.setItem("caderneta_live_profile", credentials.username);
+        sessionStorage.removeItem("caderneta_invite_token");
+        localStorage.removeItem("caderneta_invite_token");
+        inviteToken = "";
+        inviteValid = false;
+        authLoginUsernameInput.value = credentials.username;
+        authLoginPasswordInput.value = "";
+        authRegisterPasswordInput.value = "";
+        liveUsernameInput.value = credentials.username;
+        setAuthMode("login");
+        updateLiveLoginUI();
+        setAuthMessage("Conta criada. Agora faz login.", "login");
+        setSaveStatus("Conta criada com sucesso");
       } catch (error) {
+        setAuthMessage(error.message, "register");
         liveStatusText.textContent = error.message;
         setSaveStatus("Erro ao criar conta");
       }
@@ -2083,7 +2146,6 @@
       liveStatusText.textContent = "Sessao terminada. Entra para voltar ao modo online.";
       updateLiveLoginUI();
       setSaveStatus("Sessao terminada");
-      loadBaseAlbum().catch(() => {});
     }
 
     async function refreshLiveNow() {
@@ -2173,7 +2235,8 @@
 
         const rememberedUser = localStorage.getItem("caderneta_live_profile") || "";
         liveUsernameInput.value = rememberedUser;
-        authUsernameInput.value = rememberedUser;
+        authLoginUsernameInput.value = rememberedUser;
+        authRegisterUsernameInput.value = rememberedUser;
 
         if (!liveEnabled) {
           liveProfile = "";
@@ -2192,7 +2255,8 @@
         }
 
         inviteValid = await validateInviteToken(inviteToken);
-        if (!inviteValid) {
+        if (inviteToken && !inviteValid && inviteFromCurrentLink) {
+          sessionStorage.removeItem("caderneta_invite_token");
           localStorage.removeItem("caderneta_invite_token");
           inviteToken = "";
           liveProfile = "";
@@ -2203,11 +2267,18 @@
         }
 
         liveProfile = "";
-        setAuthMode("login");
-        authStatusText.textContent = "Convite aceite. Entra ou cria a tua conta.";
-        setAuthMessage("");
+        if (inviteValid) {
+          setAuthMode("register");
+          authRegisterStatusText.textContent = "Convite aceite. Cria a tua conta.";
+          setAuthMessage("", "register");
+          setSaveStatus("Registo por convite");
+        } else {
+          setAuthMode("login");
+          authLoginStatusText.textContent = "Entra com o teu username e password.";
+          setAuthMessage("", "login");
+          setSaveStatus("Login apenas");
+        }
         updateLiveLoginUI();
-        setSaveStatus("Entra para sincronizar online");
       } catch {
         liveEnabled = false;
         liveProfile = "";
@@ -2488,10 +2559,14 @@
     }
 
     search.addEventListener("input", render);
-    authUsernameInput.addEventListener("input", () => liveUsernameInput.value = authUsernameInput.value);
-    authPasswordInput.addEventListener("input", () => livePasswordInput.value = authPasswordInput.value);
-    authPasswordInput.addEventListener("keydown", event => {
+    authLoginUsernameInput.addEventListener("input", () => liveUsernameInput.value = authLoginUsernameInput.value);
+    authLoginPasswordInput.addEventListener("input", () => livePasswordInput.value = authLoginPasswordInput.value);
+    authRegisterUsernameInput.addEventListener("input", () => liveUsernameInput.value = authRegisterUsernameInput.value);
+    authLoginPasswordInput.addEventListener("keydown", event => {
       if (event.key === "Enter") loginLiveAccount();
+    });
+    authRegisterPasswordInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") registerLiveAccount();
     });
 
     countryScrollLeft.addEventListener("mouseenter", () => startCountryScroll(-1));
@@ -2528,9 +2603,7 @@
       }
     }
 
-    tryAutoLoad()
-      .then(() => initLiveMode())
-      .catch(() => initLiveMode().catch(() => {}));
+    initLiveMode().catch(() => {});
   </script>
 </body>
 </html>
