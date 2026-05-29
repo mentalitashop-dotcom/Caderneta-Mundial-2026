@@ -81,5 +81,8 @@ O objetivo principal e online. Ainda assim, podes testar antes do deploy:
 1. Copia `.env.example` para `.env`.
 2. Preenche `MONGODB_URI` e `REGISTER_PIN`.
 3. Corre `npm install`.
-4. Corre `npm start`.
-5. Abre `http://localhost:1312`.
+4. Corre `npm run test:mongodb`.
+5. Se o teste da MongoDB passar, corre `npm start`.
+6. Abre `http://localhost:1312`.
+
+O teste `npm run test:mongodb` faz `ping` e uma escrita pequena em `_connection_test`. Se falhar com `bad auth`, o problema esta no utilizador/password do Atlas. Se falhar com timeout, o problema costuma estar em Network Access/IP allowlist.
