@@ -15,7 +15,7 @@ const SESSION_DAYS = 30;
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
-const APP_VERSION = "1.0.3";
+const APP_VERSION = "1.0.4";
 const IS_RENDER = process.env.RENDER === "true";
 const IS_PRODUCTION = process.env.NODE_ENV === "production" || IS_RENDER;
 const ONLINE_REQUIRED = process.env.ONLINE_REQUIRED !== "false";

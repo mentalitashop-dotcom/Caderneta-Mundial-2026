@@ -16,7 +16,7 @@ Os ficheiros `cromos.txt` e `backup_cromos.txt` sao progresso local/backup pesso
 
 ## Variaveis obrigatorias no Render
 
-- `MONGODB_URI`: connection string do MongoDB Atlas, de preferencia `mongodb+srv://...`.
+- `MONGODB_URI`: connection string do MongoDB Atlas, de preferencia sem nome da base no caminho.
 - `MONGODB_DB`: nome da base de dados. Valor recomendado: `caderneta`.
 - `REGISTER_PIN`: PIN secreto para criar contas por convite.
 - `ONLINE_REQUIRED`: manter como `true`.
@@ -35,6 +35,20 @@ Variavel opcional:
 4. No Network Access, permite o acesso do Render ao cluster.
 5. Usa essa string em `MONGODB_URI` no Render.
 
+Formato recomendado para o Render:
+
+```text
+mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+```
+
+Depois define a base em separado:
+
+```text
+MONGODB_DB=caderneta
+```
+
+Se usares `/caderneta` dentro do URI e receberes `bad auth : authentication failed`, remove `/caderneta` do URI ou acrescenta `authSource=admin`.
+
 Se estiveres no plano gratuito do Render e nao tiveres IP fixo de saida, podes precisar de permitir `0.0.0.0/0` no Atlas. Isso permite ligacoes de qualquer IP, por isso usa uma password forte e um utilizador dedicado so para esta app.
 
 ## Deploy no Render
@@ -44,10 +58,11 @@ Se estiveres no plano gratuito do Render e nao tiveres IP fixo de saida, podes p
 3. Se usares o Blueprint, o `render.yaml` ja define:
    - `buildCommand: npm install`
    - `startCommand: npm start`
-   - `healthCheckPath: /api/health`
+   - `healthCheckPath: /`
 4. No Render, define `MONGODB_URI` e `REGISTER_PIN` como variaveis secretas.
 5. Faz deploy.
-6. Abre `/api/health`; deve devolver `onlineReady: true`.
+6. Abre `/api/health`; deve devolver `version`.
+7. Abre `/api/ready`; deve devolver `mongoConnected: true`.
 
 ## Convites
 
