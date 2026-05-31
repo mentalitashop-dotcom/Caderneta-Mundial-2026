@@ -183,6 +183,15 @@ function validatePassword(password) {
   return typeof password === "string" && password.length >= 8 && password.length <= 72;
 }
 
+function validateThemeColor(value) {
+  return /^#[0-9a-fA-F]{6}$/.test(String(value || "").trim());
+}
+
+function cleanThemeColor(value) {
+  const color = String(value || "").trim();
+  return validateThemeColor(color) ? color.toLowerCase() : "#111827";
+}
+
 function hashPassword(password, salt) {
   return crypto.pbkdf2Sync(password, salt, 120000, 32, "sha256").toString("hex");
 }
@@ -563,7 +572,8 @@ function publicUser(user) {
     id: user._id || user.id,
     username: user.username,
     role: user.role || "verificado",
-    verified: user.verified !== false
+    verified: user.verified !== false,
+    themeColor: cleanThemeColor(user.themeColor)
   };
 }
 
@@ -591,7 +601,7 @@ async function findVerifiedUser(db, username) {
   let user = await findUserAccount(
     db,
     username,
-    { projection: { username: 1, usernameLower: 1, role: 1, verified: 1 } }
+    { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, themeColor: 1 } }
   );
 
   user = await normalizeUserAccount(db, user);
@@ -1092,6 +1102,95 @@ async function handleAuthRoute(req, res, url) {
 
   if (!url.pathname.startsWith("/api/auth/")) return false;
   if (!MONGODB_URI) return sendJson(res, 503, { error: "Login online nao configurado" });
+
+  if (url.pathname === "/api/auth/settings") {
+    const user = await requireVerifiedUser(req, res);
+    if (!user) return;
+
+    const db = await openMongoDbForRequest(res);
+    if (!db) return;
+
+    if (req.method === "GET" || req.method === "HEAD") {
+      const account = await findUserAccount(
+        db,
+        user.username,
+        { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, themeColor: 1 } }
+      );
+
+      return sendJson(res, 200, {
+        ok: true,
+        settings: {
+          themeColor: cleanThemeColor(account?.themeColor)
+        },
+        user: publicUser(account || user)
+      });
+    }
+
+    if (req.method === "POST") {
+      const payload = await readJson(req);
+      const rawThemeColor = String(payload.themeColor || "").trim();
+
+      if (!validateThemeColor(rawThemeColor)) {
+        return sendJson(res, 400, { error: "Cor invalida." });
+      }
+
+      const themeColor = cleanThemeColor(rawThemeColor);
+
+      await db.collection(COLLECTIONS.users).updateOne(
+        { _id: user.id },
+        { $set: { themeColor, settingsUpdatedAt: new Date() } }
+      );
+
+      return sendJson(res, 200, {
+        ok: true,
+        settings: { themeColor }
+      });
+    }
+
+    return methodNotAllowed(res, ["GET", "POST"]);
+  }
+
+  if (url.pathname === "/api/auth/change-password" && req.method === "POST") {
+    const payload = await readJson(req);
+    const db = await openMongoDbForRequest(res);
+    if (!db) return;
+
+    const sessionUser = await getAuthUser(req, res);
+    const username = sessionUser?.username || cleanUsername(payload.username);
+    const currentPassword = String(payload.currentPassword || payload.password || "");
+    const newPassword = String(payload.newPassword || "");
+
+    if (!username || !currentPassword || !newPassword) {
+      return sendJson(res, 400, { error: "Preenche o user, password atual e nova password." });
+    }
+
+    if (!validatePassword(newPassword)) {
+      return sendJson(res, 400, { error: "A nova password deve ter entre 8 e 72 caracteres." });
+    }
+
+    let user = await findUserAccount(db, username);
+    user = await normalizeUserAccount(db, user);
+
+    if (!user || user.role !== "verificado" || user.verified !== true || !passwordMatches(currentPassword, user.salt, user.passwordHash)) {
+      return sendJson(res, 401, { error: "User ou password atual errados." });
+    }
+
+    const salt = crypto.randomBytes(16).toString("hex");
+    await db.collection(COLLECTIONS.users).updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          salt,
+          passwordHash: hashPassword(newPassword, salt),
+          passwordChangedAt: new Date()
+        }
+      }
+    );
+
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (url.pathname === "/api/auth/change-password") return methodNotAllowed(res, ["POST"]);
 
   if (url.pathname === "/api/auth/register" && req.method === "POST") {
     const payload = await readJson(req);
