@@ -1445,9 +1445,7 @@
     }
 
     .country-card-meta {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
+      display: block;
       color: var(--country-muted, var(--muted));
       font-size: 10px;
       font-weight: 800;
@@ -4245,8 +4243,6 @@
       const stats = countryStats(country, album);
       const name = countryFullName(country) || country;
       const code = exportGroupLabel(country);
-      const viewCount = filteredStickers({ country, album }).length;
-      const viewLabel = currentView === "all" ? "cromos" : viewTitleText(currentView).replace("Cromos ", "").toLowerCase();
 
       return `
         <button class="country-card" type="button" style="${countryCardStyle(country)};--progress-width:${stats.percent}%" onclick="openCountryModal('${escapeJS(country)}')">
@@ -4259,7 +4255,6 @@
           <span class="country-card-progress" aria-hidden="true"><span></span></span>
           <span class="country-card-meta">
             <span>${stats.percent}% obtidos</span>
-            <span>${viewCount} ${escapeHTML(viewLabel)}</span>
           </span>
         </button>
       `;
