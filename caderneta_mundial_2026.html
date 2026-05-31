@@ -1127,6 +1127,365 @@
     .empty-action-btn:hover {
       border-color: var(--main);
     }
+
+    #legacyImportPanel {
+      display: none !important;
+    }
+
+    .collection-progress {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+      margin: -2px 0 14px;
+      padding: 14px 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .collection-progress-copy {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .collection-progress-copy span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .collection-progress-copy strong {
+      color: var(--main);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .collection-progress-track {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e5e7eb;
+    }
+
+    .collection-progress-bar {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #111827, #475569);
+      transition: width .25s ease;
+    }
+
+    .friend-mode-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
+      border-radius: var(--radius);
+      color: #0f172a;
+      box-shadow: var(--shadow);
+    }
+
+    .friend-mode-copy {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+
+    .friend-mode-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #1d4ed8;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    .friend-mode-copy strong {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .friend-mode-copy small {
+      color: #1e3a8a;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .country-tabs-wrap {
+      position: static;
+      display: block;
+      padding: 0;
+      margin: 0 0 14px;
+      background: transparent;
+      overflow: visible;
+    }
+
+    .country-scroll-arrow {
+      display: none;
+    }
+
+    .country-tabs-viewport {
+      overflow: visible;
+    }
+
+    .country-tabs {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+      gap: 10px;
+      white-space: normal;
+      transform: none !important;
+    }
+
+    .country-gallery-head {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .country-gallery-head span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .country-gallery-head strong {
+      display: block;
+      margin-top: 2px;
+      color: var(--main);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .country-card {
+      min-height: 128px;
+      padding: 14px;
+      display: grid;
+      align-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--country-border, var(--line));
+      border-radius: 16px;
+      background: var(--country-soft, #fff);
+      color: var(--country-text, var(--main));
+      box-shadow: var(--shadow);
+      text-align: left;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+    .country-card:hover,
+    .country-card:focus-visible {
+      transform: translateY(-2px);
+      border-color: var(--country-primary, var(--main));
+      box-shadow: 0 16px 34px var(--country-shadow, rgba(17, 24, 39, .12));
+      outline: none;
+    }
+
+    .country-card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .country-card-name {
+      display: block;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.15;
+      color: var(--country-text, var(--main));
+    }
+
+    .country-card-code {
+      display: inline-flex;
+      margin-left: 4px;
+      color: var(--country-muted, var(--muted));
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+
+    .country-card-count {
+      color: var(--country-muted, var(--muted));
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .country-card-progress {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .13);
+    }
+
+    .country-card-progress span {
+      display: block;
+      width: var(--progress-width, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: var(--country-primary, var(--main));
+    }
+
+    .country-card-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--country-muted, var(--muted));
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .country-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+    }
+
+    .country-modal.hidden {
+      display: none;
+    }
+
+    .country-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, .62);
+      backdrop-filter: blur(4px);
+    }
+
+    .country-modal-panel {
+      position: relative;
+      z-index: 1;
+      width: min(1120px, 100%);
+      max-height: min(86vh, 860px);
+      overflow: auto;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, .3);
+    }
+
+    .country-modal-head {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      background: var(--section-header-bg, var(--main));
+      color: var(--section-text, #fff);
+      border-bottom: 1px solid rgba(255,255,255,.15);
+    }
+
+    .country-modal-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .country-modal-title {
+      margin: 0;
+      color: inherit;
+      font-size: 24px;
+      line-height: 1.05;
+    }
+
+    .country-modal-code {
+      color: var(--header-muted, rgba(255,255,255,.78));
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .country-modal-close {
+      min-width: 38px;
+      height: 38px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,.14);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.26);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .country-modal-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .country-modal-tabs button {
+      padding: 8px 11px;
+      background: rgba(255,255,255,.14);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.22);
+      font-size: 12px;
+    }
+
+    .country-modal-tabs button.active {
+      background: #fff;
+      color: #111827;
+      border-color: #fff;
+    }
+
+    .country-modal-content {
+      padding: 14px;
+      background: #fff;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    body.friend-view .collection-progress-bar,
+    body.friend-view .country-card-progress span {
+      background: #1d4ed8;
+    }
+
+    #content .country {
+      display: none;
+    }
+
+    .trade-card {
+      padding: 10px;
+      border-radius: 12px;
+    }
+
+    .trade-list {
+      gap: 8px;
+    }
+
+    .trade-lines {
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
     .save-status {
       display: block;
       max-width: 1150px;
@@ -1204,14 +1563,84 @@
         text-overflow: ellipsis;
       }
 
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
       .country-count {
         width: 100%;
         margin-left: 0;
         text-align: left;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .stat {
+        min-height: 70px;
+        padding: 10px 11px;
+        border-radius: 14px;
+      }
+
+      .stat span {
+        min-height: 28px;
+        margin-bottom: 2px;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .stat strong {
+        font-size: 20px;
+      }
+
+      .collection-progress {
+        padding: 12px;
+      }
+
+      .collection-progress-copy strong {
+        font-size: 15px;
+      }
+
+      .country-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .country-card {
+        min-height: 112px;
+        padding: 11px;
+        border-radius: 14px;
+      }
+
+      .country-card-name {
+        font-size: 14px;
+      }
+
+      .country-card-count,
+      .country-card-meta {
+        font-size: 11px;
+      }
+
+      .country-modal {
+        padding: 0;
+        align-items: stretch;
+      }
+
+      .country-modal-panel {
+        width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+      }
+
+      .country-modal-head {
+        padding: 14px;
+      }
+
+      .country-modal-title {
+        font-size: 21px;
+      }
+
+      .friend-mode-banner {
+        align-items: stretch;
+        flex-direction: column;
       }
     }  </style>
 </head>
@@ -1289,6 +1718,16 @@
       <div class="stat" data-view="duplicates" role="button" tabindex="0" onclick="setView('duplicates')" onkeydown="activateStat(event, 'duplicates')"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
     </section>
 
+    <section id="collectionProgress" class="collection-progress">
+      <div class="collection-progress-copy">
+        <span>Progresso da coleção</span>
+        <strong id="collectionProgressText">0/0 obtidos - 0%</strong>
+      </div>
+      <div class="collection-progress-track" aria-hidden="true">
+        <div id="collectionProgressBar" class="collection-progress-bar"></div>
+      </div>
+    </section>
+
     <section id="albumToolbar" class="toolbar">
       <div class="search-shell">
         <input id="search" class="search" type="search" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
@@ -1308,6 +1747,15 @@
         Importar ficheiro
         <input id="legacyImportInput" type="file" accept=".txt,.csv,.json,text/plain,text/csv,application/json" onchange="importLegacyAlbumFile(this)" />
       </label>
+    </section>
+
+    <section id="friendModeBanner" class="friend-mode-banner hidden">
+      <div class="friend-mode-copy">
+        <span class="friend-mode-pill">AMIGO</span>
+        <strong id="friendBannerName">Caderneta do amigo</strong>
+        <small>Só leitura. Os teus cromos não são alterados aqui.</small>
+      </div>
+      <button class="secondary" type="button" onclick="showMyAlbum()">Voltar à minha caderneta</button>
     </section>
 
     <div id="resultSummary" class="result-summary" aria-live="polite"></div>
@@ -1335,7 +1783,6 @@
           <option value="">Escolhe um amigo</option>
         </select>
         <button type="button" onclick="showMyAlbum()">A minha caderneta</button>
-        <button class="secondary" type="button" onclick="refreshLiveNow()">Atualizar</button>
       </div>
       <div id="liveComparison" class="share-comparison" aria-live="polite"></div>
     </section>
@@ -1351,7 +1798,6 @@
         <select id="tradeFriendSelect" class="live-input" onchange="selectTradeFriend(this.value)">
           <option value="">Escolhe um amigo</option>
         </select>
-        <button class="secondary" type="button" onclick="refreshLiveNow()">Atualizar</button>
       </div>
       <div id="tradeSuggestions" aria-live="polite"></div>
       <div class="share-panel-title">
@@ -1370,6 +1816,13 @@
     </section>
 
     <section id="content"></section>
+
+    <section id="countryModal" class="country-modal hidden" aria-hidden="true">
+      <div class="country-modal-backdrop" onclick="closeCountryModal()"></div>
+      <article id="countryModalPanel" class="country-modal-panel" role="dialog" aria-modal="true" aria-labelledby="countryModalTitle">
+        <div id="countryModalBody"></div>
+      </article>
+    </section>
   </main>
 
   <footer id="saveStatus" class="save-status">A iniciar...</footer>
@@ -1385,6 +1838,7 @@
     let activePage = "album";
     let currentView = "all";
     let selectedCountry = "all";
+    let countryModalOpen = false;
     let saveTimer = null;
     let countryScrollFrame = null;
     let countryTabsOffset = 0;
@@ -1405,6 +1859,9 @@
 
     const content = document.getElementById("content");
     const albumStats = document.getElementById("albumStats");
+    const collectionProgress = document.getElementById("collectionProgress");
+    const collectionProgressText = document.getElementById("collectionProgressText");
+    const collectionProgressBar = document.getElementById("collectionProgressBar");
     const albumToolbar = document.getElementById("albumToolbar");
     const countryTabsWrap = document.getElementById("countryTabsWrap");
     const countryTabs = document.getElementById("countryTabs");
@@ -1414,6 +1871,10 @@
     const clearSearchButton = document.getElementById("clearSearchButton");
     const exportListButton = document.getElementById("exportListButton");
     const exportSummary = document.getElementById("exportSummary");
+    const friendModeBanner = document.getElementById("friendModeBanner");
+    const friendBannerName = document.getElementById("friendBannerName");
+    const countryModal = document.getElementById("countryModal");
+    const countryModalBody = document.getElementById("countryModalBody");
     const legacyImportPanel = document.getElementById("legacyImportPanel");
     const legacyImportInput = document.getElementById("legacyImportInput");
     const legacyImportStatus = document.getElementById("legacyImportStatus");
@@ -1849,7 +2310,7 @@
     function updateViewTitle() {
       if (activePage === "friends") {
         currentViewTitle.textContent = hasSelectedFriend()
-          ? `${friendProfile} - ${viewTitleText(currentView)}`
+          ? `Caderneta de ${friendProfile}`
           : "Amigos";
         return;
       }
@@ -1859,14 +2320,23 @@
         return;
       }
 
-      currentViewTitle.textContent = viewTitleText(currentView);
+      currentViewTitle.textContent = "A minha caderneta";
     }
 
     function updatePageVisibility() {
       const showAlbum = activePage === "album" || (activePage === "friends" && hasSelectedFriend());
+      if (!showAlbum && countryModalOpen) {
+        countryModalOpen = false;
+        selectedCountry = "all";
+        document.body.classList.remove("modal-open");
+      }
       albumStats?.classList.toggle("hidden", !showAlbum);
+      collectionProgress?.classList.toggle("hidden", !showAlbum);
       albumToolbar?.classList.toggle("hidden", !showAlbum);
-      legacyImportPanel?.classList.toggle("hidden", activePage !== "album");
+      legacyImportPanel?.classList.add("hidden");
+      friendModeBanner?.classList.toggle("hidden", !isFriendView());
+      if (friendBannerName) friendBannerName.textContent = friendProfile ? `Caderneta de ${friendProfile}` : "Caderneta do amigo";
+      document.body.classList.toggle("friend-view", isFriendView());
       resultSummary?.classList.toggle("hidden", !showAlbum);
       countryTabsWrap?.classList.toggle("hidden", !showAlbum);
       content?.classList.toggle("hidden", !showAlbum);
@@ -1879,6 +2349,7 @@
       activePage = page;
       closeUserMenu();
       updatePageVisibility();
+      renderCountryModal();
       pulseViewTitle();
     }
 
@@ -1917,29 +2388,19 @@
     }
 
     function maxCountryTabsOffset() {
-      const viewport = countryTabs.parentElement;
-      return Math.max(0, countryTabs.scrollWidth - viewport.clientWidth);
+      return 0;
     }
 
     function applyCountryTabsOffset() {
-      countryTabsOffset = Math.max(0, Math.min(countryTabsOffset, maxCountryTabsOffset()));
-      countryTabs.style.transform = `translateX(${-countryTabsOffset}px)`;
+      countryTabsOffset = 0;
+      countryTabs.style.transform = "";
     }
 
     function focusSelectedCountryTab() {
-      const activeTab = countryTabs.querySelector(".country-tab.active");
-      const viewport = countryTabs.parentElement;
-      if (!activeTab || !viewport) {
-        applyCountryTabsOffset();
-        return;
-      }
-
-      countryTabsOffset = activeTab.offsetLeft - ((viewport.clientWidth - activeTab.offsetWidth) / 2);
       applyCountryTabsOffset();
     }
 
     function scrollCountryTabs(direction) {
-      countryTabsOffset += direction * 180;
       applyCountryTabsOffset();
     }
 
@@ -1960,20 +2421,43 @@
     }
 
     function openCountryFromHeader(country) {
-      if (selectedCountry !== "all") return;
-      setCountry(country);
+      openCountryModal(country);
     }
     function setCountry(country) {
-      selectedCountry = country;
-      search.value = "";
-      render();
-      content.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (country === "all") {
+        closeCountryModal();
+        return;
+      }
+      openCountryModal(country);
     }
 
-    function filteredStickers() {
-      const term = normalizeSearch(search.value);
+    function openCountryModal(country) {
+      selectedCountry = country;
+      countryModalOpen = true;
+      document.body.classList.add("modal-open");
+      render();
+    }
 
-      return currentAlbumStickers().filter(sticker => {
+    function closeCountryModal() {
+      countryModalOpen = false;
+      selectedCountry = "all";
+      document.body.classList.remove("modal-open");
+      render();
+    }
+
+    function setModalView(view) {
+      currentView = view;
+      updateActiveStat();
+      updateViewTitle();
+      render();
+    }
+
+    function filteredStickers(options = {}) {
+      const term = normalizeSearch(search.value);
+      const countryFilter = options.country || selectedCountry;
+      const album = options.album || currentAlbumStickers();
+
+      return album.filter(sticker => {
         const matchesView =
           currentView === "all" ||
           (currentView === "missing" && !sticker.tenho) ||
@@ -1981,8 +2465,8 @@
           (currentView === "duplicates" && sticker.tenho && (sticker.repetidos || 0) > 0);
 
         const matchesCountry =
-          selectedCountry === "all" ||
-          sticker.pais === selectedCountry;
+          countryFilter === "all" ||
+          sticker.pais === countryFilter;
 
         const matchesSearch =
           !term ||
@@ -2000,17 +2484,20 @@
     }
 
     function countryColor(country) {
+      if (isFriendView()) return "#1d4ed8";
       const code = String(country).split(" ")[0];
       return COUNTRY_COLORS[code] || "#111827";
     }
 
     function countrySecondaryColor(country) {
+      if (isFriendView()) return "#dbeafe";
       const code = String(country).split(" ")[0];
       return COUNTRY_SECONDARY_COLORS[code] || "#111827";
     }
 
 
     function countryCheckboxColor(country) {
+      if (isFriendView()) return "#60a5fa";
       const code = String(country).split(" ")[0];
       return COUNTRY_TERTIARY_COLORS[code] || COUNTRY_SECONDARY_COLORS[code] || "#111827";
     }
@@ -2134,18 +2621,35 @@
       const progressTrack = headerText === "#ffffff" ? "rgba(255,255,255,.28)" : "rgba(17,24,39,.18)";
       return `--section-header-bg:${primary};--sticker-bg:${stickerBg};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${headerText}`;
     }
+
+    function countryCardStyle(country) {
+      const primary = countryColor(country);
+      const secondary = countrySecondaryColor(country).toLowerCase();
+      const base = secondary === "white" ? "#ffffff" : secondary;
+      const soft = lightenColor(base, 0.38);
+      const text = readableTextColor(soft);
+      const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "#475569";
+      return `--country-primary:${primary};--country-soft:${soft};--country-border:${primary};--country-text:${text};--country-muted:${muted};--country-shadow:${hexToRgba(primary, .18)}`;
+    }
+
     function renderCountryTabs() {
       const countries = albumCountries();
-      const buttons = [
-        `<button class="country-tab ${selectedCountry === "all" ? "active" : ""}"${tabStyle("all")} onclick="setCountry('all')">Todos</button>`,
-        ...countries.map(country => {
-          const active = selectedCountry === country ? "active" : "";
-          return `<button class="country-tab ${active}"${tabStyle(country)} onclick="setCountry('${escapeJS(country)}')">${escapeHTML(country)}</button>`;
+      const term = normalizeSearch(search.value);
+      const album = currentAlbumStickers();
+      const visibleCountries = countries
+        .filter(country => {
+          if (!term) return true;
+          const countryStickers = album.filter(sticker => sticker.pais === country);
+          return countrySearchRank(country, countryStickers, term) < 9;
         })
-      ];
+        .sort((a, b) => {
+          if (!term) return countries.indexOf(a) - countries.indexOf(b);
+          const grouped = groupByCountry(album);
+          const rank = countrySearchRank(a, grouped[a] || [], term) - countrySearchRank(b, grouped[b] || [], term);
+          return rank || countries.indexOf(a) - countries.indexOf(b);
+        });
 
-      countryTabs.innerHTML = buttons.join("");
-      requestAnimationFrame(focusSelectedCountryTab);
+      countryTabs.innerHTML = visibleCountries.map(country => renderCountryCard(country, album)).join("");
     }
 
 
@@ -3235,6 +3739,9 @@
       ownedCount.textContent = owned;
       missingCount.textContent = missing;
       duplicatesCount.textContent = duplicates;
+      const percent = total ? Math.round((owned / total) * 100) : 0;
+      if (collectionProgressText) collectionProgressText.textContent = `${owned}/${total} obtidos - ${percent}%`;
+      if (collectionProgressBar) collectionProgressBar.style.width = `${percent}%`;
       updateExportSummary();
     }
 
@@ -3318,6 +3825,113 @@
       return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
     }
 
+    function countryStats(country, album = currentAlbumStickers()) {
+      const list = album.filter(sticker => sticker.pais === country);
+      const total = list.length;
+      const owned = list.filter(sticker => sticker.tenho).length;
+      const missing = total - owned;
+      const duplicates = list.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
+      const percent = total ? Math.round((owned / total) * 100) : 0;
+      return { total, owned, missing, duplicates, percent };
+    }
+
+    function renderCountryCard(country, album = currentAlbumStickers()) {
+      const stats = countryStats(country, album);
+      const name = countryFullName(country) || country;
+      const code = exportGroupLabel(country);
+      const viewCount = filteredStickers({ country, album }).length;
+      const viewLabel = currentView === "all" ? "cromos" : viewTitleText(currentView).replace("Cromos ", "").toLowerCase();
+
+      return `
+        <button class="country-card" type="button" style="${countryCardStyle(country)};--progress-width:${stats.percent}%" onclick="openCountryModal('${escapeJS(country)}')">
+          <span class="country-card-top">
+            <span>
+              <span class="country-card-name">${escapeHTML(name)} <span class="country-card-code">${escapeHTML(code)}</span></span>
+            </span>
+            <span class="country-card-count">${stats.owned}/${stats.total}</span>
+          </span>
+          <span class="country-card-progress" aria-hidden="true"><span></span></span>
+          <span class="country-card-meta">
+            <span>${stats.percent}% obtidos</span>
+            <span>${viewCount} ${escapeHTML(viewLabel)}</span>
+          </span>
+        </button>
+      `;
+    }
+
+    function sortedCountryStickers(list) {
+      const term = normalizeSearch(search.value);
+      return [...list].sort((a, b) => {
+        const rank = term ? stickerSearchRank(a, term) - stickerSearchRank(b, term) : 0;
+        if (rank) return rank;
+        return a.codigo.localeCompare(b.codigo, "pt-PT", { numeric: true });
+      });
+    }
+
+    function renderStickerSections(countryStickers) {
+      const ordered = sortedCountryStickers(countryStickers);
+      const teamStickers = ordered.filter(isTeamAlbumSticker);
+      const regularStickers = ordered.filter(sticker => !isTeamAlbumSticker(sticker));
+      const firstHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) <= 10);
+      const secondHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) >= 11);
+
+      return [
+        teamStickers.length ? `<div class="sticker-section sticker-section-featured"><div class="sticker-grid">${teamStickers.map(renderStickerCard).join("")}</div></div>` : "",
+        firstHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHalfStickers.map(renderStickerCard).join("")}</div></div>` : "",
+        secondHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHalfStickers.map(renderStickerCard).join("")}</div></div>` : ""
+      ].join("");
+    }
+
+    function renderCountryModal() {
+      if (!countryModal || !countryModalBody) return;
+
+      if (!countryModalOpen || selectedCountry === "all") {
+        countryModal.classList.add("hidden");
+        countryModal.setAttribute("aria-hidden", "true");
+        return;
+      }
+
+      const album = currentAlbumStickers();
+      const country = selectedCountry;
+      const stats = countryStats(country, album);
+      const name = countryFullName(country) || country;
+      const code = exportGroupLabel(country);
+      const list = filteredStickers({ country, album });
+      const viewCounts = {
+        all: album.filter(sticker => sticker.pais === country).length,
+        missing: album.filter(sticker => sticker.pais === country && !sticker.tenho).length,
+        owned: album.filter(sticker => sticker.pais === country && sticker.tenho).length,
+        duplicates: album.filter(sticker => sticker.pais === country && sticker.tenho && (sticker.repetidos || 0) > 0).length
+      };
+      const tabButton = view => `<button type="button" class="${currentView === view ? "active" : ""}" onclick="setModalView('${view}')">${viewTitleText(view)} (${viewCounts[view]})</button>`;
+
+      countryModal.classList.remove("hidden");
+      countryModal.setAttribute("aria-hidden", "false");
+      countryModalBody.innerHTML = `
+        <div class="country-modal-inner" style="${sectionStyle(country)}">
+          <header class="country-modal-head">
+            <div class="country-modal-title-row">
+              <div>
+                <div class="country-modal-code">${escapeHTML(code)}${isFriendView() ? " - AMIGO" : ""}</div>
+                <h2 id="countryModalTitle" class="country-modal-title">${escapeHTML(name)}</h2>
+              </div>
+              <button class="country-modal-close" type="button" onclick="closeCountryModal()" aria-label="Fechar">x</button>
+            </div>
+            <div class="country-count">${stats.owned}/${stats.total} obtidos - ${stats.percent}%</div>
+            <div class="country-progress" aria-hidden="true">
+              <div class="country-progress-bar" style="--progress-width:${stats.percent}%"></div>
+            </div>
+            <div class="country-modal-tabs">
+              ${["all", "missing", "owned", "duplicates"].map(tabButton).join("")}
+            </div>
+          </header>
+          <div class="country-modal-content">
+            ${list.length ? `<div class="stickers">${renderStickerSections(list)}</div>` : renderEmptyState(emptyViewMessage())}
+          </div>
+        </div>
+      `;
+    }
+
     function renderStickerCard(sticker) {
       const stickerId = escapeJS(sticker.id);
       const readonly = isFriendView();
@@ -3358,10 +3972,18 @@
       renderCountryTabs();
       updateViewTitle();
       updatePageVisibility();
+      renderCountryModal();
 
       const term = normalizeSearch(search.value);
       const list = filteredStickers();
       const grouped = groupByCountry(list);
+
+      if (album.length) {
+        const visibleCountryCards = countryTabs.querySelectorAll(".country-card").length;
+        updateResultSummary(filteredStickers({ country: "all", album }));
+        content.innerHTML = visibleCountryCards ? "" : renderEmptyState("Nao ha selecoes para mostrar nesta pesquisa.");
+        return;
+      }
 
       if (!album.length) {
         resultSummary.textContent = "";
@@ -3539,6 +4161,9 @@
     });
     authRegisterPasswordInput.addEventListener("keydown", event => {
       if (event.key === "Enter") registerLiveAccount();
+    });
+    window.addEventListener("keydown", event => {
+      if (event.key === "Escape" && countryModalOpen) closeCountryModal();
     });
 
     countryScrollLeft.addEventListener("mouseenter", () => startCountryScroll(-1));
