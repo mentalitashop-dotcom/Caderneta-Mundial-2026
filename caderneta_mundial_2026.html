@@ -1996,6 +1996,22 @@
       border-color: var(--main);
     }
 
+    body:not([data-theme-mode="dark"]) .duplicate-results .sticker {
+      background: var(--duplicate-card-bg);
+      color: var(--duplicate-card-text);
+      border-color: var(--duplicate-card-border);
+      box-shadow: 0 8px 18px var(--duplicate-card-shadow);
+    }
+
+    body:not([data-theme-mode="dark"]) .duplicate-results .sticker .code {
+      color: var(--duplicate-card-text);
+    }
+
+    body:not([data-theme-mode="dark"]) .duplicate-results .sticker .name,
+    body:not([data-theme-mode="dark"]) .duplicate-results .sticker .duplicate-summary {
+      color: var(--duplicate-card-muted);
+    }
+
     body[data-theme-mode="dark"] .search-results .sticker {
       background: var(--panel);
       color: var(--text);
@@ -3600,6 +3616,13 @@
       const color = countryCheckboxColor(country).toLowerCase();
       const mark = readableTextColor(color);
       return `--check-bg:${color};--check-border:${color};--check-mark:${mark};--sticker-shadow:${hexToRgba(color, .32)};--sticker-focus:${hexToRgba(color, .34)}`;
+    }
+
+    function duplicateStickerStyle(country) {
+      const primary = countryColor(country).toLowerCase();
+      const text = readableTextColor(primary);
+      const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "rgba(17,24,39,.72)";
+      return `--duplicate-card-bg:${primary};--duplicate-card-border:${primary};--duplicate-card-text:${text};--duplicate-card-muted:${muted};--duplicate-card-shadow:${hexToRgba(primary, .28)}`;
     }
 
     function duplicateInputStyle(country) {
@@ -5472,13 +5495,14 @@
       `;
     }
 
-    function renderStickerCard(sticker) {
+    function renderStickerCard(sticker, options = {}) {
       const stickerId = escapeJS(sticker.id);
       const readonly = isFriendView();
+      const cardStyle = `${checkboxStyle(sticker.pais)}${options.duplicatePalette ? `;${duplicateStickerStyle(sticker.pais)}` : ""}`;
       return `
         <div
           class="sticker ${sticker.tenho ? "is-owned" : ""} ${readonly ? "is-readonly" : ""}"
-          style="${checkboxStyle(sticker.pais)}"
+          style="${cardStyle}"
           role="${readonly ? "group" : "checkbox"}"
           ${readonly ? `aria-label="Cromo de ${escapeHTML(friendProfile)}"` : `aria-checked="${sticker.tenho ? "true" : "false"}" tabindex="0" onclick="toggleStickerOwned('${stickerId}')" onkeydown="handleStickerCardKey(event, '${stickerId}')"`}
           title="${readonly ? `Cromo de ${escapeHTML(friendProfile)}` : (sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido")}"
@@ -5523,9 +5547,9 @@
 
     function renderDuplicateStickerResults(list) {
       return `
-        <section class="search-results" aria-label="Cromos repetidos">
+        <section class="search-results duplicate-results" aria-label="Cromos repetidos">
           <div class="search-results-title">Cromos repetidos</div>
-          <div class="sticker-grid">${list.map(renderStickerCard).join("")}</div>
+          <div class="sticker-grid">${list.map(sticker => renderStickerCard(sticker, { duplicatePalette: true })).join("")}</div>
         </section>
       `;
     }
