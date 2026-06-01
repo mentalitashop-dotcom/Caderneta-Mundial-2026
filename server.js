@@ -1035,6 +1035,7 @@ async function createTradeProposal(db, user, payload) {
   const giveIds = cleanStickerIdList(payload.giveStickerIds || payload.giveIds || payload.give);
   const receiveIds = cleanStickerIdList(payload.receiveStickerIds || payload.receiveIds || payload.receive);
   if (!giveIds.length || !receiveIds.length) throw new HttpError(400, "Escolhe pelo menos um cromo para dar e um para receber.");
+  if (giveIds.length !== receiveIds.length) throw new HttpError(400, "A troca tem de ter o mesmo numero de cromos dos dois lados.");
 
   const [myStickers, friendStickers] = await Promise.all([
     getUserStickerState(db, user),

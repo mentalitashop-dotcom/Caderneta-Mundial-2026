@@ -831,7 +831,7 @@
     }
 
     .trade-lines {
-      color: #4b5563;
+      color: var(--muted);
       font-size: 13px;
       font-weight: 700;
       line-height: 1.5;
@@ -865,6 +865,148 @@
 
     .trade-pagination button {
       padding: 8px 12px;
+    }
+
+    .trade-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+    }
+
+    .trade-modal.hidden {
+      display: none;
+    }
+
+    .trade-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, .62);
+      backdrop-filter: blur(4px);
+    }
+
+    .trade-modal-panel {
+      position: relative;
+      z-index: 1;
+      width: min(980px, 100%);
+      max-height: min(88vh, 820px);
+      overflow: auto;
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border-radius: 20px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: 0 30px 90px rgba(0,0,0,.3);
+    }
+
+    .trade-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .trade-modal-head h2 {
+      margin: 0;
+      color: var(--main);
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .trade-modal-head p,
+    .trade-modal-balance {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .trade-modal-close {
+      min-width: 38px;
+      height: 38px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .trade-pick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .trade-pick-column {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+
+    .trade-pick-column-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--main);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .trade-pick-list {
+      display: grid;
+      gap: 7px;
+      max-height: 360px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .trade-pick-card {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+      display: grid;
+      gap: 3px;
+      text-align: left;
+      box-shadow: none;
+    }
+
+    .trade-pick-card strong {
+      color: var(--main);
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .trade-pick-card span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .trade-pick-card.is-selected {
+      border-color: var(--main);
+      box-shadow: inset 4px 0 0 var(--main), 0 10px 22px rgba(15, 23, 42, .10);
+    }
+
+    .trade-modal-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .trade-modal-actions button:disabled {
+      opacity: .48;
+      cursor: not-allowed;
     }
 
     .result-summary {
@@ -1665,9 +1807,9 @@
     }
 
     .country-modal-nav {
-      min-width: 38px;
+      min-width: 54px;
       height: 38px;
-      padding: 0;
+      padding: 0 10px;
       display: grid;
       place-items: center;
       background: rgba(255,255,255,.14);
@@ -1675,6 +1817,12 @@
       border: 1px solid rgba(255,255,255,.26);
       font-size: 22px;
       line-height: 1;
+    }
+
+    .country-modal-nav:disabled {
+      opacity: .32;
+      cursor: not-allowed;
+      filter: grayscale(.3);
     }
 
     .country-modal-nav:hover,
@@ -1730,6 +1878,15 @@
       margin-top: 12px;
       padding-top: 22px;
       border-top: 4px solid var(--main);
+    }
+
+    .search-results-title {
+      margin: 0 0 10px;
+      color: var(--main);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
     }
 
     .search-results .sticker-grid {
@@ -1860,6 +2017,10 @@
       }
 
       .trade-select-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .trade-pick-grid {
         grid-template-columns: 1fr;
       }
 
@@ -2173,6 +2334,13 @@
       <div id="tradeList" class="trade-list" aria-live="polite"></div>
     </section>
 
+    <section id="tradeModal" class="trade-modal hidden" aria-hidden="true">
+      <div class="trade-modal-backdrop" onclick="closeTradeModal()"></div>
+      <article class="trade-modal-panel" role="dialog" aria-modal="true" aria-labelledby="tradeModalTitle">
+        <div id="tradeModalBody"></div>
+      </article>
+    </section>
+
     <section id="settingsPanel" class="share-panel settings-panel hidden" aria-label="Definições">
       <div class="share-panel-head">
         <div class="share-panel-title">
@@ -2298,6 +2466,9 @@
     let friendUpdatedAt = "";
     let tradeRequests = [];
     let tradeHistoryPage = 1;
+    let tradeModalOpen = false;
+    let selectedTradeGiveIds = [];
+    let selectedTradeReceiveIds = [];
     let liveRefreshTimer = null;
     let idleLogoutTimer = null;
     let authRequestLocked = false;
@@ -2348,6 +2519,8 @@
     const tradeFriendSelect = document.getElementById("tradeFriendSelect");
     const tradeSuggestions = document.getElementById("tradeSuggestions");
     const tradeList = document.getElementById("tradeList");
+    const tradeModal = document.getElementById("tradeModal");
+    const tradeModalBody = document.getElementById("tradeModalBody");
     const settingsPanel = document.getElementById("settingsPanel");
     const themeColorInput = document.getElementById("themeColorInput");
     const themeColorTextInput = document.getElementById("themeColorTextInput");
@@ -2842,6 +3015,9 @@
         countryModalOpen = false;
         selectedCountry = "all";
         document.body.classList.remove("modal-open");
+      }
+      if (activePage !== "trades" && tradeModalOpen) {
+        closeTradeModal();
       }
       albumStats?.classList.toggle("hidden", !showAlbum);
       collectionProgress?.classList.toggle("hidden", !showAlbum);
@@ -3701,6 +3877,108 @@
       return `<option value="${escapeHTML(sticker.id)}">${escapeHTML(stickerTradeLabel(sticker))}</option>`;
     }
 
+    function tradePickCard(sticker, side) {
+      const selected = side === "give"
+        ? selectedTradeGiveIds.includes(sticker.id)
+        : selectedTradeReceiveIds.includes(sticker.id);
+      return `
+        <button class="trade-pick-card ${selected ? "is-selected" : ""}" type="button" onclick="toggleTradeSelection('${side}', '${escapeJS(sticker.id)}')">
+          <strong>${escapeHTML(exportGroupLabel(sticker.pais))} ${escapeHTML(stickerExportNumber(sticker))}</strong>
+          <span>${escapeHTML(sticker.nome)}</span>
+        </button>
+      `;
+    }
+
+    function resetTradeSelection() {
+      selectedTradeGiveIds = [];
+      selectedTradeReceiveIds = [];
+    }
+
+    function openTradeModal() {
+      if (!hasSelectedFriend()) {
+        setSaveStatus("Escolhe primeiro um amigo");
+        return;
+      }
+      resetTradeSelection();
+      tradeModalOpen = true;
+      document.body.classList.add("modal-open");
+      renderTradeModal();
+    }
+
+    function closeTradeModal() {
+      tradeModalOpen = false;
+      resetTradeSelection();
+      if (!countryModalOpen) document.body.classList.remove("modal-open");
+      if (tradeModal) {
+        tradeModal.classList.add("hidden");
+        tradeModal.setAttribute("aria-hidden", "true");
+      }
+    }
+
+    function toggleTradeSelection(side, stickerId) {
+      const list = side === "give" ? selectedTradeGiveIds : selectedTradeReceiveIds;
+      const index = list.indexOf(stickerId);
+      if (index >= 0) list.splice(index, 1);
+      else list.push(stickerId);
+      renderTradeModal();
+    }
+
+    function tradeSelectionIsBalanced() {
+      return selectedTradeGiveIds.length > 0 && selectedTradeGiveIds.length === selectedTradeReceiveIds.length;
+    }
+
+    function renderTradeModal() {
+      if (!tradeModal || !tradeModalBody) return;
+      if (!tradeModalOpen) {
+        tradeModal.classList.add("hidden");
+        tradeModal.setAttribute("aria-hidden", "true");
+        return;
+      }
+
+      const gives = possibleTradeGivesFriendNeeds();
+      const receives = possibleTradeReceives();
+      const balanced = tradeSelectionIsBalanced();
+      const hasEnough = gives.length && receives.length;
+      const balanceText = selectedTradeGiveIds.length === selectedTradeReceiveIds.length
+        ? `${selectedTradeGiveIds.length} por ${selectedTradeReceiveIds.length}`
+        : `${selectedTradeGiveIds.length} por ${selectedTradeReceiveIds.length} - escolhe a mesma quantidade`;
+
+      tradeModal.classList.remove("hidden");
+      tradeModal.setAttribute("aria-hidden", "false");
+      tradeModalBody.innerHTML = `
+        <div class="trade-modal-head">
+          <div>
+            <h2 id="tradeModalTitle">Proposta para ${escapeHTML(friendProfile)}</h2>
+            <p>Seleciona só cromos que o ${escapeHTML(friendProfile)} precisa e cromos dele que te faltam.</p>
+            <div class="trade-modal-balance">${escapeHTML(balanceText)}</div>
+          </div>
+          <button class="trade-modal-close secondary" type="button" onclick="closeTradeModal()" aria-label="Fechar">x</button>
+        </div>
+        ${hasEnough ? `
+          <div class="trade-pick-grid">
+            <div class="trade-pick-column">
+              <div class="trade-pick-column-title">
+                <span>Tu dás</span>
+                <span>${selectedTradeGiveIds.length}/${gives.length}</span>
+              </div>
+              <div class="trade-pick-list">${gives.map(sticker => tradePickCard(sticker, "give")).join("")}</div>
+            </div>
+            <div class="trade-pick-column">
+              <div class="trade-pick-column-title">
+                <span>Tu recebes</span>
+                <span>${selectedTradeReceiveIds.length}/${receives.length}</span>
+              </div>
+              <div class="trade-pick-list">${receives.map(sticker => tradePickCard(sticker, "receive")).join("")}</div>
+            </div>
+          </div>
+          <div class="trade-modal-actions">
+            <span class="trade-modal-balance">A proposta só pode ser enviada quando for 1 por 1, 2 por 2, 3 por 3...</span>
+            <button type="button" onclick="proposeTrade()" ${balanced ? "" : "disabled"}>Enviar proposta</button>
+          </div>
+        ` : `<div class="comparison-empty">Não há cromos suficientes para montar uma troca equilibrada.</div>`}
+      `;
+    }
+
     function renderTradeSuggestions() {
       if (!tradeSuggestions) return;
 
@@ -3781,6 +4059,61 @@
           </div>
         </div>
       `;
+    }
+
+    function renderTradeSuggestions() {
+      if (!tradeSuggestions) return;
+
+      if (!hasSelectedFriend()) {
+        tradeSuggestions.innerHTML = `
+          <div class="comparison-empty">
+            Escolhe um amigo para veres as trocas possíveis.
+          </div>
+        `;
+        closeTradeModal();
+        return;
+      }
+
+      const givesFriendNeeds = possibleTradeGivesFriendNeeds();
+      const receives = possibleTradeReceives();
+
+      if (!givesFriendNeeds.length || !receives.length) {
+        tradeSuggestions.innerHTML = `
+          <div class="trade-select-grid">
+            <div class="trade-card">
+              <div class="trade-card-title">Tu podes dar</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendNeeds)}</div>
+            </div>
+            <div class="trade-card">
+              <div class="trade-card-title">Tu podes receber</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(receives)}</div>
+            </div>
+          </div>
+          <div class="comparison-empty">Ainda não há cromos suficientes para uma troca equilibrada com este amigo.</div>
+        `;
+        closeTradeModal();
+        return;
+      }
+
+      tradeSuggestions.innerHTML = `
+        <div class="trade-builder">
+          <div class="trade-card-title">Nova proposta para ${escapeHTML(friendProfile)}</div>
+          <div class="trade-select-grid">
+            <div class="trade-card">
+              <div class="trade-card-title">Tu podes dar</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendNeeds)}</div>
+            </div>
+            <div class="trade-card">
+              <div class="trade-card-title">Tu podes receber</div>
+              <div class="trade-lines is-scrollable">${tradeStickerList(receives)}</div>
+            </div>
+          </div>
+          <div class="trade-actions">
+            <button type="button" onclick="openTradeModal()">Criar proposta</button>
+          </div>
+        </div>
+      `;
+      if (tradeModalOpen) renderTradeModal();
     }
 
     function tradeStatusText(status) {
@@ -3924,6 +4257,39 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "Nao foi possivel propor troca");
         setSaveStatus(`Troca proposta a ${friendProfile}`);
+        await loadTradeRequests();
+        renderTradePanel();
+      } catch (error) {
+        setSaveStatus(error.message);
+      }
+    }
+
+    async function proposeTrade() {
+      if (!hasSelectedFriend()) {
+        setSaveStatus("Escolhe primeiro um amigo");
+        return;
+      }
+
+      if (!tradeSelectionIsBalanced()) {
+        setSaveStatus("A troca tem de ter o mesmo número de cromos dos dois lados");
+        renderTradeModal();
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/live/trades", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            toUser: friendProfile,
+            giveStickerIds: selectedTradeGiveIds,
+            receiveStickerIds: selectedTradeReceiveIds
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Nao foi possivel propor troca");
+        setSaveStatus(`Troca proposta a ${friendProfile}`);
+        closeTradeModal();
         await loadTradeRequests();
         renderTradePanel();
       } catch (error) {
@@ -4776,8 +5142,9 @@
     function moveCountryModal(direction) {
       const countries = albumCountries();
       if (!countries.length) return;
-      const currentIndex = Math.max(0, countries.indexOf(selectedCountry));
-      const nextIndex = (currentIndex + direction + countries.length) % countries.length;
+      const currentIndex = countries.indexOf(selectedCountry);
+      const nextIndex = currentIndex + direction;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= countries.length) return;
       selectedCountry = countries[nextIndex];
       countryModalOpen = true;
       render();
@@ -4797,6 +5164,10 @@
 
       const album = currentAlbumStickers();
       const country = selectedCountry;
+      const countries = albumCountries();
+      const countryIndex = countries.indexOf(country);
+      const previousCountry = countryIndex > 0 ? countries[countryIndex - 1] : "";
+      const nextCountry = countryIndex >= 0 && countryIndex < countries.length - 1 ? countries[countryIndex + 1] : "";
       const stats = countryStats(country, album);
       const name = countryFullName(country) || country;
       const code = exportGroupLabel(country);
@@ -4820,8 +5191,8 @@
                 <h2 id="countryModalTitle" class="country-modal-title">${escapeHTML(name)}</h2>
               </div>
               <div class="country-modal-title-actions">
-                <button class="country-modal-nav" type="button" onclick="moveCountryModal(-1)" aria-label="Seleção anterior">‹</button>
-                <button class="country-modal-nav" type="button" onclick="moveCountryModal(1)" aria-label="Seleção seguinte">›</button>
+                <button class="country-modal-nav" type="button" onclick="moveCountryModal(-1)" aria-label="Seleção anterior" ${previousCountry ? "" : "disabled"}>‹ ${escapeHTML(previousCountry ? exportGroupLabel(previousCountry) : "")}</button>
+                <button class="country-modal-nav" type="button" onclick="moveCountryModal(1)" aria-label="Seleção seguinte" ${nextCountry ? "" : "disabled"}>${escapeHTML(nextCountry ? exportGroupLabel(nextCountry) : "")} ›</button>
                 <button class="country-modal-close" type="button" onclick="closeCountryModal()" aria-label="Fechar">x</button>
               </div>
             </div>
@@ -4883,6 +5254,7 @@
     function renderSearchStickerResults(list) {
       return `
         <section class="search-results" aria-label="Cromos encontrados">
+          <div class="search-results-title">Cromos encontrados</div>
           <div class="sticker-grid">${list.map(renderStickerCard).join("")}</div>
         </section>
       `;
@@ -5105,6 +5477,7 @@
     themeColorTextInput.addEventListener("input", previewThemeColor);
     window.addEventListener("keydown", event => {
       if (event.key === "Escape" && countryModalOpen) closeCountryModal();
+      if (event.key === "Escape" && tradeModalOpen) closeTradeModal();
       if (event.key === "ArrowLeft" && countryModalOpen) moveCountryModal(-1);
       if (event.key === "ArrowRight" && countryModalOpen) moveCountryModal(1);
     });
