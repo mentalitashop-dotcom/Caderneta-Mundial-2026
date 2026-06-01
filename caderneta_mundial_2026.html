@@ -616,8 +616,20 @@
       font-size: 13px;
       font-weight: 800;
       outline: none;
-      background: #fff;
-      color: var(--main);
+      background: var(--card);
+      color: var(--text);
+    }
+
+    select.live-input,
+    select.live-input option {
+      background: var(--card);
+      color: var(--text);
+    }
+
+    select.live-input option:checked,
+    select.live-input option:hover {
+      background: var(--main);
+      color: #fff;
     }
 
     .live-input:focus {
@@ -1002,18 +1014,21 @@
 
     .country-progress {
       flex: 0 0 100%;
-      height: 7px;
+      height: 8px;
       border-radius: 999px;
       overflow: hidden;
       background: var(--progress-track, rgba(255,255,255,.28));
+      box-shadow: inset 0 1px 3px rgba(0,0,0,.18);
     }
 
     .country-progress-bar {
       height: 100%;
       width: var(--progress-width, 0%);
       border-radius: inherit;
-      background: var(--progress-fill, #fff);
-      transition: width .2s ease;
+      background: linear-gradient(90deg, var(--progress-fill, #fff), var(--progress-fill-soft, var(--progress-fill, #fff)));
+      position: relative;
+      overflow: hidden;
+      transition: width .3s ease;
     }
 
     .country-title {
@@ -1230,7 +1245,7 @@
     .empty {
       text-align: center;
       color: var(--muted);
-      background: #fff;
+      background: var(--card);
       border: 1px dashed var(--line);
       border-radius: var(--radius);
       padding: 35px 20px;
@@ -1240,7 +1255,7 @@
     }
 
     .empty strong {
-      color: #374151;
+      color: var(--text);
       font-size: 15px;
     }
 
@@ -1252,7 +1267,7 @@
     }
 
     .empty-action-btn {
-      background: #fff;
+      background: var(--card);
       color: var(--main);
       border: 1px solid var(--line);
     }
@@ -1303,7 +1318,8 @@
       height: 10px;
       overflow: hidden;
       border-radius: 999px;
-      background: #e5e7eb;
+      background: linear-gradient(180deg, var(--line), var(--panel));
+      box-shadow: inset 0 1px 3px rgba(15, 23, 42, .18);
     }
 
     .collection-progress-bar {
@@ -1311,7 +1327,26 @@
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, var(--main), var(--main-soft));
-      transition: width .25s ease;
+      position: relative;
+      overflow: hidden;
+      transition: width .35s ease;
+      box-shadow: 0 0 16px rgba(17, 24, 39, .14);
+    }
+
+    .collection-progress-bar::after,
+    .country-progress-bar::after,
+    .country-card-progress span::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.34), transparent);
+      transform: translateX(-100%);
+      animation: progress-shine 2.8s ease-in-out infinite;
+    }
+
+    @keyframes progress-shine {
+      0% { transform: translateX(-100%); }
+      45%, 100% { transform: translateX(100%); }
     }
 
     .album-home-title {
@@ -1524,7 +1559,9 @@
       width: var(--progress-width, 0%);
       height: 100%;
       border-radius: inherit;
-      background: var(--country-primary, var(--main));
+      background: linear-gradient(90deg, var(--country-primary, var(--main)), var(--country-progress-soft, var(--country-primary, var(--main))));
+      position: relative;
+      overflow: hidden;
     }
 
     .country-card-meta {
@@ -1565,8 +1602,13 @@
       max-height: min(86vh, 860px);
       overflow: auto;
       border-radius: 20px;
-      background: #fff;
+      background: var(--card);
+      border: 1px solid var(--line);
       box-shadow: 0 30px 90px rgba(0, 0, 0, .3);
+    }
+
+    .country-modal-inner {
+      background: var(--section-content-bg, var(--card));
     }
 
     .country-modal-head {
@@ -1616,6 +1658,30 @@
       line-height: 1;
     }
 
+    .country-modal-title-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .country-modal-nav {
+      min-width: 38px;
+      height: 38px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,.14);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,.26);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .country-modal-nav:hover,
+    .country-modal-close:hover {
+      filter: brightness(1.08);
+    }
+
     .country-modal-tabs {
       display: flex;
       gap: 8px;
@@ -1631,14 +1697,20 @@
     }
 
     .country-modal-tabs button.active {
-      background: #fff;
-      color: #111827;
-      border-color: #fff;
+      background: var(--card);
+      color: var(--text);
+      border-color: var(--card);
+    }
+
+    body[data-theme-mode="dark"] .country-modal-tabs button.active {
+      background: rgba(255,255,255,.16);
+      color: #fff;
+      border-color: rgba(255,255,255,.32);
     }
 
     .country-modal-content {
       padding: 14px;
-      background: #fff;
+      background: var(--section-content-bg, var(--card));
     }
 
     body.modal-open {
@@ -1652,6 +1724,22 @@
 
     #content .country {
       display: none;
+    }
+
+    .search-results {
+      margin-top: 12px;
+      padding-top: 22px;
+      border-top: 4px solid var(--main);
+    }
+
+    .search-results .sticker-grid {
+      grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
+      gap: 8px;
+    }
+
+    .search-results .sticker {
+      border-width: 2px;
+      border-color: var(--main);
     }
 
     .trade-card {
@@ -1677,6 +1765,41 @@
       font-size: 13px;
       font-weight: 700;
       text-align: right;
+    }
+
+    .sticker-toast-stack {
+      position: fixed;
+      left: 16px;
+      bottom: 18px;
+      z-index: 120;
+      display: grid;
+      gap: 8px;
+      width: min(360px, calc(100vw - 32px));
+      pointer-events: none;
+    }
+
+    .sticker-toast {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--main);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, .26);
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.25;
+      letter-spacing: .02em;
+      transform-origin: left bottom;
+      animation: sticker-toast-in .18s ease-out, sticker-toast-out .35s ease-in 1.85s forwards;
+    }
+
+    @keyframes sticker-toast-in {
+      from { opacity: 0; transform: translateX(-12px) scale(.98); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    @keyframes sticker-toast-out {
+      to { opacity: 0; transform: translateX(-10px) scale(.98); }
     }
 
     .hidden { display: none; }
@@ -2209,6 +2332,7 @@
     const friendModeBanner = document.getElementById("friendModeBanner");
     const friendBannerName = document.getElementById("friendBannerName");
     const countryModal = document.getElementById("countryModal");
+    const countryModalPanel = document.getElementById("countryModalPanel");
     const countryModalBody = document.getElementById("countryModalBody");
     const legacyImportPanel = document.getElementById("legacyImportPanel");
     const legacyImportInput = document.getElementById("legacyImportInput");
@@ -2608,6 +2732,29 @@
       saveStatus.textContent = text;
     }
 
+    function stickerToastText(sticker) {
+      const code = exportGroupLabel(sticker.pais);
+      const number = stickerExportNumber(sticker);
+      return `CROMO ${code} ${number} COLADO NA CADERNETA`;
+    }
+
+    function showStickerToast(sticker) {
+      const stackId = "stickerToastStack";
+      let stack = document.getElementById(stackId);
+      if (!stack) {
+        stack = document.createElement("div");
+        stack.id = stackId;
+        stack.className = "sticker-toast-stack";
+        document.body.appendChild(stack);
+      }
+
+      const toast = document.createElement("div");
+      toast.className = "sticker-toast";
+      toast.textContent = stickerToastText(sticker);
+      stack.appendChild(toast);
+      setTimeout(() => toast.remove(), 2300);
+    }
+
     function hasSelectedFriend() {
       return Boolean(friendProfile);
     }
@@ -2876,18 +3023,14 @@
       const code = String(country).split(" ")[0];
       const original = COUNTRY_COLORS[code] || "#111827";
       if (isFriendView()) return friendUserColor || DEFAULT_USER_COLOR;
-      if (currentAppTheme().countryMode === "normal") return original;
-      return mixColors(original, currentAppTheme().accent, appThemeMode === "dark" ? 0.42 : 0.28);
+      return original;
     }
 
     function countrySecondaryColor(country) {
       const code = String(country).split(" ")[0];
       const original = COUNTRY_SECONDARY_COLORS[code] || "#111827";
       if (isFriendView()) return appThemeMode === "dark" ? darkenColor(friendUserColor || DEFAULT_USER_COLOR, 0.2) : lightenColor(friendUserColor || DEFAULT_USER_COLOR, 0.72);
-      if (currentAppTheme().countryMode === "normal") return original;
-      return appThemeMode === "dark"
-        ? mixColors(original, currentAppTheme().accent, 0.55)
-        : lightenColor(mixColors(original, currentAppTheme().accent, 0.35), 0.48);
+      return original;
     }
 
 
@@ -2895,8 +3038,7 @@
       const code = String(country).split(" ")[0];
       const original = COUNTRY_TERTIARY_COLORS[code] || COUNTRY_SECONDARY_COLORS[code] || "#111827";
       if (isFriendView()) return appThemeMode === "dark" ? lightenColor(friendUserColor || DEFAULT_USER_COLOR, 0.2) : darkenColor(friendUserColor || DEFAULT_USER_COLOR, 0.08);
-      if (currentAppTheme().countryMode === "normal") return original;
-      return mixColors(original, currentAppTheme().accent, appThemeMode === "dark" ? 0.35 : 0.18);
+      return original;
     }
     function readableTextColor(hex) {
       const normalized = String(hex).replace("#", "");
@@ -3190,11 +3332,15 @@
       const code = normalizeSearch(sticker.codigo);
       const name = normalizeSearch(sticker.nome);
 
-      if (countryCode === term || countryName === term) return 0;
-      if (countryCode.includes(term) || countryName.includes(term)) return 1;
-      if (code.includes(term)) return 2;
-      if (name.includes(term)) return 3;
+      if (code === term) return 0;
+      if (name === term) return 1;
+      if (countryCode === term || countryName === term) return 2;
+      if (term.length >= 4 && name.includes(term)) return 3;
       return 9;
+    }
+
+    function stickerMatchesDirectSearch(sticker, term) {
+      return stickerSearchRank(sticker, term) < 9;
     }
 
     function countrySearchRank(country, countryStickers, term) {
@@ -3205,14 +3351,35 @@
 
       if (countryCode === term || countryName === term) return 0;
       if (countryCode.includes(term) || countryName.includes(term)) return 1;
-      if (countryStickers.some(sticker => normalizeSearch(sticker.codigo).includes(term))) return 2;
-      if (countryStickers.some(sticker => normalizeSearch(sticker.nome).includes(term))) return 3;
+      if (countryStickers.some(sticker => stickerMatchesDirectSearch(sticker, term))) return 2;
       return 9;
+    }
+
+    function searchResultStickers(album, term) {
+      if (!term) return [];
+      return album
+        .filter(sticker => stickerMatchesDirectSearch(sticker, term))
+        .sort((a, b) => {
+          const rank = stickerSearchRank(a, term) - stickerSearchRank(b, term);
+          if (rank) return rank;
+          return a.codigo.localeCompare(b.codigo, "pt-PT", { numeric: true });
+        });
     }
     function sectionStyle(country) {
       const primary = countryColor(country);
       const secondary = countrySecondaryColor(country).toLowerCase();
       const base = secondary === "white" ? "#ffffff" : secondary;
+      if (appThemeMode === "dark") {
+        const theme = currentAppTheme();
+        const contentBg = theme.card;
+        const stickerBg = mixColors(theme.panel, base, 0.18);
+        const border = mixColors(theme.line, primary, 0.48);
+        const headerText = readableTextColor(primary);
+        const headerMuted = headerText === "#ffffff" ? "rgba(255,255,255,.86)" : "rgba(17,24,39,.74)";
+        const progressTrack = headerText === "#ffffff" ? "rgba(255,255,255,.25)" : "rgba(17,24,39,.22)";
+        return `--section-header-bg:${primary};--section-content-bg:${contentBg};--sticker-bg:${stickerBg};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:#f8fafc;--sticker-muted:#cbd5e1;--progress-track:${progressTrack};--progress-fill:${headerText};--progress-fill-soft:${lightenColor(primary, 0.38)}`;
+      }
+
       const stickerBg = lightenColor(base, 0.28);
       const border = lightenColor(base, 0.08);
       const headerText = readableTextColor(primary);
@@ -3220,7 +3387,7 @@
       const stickerText = readableTextColor(stickerBg);
       const stickerMuted = stickerText === "#ffffff" ? "rgba(255,255,255,.84)" : "#374151";
       const progressTrack = headerText === "#ffffff" ? "rgba(255,255,255,.28)" : "rgba(17,24,39,.18)";
-      return `--section-header-bg:${primary};--sticker-bg:${stickerBg};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${headerText}`;
+      return `--section-header-bg:${primary};--section-content-bg:#ffffff;--sticker-bg:${stickerBg};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${headerText};--progress-fill-soft:${lightenColor(primary, 0.38)}`;
     }
 
     function countryCardStyle(country) {
@@ -4489,6 +4656,7 @@
 
       sticker.tenho = checked;
       if (!checked) sticker.repetidos = 0;
+      if (checked) showStickerToast(sticker);
       saveState();
       render();
     }
@@ -4605,6 +4773,19 @@
       ].join("");
     }
 
+    function moveCountryModal(direction) {
+      const countries = albumCountries();
+      if (!countries.length) return;
+      const currentIndex = Math.max(0, countries.indexOf(selectedCountry));
+      const nextIndex = (currentIndex + direction + countries.length) % countries.length;
+      selectedCountry = countries[nextIndex];
+      countryModalOpen = true;
+      render();
+      requestAnimationFrame(() => {
+        countryModalPanel?.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+
     function renderCountryModal() {
       if (!countryModal || !countryModalBody) return;
 
@@ -4638,7 +4819,11 @@
                 <div class="country-modal-code">${escapeHTML(code)}${isFriendView() ? " - AMIGO" : ""}</div>
                 <h2 id="countryModalTitle" class="country-modal-title">${escapeHTML(name)}</h2>
               </div>
-              <button class="country-modal-close" type="button" onclick="closeCountryModal()" aria-label="Fechar">x</button>
+              <div class="country-modal-title-actions">
+                <button class="country-modal-nav" type="button" onclick="moveCountryModal(-1)" aria-label="Seleção anterior">‹</button>
+                <button class="country-modal-nav" type="button" onclick="moveCountryModal(1)" aria-label="Seleção seguinte">›</button>
+                <button class="country-modal-close" type="button" onclick="closeCountryModal()" aria-label="Fechar">x</button>
+              </div>
             </div>
             <div class="country-count">${stats.owned}/${stats.total} obtidos - ${stats.percent}%</div>
             <div class="country-progress" aria-hidden="true">
@@ -4687,6 +4872,22 @@
         </div>
       `;
     }
+
+    function stickerMatchesCurrentView(sticker) {
+      return currentView === "all" ||
+        (currentView === "missing" && !sticker.tenho) ||
+        (currentView === "owned" && sticker.tenho) ||
+        (currentView === "duplicates" && sticker.tenho && (sticker.repetidos || 0) > 0);
+    }
+
+    function renderSearchStickerResults(list) {
+      return `
+        <section class="search-results" aria-label="Cromos encontrados">
+          <div class="sticker-grid">${list.map(renderStickerCard).join("")}</div>
+        </section>
+      `;
+    }
+
     function render() {
       const album = currentAlbumStickers();
       updateStats();
@@ -4703,8 +4904,13 @@
 
       if (album.length) {
         const visibleCountryCards = countryTabs.querySelectorAll(".country-card").length;
+        const searchMatches = term
+          ? searchResultStickers(album, term).filter(stickerMatchesCurrentView)
+          : [];
         updateResultSummary(filteredStickers({ country: "all", album }));
-        content.innerHTML = visibleCountryCards ? "" : renderEmptyState("Nao ha selecoes para mostrar nesta pesquisa.");
+        content.innerHTML = searchMatches.length
+          ? renderSearchStickerResults(searchMatches)
+          : (visibleCountryCards ? "" : renderEmptyState("Nao ha selecoes para mostrar nesta pesquisa."));
         return;
       }
 
@@ -4899,6 +5105,8 @@
     themeColorTextInput.addEventListener("input", previewThemeColor);
     window.addEventListener("keydown", event => {
       if (event.key === "Escape" && countryModalOpen) closeCountryModal();
+      if (event.key === "ArrowLeft" && countryModalOpen) moveCountryModal(-1);
+      if (event.key === "ArrowRight" && countryModalOpen) moveCountryModal(1);
     });
 
     countryScrollLeft.addEventListener("mouseenter", () => startCountryScroll(-1));
