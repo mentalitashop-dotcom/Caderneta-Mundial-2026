@@ -31,6 +31,7 @@
       font-family: Arial, Helvetica, sans-serif;
       background: var(--bg);
       color: var(--text);
+      overflow-x: hidden;
     }
 
     header {
@@ -2012,6 +2013,112 @@
       color: var(--duplicate-card-muted);
     }
 
+    .duplicate-results {
+      border-top-width: 3px;
+    }
+
+    .duplicate-results .sticker-grid {
+      grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
+      gap: 8px;
+    }
+
+    .duplicate-results .sticker {
+      min-height: 96px;
+      align-items: flex-start;
+      padding: 10px 42px 10px 10px;
+      overflow: hidden;
+      border-radius: 9px;
+    }
+
+    .duplicate-results .sticker-state {
+      display: none;
+    }
+
+    .duplicate-results .code {
+      margin-bottom: 4px;
+      font-size: 17px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .duplicate-results .name {
+      font-size: 12px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      overflow-wrap: normal;
+    }
+
+    .duplicate-results .duplicate-row {
+      display: block;
+      margin-top: 8px;
+    }
+
+    .duplicate-results .duplicate-summary {
+      display: grid;
+      gap: 2px;
+      font-size: 12px;
+      line-height: 1.1;
+      overflow-wrap: normal;
+    }
+
+    .duplicate-results .duplicate-summary-count {
+      display: block;
+      font-size: 15px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .duplicate-results .duplicate-controls {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 33px;
+      display: block;
+      margin: 0;
+      z-index: 2;
+    }
+
+    .duplicate-results .duplicate-buttons {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 0;
+      overflow: hidden;
+      border-left: 3px solid #061222;
+      border-radius: 0 8px 8px 0;
+      background: rgba(255,255,255,.24);
+    }
+
+    .duplicate-results .duplicate-control-btn {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+      background: rgba(255,255,255,.78);
+      color: #061222;
+      font-size: 19px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .duplicate-results .duplicate-control-btn[title="Adicionar repetido"] {
+      order: -1;
+      border-bottom: 2px solid #061222;
+    }
+
+    .duplicate-results .duplicate-control-btn[title="Remover repetido"] {
+      order: 1;
+    }
+
+    .duplicate-results .duplicate-control-btn:disabled {
+      opacity: .55;
+      background: rgba(255,255,255,.48);
+    }
+
     body[data-theme-mode="dark"] .search-results .sticker {
       background: var(--panel);
       color: var(--text);
@@ -2035,6 +2142,20 @@
 
     body[data-theme-mode="dark"] .search-results .sticker.is-owned .sticker-state {
       background: var(--check-bg, var(--main));
+    }
+
+    body[data-theme-mode="dark"] .duplicate-results .duplicate-buttons {
+      border-left-color: var(--line);
+      background: rgba(255,255,255,.08);
+    }
+
+    body[data-theme-mode="dark"] .duplicate-results .duplicate-control-btn {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+    }
+
+    body[data-theme-mode="dark"] .duplicate-results .duplicate-control-btn[title="Adicionar repetido"] {
+      border-bottom-color: var(--line);
     }
 
     .trade-card {
@@ -2100,6 +2221,13 @@
     .hidden { display: none; }
 
     @media (max-width: 760px) {
+      main {
+        width: 100%;
+        max-width: 100%;
+        padding: 16px 14px 44px;
+        overflow-x: hidden;
+      }
+
       .toolbar {
         grid-template-columns: 1fr;
       }
@@ -2168,16 +2296,48 @@
     }
 
     @media (max-width: 520px) {
+      html,
+      body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      header {
+        overflow: hidden;
+      }
+
+      .topbar {
+        padding: 10px 12px;
+        gap: 8px;
+      }
+
+      main {
+        padding: 12px 10px 34px;
+      }
+
       .toolbar-actions {
         flex-direction: row;
+        justify-content: flex-start;
       }
 
       .brand {
         font-size: 18px;
       }
 
+      .brand-button {
+        max-width: 100%;
+        white-space: normal;
+        line-height: 1.05;
+      }
+
+      .user-menu {
+        min-width: 0;
+      }
+
       .user-menu-button {
-        max-width: 160px;
+        max-width: 112px;
+        padding: 8px 10px;
       }
 
       #userMenuName {
@@ -2213,12 +2373,40 @@
         font-size: 18px;
       }
 
+      .toolbar {
+        gap: 8px;
+      }
+
+      .search {
+        min-height: 44px;
+        font-size: 14px;
+      }
+
+      .export-list-btn {
+        min-width: 96px;
+        max-width: 128px;
+        min-height: 36px;
+        padding: 6px 9px;
+        font-size: 11px;
+      }
+
+      .export-list-btn small {
+        font-size: 9px;
+      }
+
       .collection-progress {
         padding: 12px;
       }
 
+      .collection-progress-copy {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 4px;
+      }
+
       .collection-progress-copy strong {
         font-size: 15px;
+        justify-self: start;
       }
 
       .country-tabs {
@@ -2235,6 +2423,7 @@
 
       .country-card-name {
         font-size: 10px;
+        overflow-wrap: anywhere;
       }
 
       .country-card-count,
@@ -2249,6 +2438,38 @@
 
       .country-card-progress {
         height: 5px;
+      }
+
+      .country-card-bottom {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 4px;
+      }
+
+      .country-card-count {
+        justify-self: end;
+      }
+
+      .search-results .sticker-grid,
+      .duplicate-results .sticker-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .duplicate-results .sticker {
+        min-height: 92px;
+        padding: 9px 38px 9px 9px;
+      }
+
+      .duplicate-results .code {
+        font-size: 15px;
+      }
+
+      .duplicate-results .name,
+      .duplicate-results .duplicate-summary {
+        font-size: 11px;
+      }
+
+      .duplicate-results .duplicate-controls {
+        width: 30px;
       }
 
       .country-modal {
@@ -3620,9 +3841,10 @@
 
     function duplicateStickerStyle(country) {
       const primary = countryColor(country).toLowerCase();
-      const text = readableTextColor(primary);
+      const bg = appThemeMode === "dark" ? primary : mixColors("#ffffff", primary, 0.58);
+      const text = readableTextColor(bg);
       const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "rgba(17,24,39,.72)";
-      return `--duplicate-card-bg:${primary};--duplicate-card-border:${primary};--duplicate-card-text:${text};--duplicate-card-muted:${muted};--duplicate-card-shadow:${hexToRgba(primary, .28)}`;
+      return `--duplicate-card-bg:${bg};--duplicate-card-border:${primary};--duplicate-card-text:${text};--duplicate-card-muted:${muted};--duplicate-card-shadow:${hexToRgba(primary, .28)}`;
     }
 
     function duplicateInputStyle(country) {
