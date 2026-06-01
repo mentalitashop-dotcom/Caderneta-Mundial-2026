@@ -13,6 +13,8 @@
       --line: #e5e7eb;
       --main: #111827;
       --main-soft: #475569;
+      --friend-color: #1d4ed8;
+      --friend-color-soft: #dbeafe;
       --ok: #111827;
       --danger: #dc2626;
       --shadow: 0 10px 25px rgba(0,0,0,.06);
@@ -52,6 +54,28 @@
       letter-spacing: -.03em;
       font-size: 20px;
       min-width: 0;
+    }
+
+    .brand-button {
+      width: fit-content;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--main);
+      font: inherit;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      text-align: left;
+      box-shadow: none;
+    }
+
+    .brand-button:hover,
+    .brand-button:focus-visible {
+      color: var(--main);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      outline: none;
     }
 
     nav {
@@ -670,8 +694,8 @@
     }
 
     .color-swatches {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
       gap: 8px;
     }
 
@@ -687,6 +711,12 @@
 
     .color-swatch.is-active {
       box-shadow: 0 0 0 3px var(--main);
+    }
+
+    .color-swatch:disabled {
+      cursor: not-allowed;
+      opacity: .28;
+      filter: grayscale(.45);
     }
 
     .settings-actions {
@@ -828,15 +858,8 @@
       border-radius: 14px;
       padding: 12px 13px;
       box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: border-color .15s ease, transform .15s ease;
-    }
-
-    .stat:hover,
-    .stat:focus-visible {
-      border-color: var(--main);
-      transform: translateY(-1px);
-      outline: none;
+      cursor: default;
+      transition: border-color .15s ease;
     }
 
     .stat.active {
@@ -1451,6 +1474,10 @@
       font-weight: 800;
     }
 
+    .country-card-meta span + span {
+      display: none;
+    }
+
     .country-modal {
       position: fixed;
       inset: 0;
@@ -1560,7 +1587,7 @@
 
     body.friend-view .collection-progress-bar,
     body.friend-view .country-card-progress span {
-      background: #1d4ed8;
+      background: var(--friend-color);
     }
 
     #content .country {
@@ -1609,7 +1636,21 @@
       }
 
       .export-list-btn {
-        width: 100%;
+        width: auto;
+        min-width: 112px;
+        min-height: 38px;
+        padding: 7px 11px;
+        align-self: flex-start;
+        justify-self: flex-end;
+        font-size: 12px;
+      }
+
+      .export-list-btn small {
+        font-size: 10px;
+      }
+
+      .toolbar-actions {
+        justify-content: flex-end;
       }
 
       .stats {
@@ -1646,7 +1687,7 @@
 
     @media (max-width: 520px) {
       .toolbar-actions {
-        flex-direction: column;
+        flex-direction: row;
       }
 
       .brand {
@@ -1699,23 +1740,33 @@
       }
 
       .country-tabs {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 7px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
       }
 
       .country-card {
-        min-height: 88px;
-        padding: 9px;
-        border-radius: 12px;
+        min-height: 78px;
+        padding: 7px;
+        border-radius: 10px;
+        gap: 5px;
       }
 
       .country-card-name {
-        font-size: 12px;
+        font-size: 10px;
       }
 
       .country-card-count,
       .country-card-meta {
-        font-size: 10px;
+        font-size: 9px;
+      }
+
+      .country-card-code {
+        font-size: 8px;
+        margin-left: 2px;
+      }
+
+      .country-card-progress {
+        height: 5px;
       }
 
       .country-modal {
@@ -1811,7 +1862,7 @@
   </section>
   <header>
     <div class="topbar">
-      <div class="brand">Caderneta Mundial 2026</div>
+      <button class="brand brand-button" type="button" onclick="goHome()">Caderneta Mundial 2026</button>
       <nav aria-live="polite"><div id="currentViewTitle" class="view-title">Cromos Todos</div></nav>
       <div id="userMenu" class="user-menu">
         <button id="userMenuButton" class="user-menu-button" type="button" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
@@ -1836,11 +1887,14 @@
 
   <main>
 
-    <section id="albumStats" class="stats">
-      <div class="stat active" data-view="all" role="button" tabindex="0" onclick="setView('all')" onkeydown="activateStat(event, 'all')"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
-      <div class="stat" data-view="missing" role="button" tabindex="0" onclick="setView('missing')" onkeydown="activateStat(event, 'missing')"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
-      <div class="stat" data-view="owned" role="button" tabindex="0" onclick="setView('owned')" onkeydown="activateStat(event, 'owned')"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
-      <div class="stat" data-view="duplicates" role="button" tabindex="0" onclick="setView('duplicates')" onkeydown="activateStat(event, 'duplicates')"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
+    <section id="albumToolbar" class="toolbar">
+      <div class="search-shell">
+        <input id="search" class="search" type="search" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
+        <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
+      </div>
+      <div class="toolbar-actions">
+        <button id="exportListButton" class="export-list-btn" type="button" onclick="exportMissingAndDuplicates()"><span>Exportar lista</span><small id="exportSummary">0 faltam - 0 rep.</small></button>
+      </div>
     </section>
 
     <section id="collectionProgress" class="collection-progress">
@@ -1853,14 +1907,11 @@
       </div>
     </section>
 
-    <section id="albumToolbar" class="toolbar">
-      <div class="search-shell">
-        <input id="search" class="search" type="search" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
-        <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
-      </div>
-      <div class="toolbar-actions">
-        <button id="exportListButton" class="export-list-btn" type="button" onclick="exportMissingAndDuplicates()"><span>Exportar lista</span><small id="exportSummary">0 faltam - 0 rep.</small></button>
-      </div>
+    <section id="albumStats" class="stats" aria-label="Resumo da caderneta">
+      <div class="stat active" data-view="all"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
+      <div class="stat" data-view="missing"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
+      <div class="stat" data-view="owned"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
+      <div class="stat" data-view="duplicates"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
     </section>
 
     <section id="legacyImportPanel" class="legacy-import-panel">
@@ -2006,8 +2057,14 @@
 
   <script>
     const STORAGE_KEY = "caderneta_mundial_2026_estado_v1";
-    const THEME_COLOR_KEY = "caderneta_mundial_2026_theme_color";
-    const DEFAULT_THEME_COLOR = "#111827";
+    const USER_COLOR_KEY = "caderneta_mundial_2026_user_color";
+    const DEFAULT_USER_COLOR = "#111827";
+    const USER_COLOR_PALETTE = [
+      "#111827", "#7f1d1d", "#dc2626", "#ea580c", "#f59e0b",
+      "#eab308", "#84cc16", "#16a34a", "#059669", "#0d9488",
+      "#0891b2", "#0284c7", "#1d4ed8", "#312e81", "#7c3aed",
+      "#a21caf", "#db2777", "#be123c", "#92400e", "#4b5563"
+    ];
     const LIVE_REFRESH_MS = 15000;
     const IDLE_LOGOUT_MS = 30 * 60 * 1000;
     const AUTH_LOCK_MS = 1200;
@@ -2035,7 +2092,11 @@
     let inviteToken = "";
     let inviteValid = false;
     let inviteFromCurrentLink = false;
-    let currentThemeColor = DEFAULT_THEME_COLOR;
+    let currentUserColor = DEFAULT_USER_COLOR;
+    let friendUserColor = DEFAULT_USER_COLOR;
+    let availableUserColors = [...USER_COLOR_PALETTE];
+    let usedUserColors = [];
+    let profileColors = {};
 
     const content = document.getElementById("content");
     const albumStats = document.getElementById("albumStats");

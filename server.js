@@ -15,6 +15,29 @@ const SESSION_IDLE_MINUTES = Number(process.env.SESSION_IDLE_MINUTES || 30);
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
+const DEFAULT_USER_COLOR = "#111827";
+const USER_COLOR_PALETTE = [
+  DEFAULT_USER_COLOR,
+  "#7f1d1d",
+  "#dc2626",
+  "#ea580c",
+  "#f59e0b",
+  "#eab308",
+  "#84cc16",
+  "#16a34a",
+  "#059669",
+  "#0d9488",
+  "#0891b2",
+  "#0284c7",
+  "#1d4ed8",
+  "#312e81",
+  "#7c3aed",
+  "#a21caf",
+  "#db2777",
+  "#be123c",
+  "#92400e",
+  "#4b5563"
+];
 const IS_RENDER = process.env.RENDER === "true";
 const IS_PRODUCTION = process.env.NODE_ENV === "production" || IS_RENDER;
 const ONLINE_REQUIRED = process.env.ONLINE_REQUIRED !== "false";
@@ -183,13 +206,30 @@ function validatePassword(password) {
   return typeof password === "string" && password.length >= 8 && password.length <= 72;
 }
 
-function validateThemeColor(value) {
-  return /^#[0-9a-fA-F]{6}$/.test(String(value || "").trim());
+function normalizeColor(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
-function cleanThemeColor(value) {
-  const color = String(value || "").trim();
-  return validateThemeColor(color) ? color.toLowerCase() : "#111827";
+function validateUserColor(value) {
+  return USER_COLOR_PALETTE.includes(normalizeColor(value));
+}
+
+function cleanUserColor(value) {
+  const color = normalizeColor(value);
+  return validateUserColor(color) ? color : DEFAULT_USER_COLOR;
+}
+
+async function usedUserColors(db, excludedUserId = "") {
+  const docs = await db.collection(COLLECTIONS.users)
+    .find(
+      { _id: { $ne: excludedUserId } },
+      { projection: { userColor: 1, themeColor: 1 } }
+    )
+    .toArray();
+
+  return [...new Set(docs
+    .map(doc => cleanUserColor(doc.userColor || doc.themeColor))
+    .filter(color => color !== DEFAULT_USER_COLOR))];
 }
 
 function hashPassword(password, salt) {
@@ -442,6 +482,7 @@ async function normalizeExistingUsersForIndexes(db) {
           usernameLower: { $toLower: "$username" },
           role: { $ifNull: ["$role", "verificado"] },
           verified: { $ifNull: ["$verified", true] },
+          userColor: { $ifNull: ["$userColor", { $ifNull: ["$themeColor", DEFAULT_USER_COLOR] }] },
           verifiedByLegacyUpgrade: true
         }
       }
@@ -449,8 +490,8 @@ async function normalizeExistingUsersForIndexes(db) {
   );
 
   await db.collection(COLLECTIONS.users).updateMany(
-    { $or: [{ role: { $exists: false } }, { verified: { $exists: false } }] },
-    { $set: { role: "verificado", verified: true, verifiedByLegacyUpgrade: true } }
+    { $or: [{ role: { $exists: false } }, { verified: { $exists: false } }, { userColor: { $exists: false } }] },
+    { $set: { role: "verificado", verified: true, userColor: DEFAULT_USER_COLOR, verifiedByLegacyUpgrade: true } }
   );
 }
 
@@ -573,7 +614,7 @@ function publicUser(user) {
     username: user.username,
     role: user.role || "verificado",
     verified: user.verified !== false,
-    themeColor: cleanThemeColor(user.themeColor)
+    userColor: cleanUserColor(user.userColor || user.themeColor)
   };
 }
 
@@ -582,6 +623,7 @@ async function normalizeUserAccount(db, user) {
   const changes = {};
   if (!user.role) changes.role = "verificado";
   if (user.verified === undefined) changes.verified = true;
+  if (!user.userColor) changes.userColor = cleanUserColor(user.themeColor);
   if (!Object.keys(changes).length) return user;
 
   await db.collection(COLLECTIONS.users).updateOne({ _id: user._id }, { $set: changes });
@@ -601,7 +643,7 @@ async function findVerifiedUser(db, username) {
   let user = await findUserAccount(
     db,
     username,
-    { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, themeColor: 1 } }
+    { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, userColor: 1, themeColor: 1 } }
   );
 
   user = await normalizeUserAccount(db, user);
@@ -1114,13 +1156,17 @@ async function handleAuthRoute(req, res, url) {
       const account = await findUserAccount(
         db,
         user.username,
-        { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, themeColor: 1 } }
+        { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, userColor: 1, themeColor: 1 } }
       );
+      const usedColors = await usedUserColors(db, user.id);
+      const userColor = cleanUserColor(account?.userColor || account?.themeColor);
 
       return sendJson(res, 200, {
         ok: true,
         settings: {
-          themeColor: cleanThemeColor(account?.themeColor)
+          userColor,
+          colorPalette: USER_COLOR_PALETTE,
+          usedColors
         },
         user: publicUser(account || user)
       });
@@ -1128,22 +1174,41 @@ async function handleAuthRoute(req, res, url) {
 
     if (req.method === "POST") {
       const payload = await readJson(req);
-      const rawThemeColor = String(payload.themeColor || "").trim();
+      const rawUserColor = normalizeColor(payload.userColor || payload.themeColor);
 
-      if (!validateThemeColor(rawThemeColor)) {
-        return sendJson(res, 400, { error: "Cor invalida." });
+      if (!validateUserColor(rawUserColor)) {
+        return sendJson(res, 400, { error: "Escolhe uma cor da paleta." });
       }
 
-      const themeColor = cleanThemeColor(rawThemeColor);
+      const userColor = cleanUserColor(rawUserColor);
+
+      if (userColor !== DEFAULT_USER_COLOR) {
+        const alreadyUsed = await db.collection(COLLECTIONS.users).findOne({
+          _id: { $ne: user.id },
+          $or: [
+            { userColor },
+            { userColor: { $exists: false }, themeColor: userColor }
+          ]
+        }, { projection: { username: 1 } });
+
+        if (alreadyUsed) {
+          return sendJson(res, 409, { error: "Essa cor ja esta a ser usada por outro user." });
+        }
+      }
 
       await db.collection(COLLECTIONS.users).updateOne(
         { _id: user.id },
-        { $set: { themeColor, settingsUpdatedAt: new Date() } }
+        { $set: { userColor, settingsUpdatedAt: new Date() }, $unset: { themeColor: "" } }
       );
 
+      const usedColors = await usedUserColors(db, user.id);
       return sendJson(res, 200, {
         ok: true,
-        settings: { themeColor }
+        settings: {
+          userColor,
+          colorPalette: USER_COLOR_PALETTE,
+          usedColors
+        }
       });
     }
 
@@ -1228,6 +1293,7 @@ async function handleAuthRoute(req, res, url) {
       passwordHash: hashPassword(password, salt),
       role: "verificado",
       verified: true,
+      userColor: DEFAULT_USER_COLOR,
       verifiedAt: now,
       verifiedByInvite: true,
       createdAt: now
@@ -1320,12 +1386,17 @@ async function handleLiveRoute(req, res, url) {
     const users = await db.collection(COLLECTIONS.users)
       .find(
         { role: "verificado", verified: true },
-        { projection: { _id: 0, username: 1 } }
+        { projection: { _id: 0, username: 1, userColor: 1, themeColor: 1 } }
       )
       .sort({ usernameLower: 1 })
       .limit(100)
       .toArray();
-    return sendJson(res, 200, { profiles: users.map(item => ({ profile: item.username || item.profile })) });
+    return sendJson(res, 200, {
+      profiles: users.map(item => ({
+        profile: item.username || item.profile,
+        userColor: cleanUserColor(item.userColor || item.themeColor)
+      }))
+    });
   }
 
   if (url.pathname === "/api/live/trades") {
@@ -1370,6 +1441,7 @@ async function handleLiveRoute(req, res, url) {
           enabled: true,
           exists: false,
           profile: requestedProfile,
+          userColor: DEFAULT_USER_COLOR,
           csv: "",
           updatedAt: ""
         });
@@ -1386,6 +1458,7 @@ async function handleLiveRoute(req, res, url) {
         enabled: true,
         exists: true,
         profile: profileUser.username,
+        userColor: profileUser.userColor || DEFAULT_USER_COLOR,
         csv: stickersToCSV(stickers),
         counts: countStickerState(stickers),
         updatedAt: snapshot?.updatedAt || ""
