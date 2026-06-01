@@ -1996,6 +1996,27 @@
       border-color: var(--main);
     }
 
+    body[data-theme-mode="dark"] .search-results .sticker {
+      background: var(--panel);
+      color: var(--text);
+      border-color: var(--line);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .28);
+    }
+
+    body[data-theme-mode="dark"] .search-results .sticker.is-owned {
+      border-color: var(--line);
+      box-shadow: inset 4px 0 0 var(--check-border, var(--main)), 0 8px 18px rgba(0, 0, 0, .34);
+    }
+
+    body[data-theme-mode="dark"] .search-results .sticker-state {
+      background: rgba(15, 23, 42, .78);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .32);
+    }
+
+    body[data-theme-mode="dark"] .search-results .sticker.is-owned .sticker-state {
+      background: var(--check-bg, var(--main));
+    }
+
     .trade-card {
       padding: 10px;
       border-radius: 12px;
@@ -5461,7 +5482,7 @@
           <div class="sticker-state" aria-hidden="true"></div>
           <div class="sticker-info">
             <div class="code">
-              ${escapeHTML(currentView === "duplicates" ? stickerExportNumber(sticker) : sticker.codigo)}
+              ${escapeHTML(currentView === "duplicates" ? `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}` : sticker.codigo)}
             </div>
             <div class="name">${escapeHTML(sticker.nome)}</div>
             ${sticker.tenho ? `
