@@ -2317,6 +2317,7 @@
             <strong id="userMenuProfile">Conta</strong>
           </div>
           <button type="button" role="menuitem" onclick="showMyAlbum()">A minha caderneta</button>
+          <button type="button" role="menuitem" onclick="openDuplicatesView()">Cromos repetidos</button>
           <button type="button" role="menuitem" onclick="openFriendsPage()">Amigos</button>
           <button type="button" role="menuitem" onclick="openTradesPanel()">Trocas</button>
           <button type="button" role="menuitem" onclick="openSettingsPanel()">Definições</button>
@@ -3899,6 +3900,26 @@
       closeUserMenu();
       render();
       renderTradePanel();
+    }
+
+    function openDuplicatesView() {
+      activePage = "album";
+      currentView = "duplicates";
+      selectedCountry = "all";
+      countryModalOpen = false;
+      friendProfile = "";
+      friendStickers = [];
+      friendUpdatedAt = "";
+      friendUserColor = DEFAULT_USER_COLOR;
+      search.value = "";
+      document.body.classList.remove("modal-open");
+      syncFriendSelects("");
+      liveComparison.innerHTML = `<div class="comparison-empty">A ver os teus cromos repetidos.</div>`;
+      setSaveStatus("A ver os cromos repetidos");
+      closeUserMenu();
+      render();
+      renderTradePanel();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     async function loadFriendAlbum(profile, page = activePage) {
