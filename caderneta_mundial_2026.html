@@ -37,10 +37,11 @@
     header {
       position: sticky;
       top: 0;
-      z-index: 20;
+      z-index: 100;
       background: var(--header-bg);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--section-header-bg, var(--line));
+      overflow: visible;
     }
 
     .topbar {
@@ -118,6 +119,7 @@
     .user-menu {
       position: relative;
       justify-self: end;
+      z-index: 110;
     }
 
     .user-menu-button {
@@ -160,7 +162,7 @@
       position: absolute;
       top: calc(100% + 8px);
       right: 0;
-      z-index: 40;
+      z-index: 120;
       width: min(250px, calc(100vw - 36px));
       padding: 8px;
       background: var(--card);
@@ -2304,7 +2306,7 @@
       }
 
       header {
-        overflow: hidden;
+        overflow: visible;
       }
 
       .topbar {
@@ -2333,6 +2335,16 @@
 
       .user-menu {
         min-width: 0;
+        position: static;
+      }
+
+      .user-menu-panel {
+        position: fixed;
+        top: 58px;
+        right: 12px;
+        width: min(250px, calc(100vw - 24px));
+        max-height: calc(100vh - 72px);
+        overflow-y: auto;
       }
 
       .user-menu-button {
