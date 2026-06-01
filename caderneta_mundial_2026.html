@@ -8,11 +8,14 @@
     :root {
       --bg: #f6f7f9;
       --card: #ffffff;
+      --panel: #f9fafb;
       --text: #171717;
       --muted: #6b7280;
       --line: #e5e7eb;
       --main: #111827;
       --main-soft: #475569;
+      --header-bg: rgba(255,255,255,.92);
+      --user-color: #111827;
       --friend-color: #1d4ed8;
       --friend-color-soft: #dbeafe;
       --ok: #111827;
@@ -34,7 +37,7 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      background: rgba(255,255,255,.92);
+      background: var(--header-bg);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--section-header-bg, var(--line));
     }
@@ -122,7 +125,7 @@
       align-items: center;
       gap: 8px;
       padding: 6px 8px 6px 12px;
-      background: #fff;
+      background: var(--card);
       color: var(--main);
       border: 1px solid var(--line);
       box-shadow: 0 8px 20px rgba(17, 24, 39, .06);
@@ -140,7 +143,7 @@
       display: grid;
       place-items: center;
       border-radius: 999px;
-      background: var(--main);
+      background: var(--user-color);
       color: #fff;
       font-size: 12px;
       font-weight: 900;
@@ -159,7 +162,7 @@
       z-index: 40;
       width: min(250px, calc(100vw - 36px));
       padding: 8px;
-      background: #fff;
+      background: var(--card);
       border: 1px solid var(--line);
       border-radius: 14px;
       box-shadow: 0 18px 45px rgba(17, 24, 39, .16);
@@ -194,7 +197,7 @@
       justify-content: space-between;
       padding: 9px 10px;
       border-radius: 10px;
-      background: #fff;
+      background: var(--card);
       color: var(--main);
       text-align: left;
     }
@@ -406,7 +409,8 @@
       padding: 12px 46px 12px 16px;
       outline: none;
       font-size: 15px;
-      background: #fff;
+      background: var(--card);
+      color: var(--text);
       transition: border-color .15s ease, box-shadow .15s ease;
     }
 
@@ -425,7 +429,7 @@
       transform: translateY(-50%);
       display: none;
       place-items: center;
-      background: #f3f4f6;
+      background: var(--panel);
       color: var(--main);
       font-size: 18px;
       line-height: 1;
@@ -528,7 +532,7 @@
     }
 
     .share-panel {
-      background: #fff;
+      background: var(--card);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
@@ -574,7 +578,7 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 12px;
-      background: #f9fafb;
+      background: var(--panel);
     }
 
     .comparison-block strong {
@@ -653,7 +657,7 @@
       padding: 14px;
       border: 1px solid var(--line);
       border-radius: 14px;
-      background: #f9fafb;
+      background: var(--panel);
     }
 
     .setting-card h2 {
@@ -719,6 +723,18 @@
       filter: grayscale(.45);
     }
 
+    .theme-mode-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .theme-mode-row button.active {
+      background: var(--main);
+      color: #fff;
+      border-color: var(--main);
+    }
+
     .settings-actions {
       display: flex;
       flex-wrap: wrap;
@@ -747,7 +763,7 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 12px;
-      background: #f9fafb;
+      background: var(--panel);
     }
 
     .trade-builder {
@@ -835,15 +851,7 @@
     }
 
     .result-summary {
-      min-height: 21px;
-      margin: -2px 0 14px;
-      color: #4b5563;
-      font-size: 13px;
-      font-weight: 700;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
+      display: none !important;
     }
     .stats {
       display: grid;
@@ -1301,6 +1309,30 @@
       transition: width .25s ease;
     }
 
+    .album-home-title {
+      margin: -2px 0 12px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--main);
+    }
+
+    .album-home-title strong {
+      display: block;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .album-home-title span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     .friend-mode-banner {
       display: flex;
       align-items: center;
@@ -1334,6 +1366,16 @@
       font-size: 11px;
       font-weight: 900;
       letter-spacing: .08em;
+    }
+
+    body.friend-view .friend-mode-banner {
+      background: var(--friend-color-soft);
+      border-color: var(--friend-color);
+    }
+
+    body.friend-view .friend-mode-pill {
+      background: var(--friend-color);
+      color: #fff;
     }
 
     .friend-mode-copy strong {
@@ -1897,6 +1939,13 @@
       </div>
     </section>
 
+    <section id="albumHomeTitle" class="album-home-title">
+      <div>
+        <strong id="albumHomeTitleMain">Seleções</strong>
+        <span id="albumHomeTitleSub">Escolhe uma seleção para abrir a caderneta.</span>
+      </div>
+    </section>
+
     <section id="collectionProgress" class="collection-progress">
       <div class="collection-progress-copy">
         <span>Progresso da coleção</span>
@@ -1908,7 +1957,7 @@
     </section>
 
     <section id="albumStats" class="stats" aria-label="Resumo da caderneta">
-      <div class="stat active" data-view="all"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
+      <div class="stat" data-view="all"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
       <div class="stat" data-view="missing"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
       <div class="stat" data-view="owned"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
       <div class="stat" data-view="duplicates"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
@@ -1992,24 +2041,29 @@
       </div>
       <div class="settings-grid">
         <article class="setting-card">
-          <h2>Cor principal</h2>
-          <p>Esta cor muda menus, botões, barras e destaques da tua app.</p>
-          <div class="color-setting-row">
+          <h2>Cor do user</h2>
+          <p>Esta cor identifica a tua caderneta quando os teus amigos a estiverem a ver.</p>
+          <div class="color-setting-row hidden">
             <input id="themeColorInput" class="theme-color-picker" type="color" value="#111827" aria-label="Escolher cor principal" />
             <input id="themeColorTextInput" class="live-input" type="text" maxlength="7" value="#111827" aria-label="Codigo da cor principal" />
           </div>
-          <div class="color-swatches" aria-label="Cores rápidas">
-            <button class="color-swatch" type="button" style="--swatch-color:#111827" onclick="chooseThemeColor('#111827')" aria-label="Preto"></button>
-            <button class="color-swatch" type="button" style="--swatch-color:#b91c1c" onclick="chooseThemeColor('#b91c1c')" aria-label="Vermelho"></button>
-            <button class="color-swatch" type="button" style="--swatch-color:#0055a4" onclick="chooseThemeColor('#0055a4')" aria-label="Azul"></button>
-            <button class="color-swatch" type="button" style="--swatch-color:#007749" onclick="chooseThemeColor('#007749')" aria-label="Verde"></button>
-            <button class="color-swatch" type="button" style="--swatch-color:#8a1538" onclick="chooseThemeColor('#8a1538')" aria-label="Bordeaux"></button>
-          </div>
+          <div id="userColorPalette" class="color-swatches" aria-label="Cores do user"></div>
           <div class="settings-actions">
             <button type="button" onclick="saveThemeSettings()">Guardar cor</button>
             <button class="secondary" type="button" onclick="resetThemeColor()">Repor</button>
           </div>
           <div id="settingsThemeMessage" class="settings-message" aria-live="polite"></div>
+        </article>
+
+        <article class="setting-card">
+          <h2>Aparência</h2>
+          <p>O tema muda só a tua app. Não altera a cor do teu user.</p>
+          <div class="theme-mode-row" role="group" aria-label="Modo da app">
+            <button id="lightModeButton" class="secondary" type="button" onclick="setAppThemeMode('light')">Light</button>
+            <button id="darkModeButton" class="secondary" type="button" onclick="setAppThemeMode('dark')">Dark</button>
+          </div>
+          <div id="appThemePalette" class="color-swatches" aria-label="Cores da app"></div>
+          <div id="settingsAppearanceMessage" class="settings-message" aria-live="polite"></div>
         </article>
 
         <article class="setting-card">
@@ -2065,6 +2119,21 @@
       "#0891b2", "#0284c7", "#1d4ed8", "#312e81", "#7c3aed",
       "#a21caf", "#db2777", "#be123c", "#92400e", "#4b5563"
     ];
+    const APP_THEME_KEY = "caderneta_mundial_2026_app_theme";
+    const APP_THEMES = {
+      light: [
+        { id: "default", name: "Light default", accent: "#111827", countryMode: "normal", bg: "#f6f7f9", card: "#ffffff", panel: "#f9fafb", text: "#171717", muted: "#6b7280", line: "#e5e7eb", header: "rgba(255,255,255,.92)" },
+        { id: "oceano", name: "Oceano", accent: "#0369a1", countryMode: "theme", bg: "#eef8ff", card: "#ffffff", panel: "#e0f2fe", text: "#0f172a", muted: "#475569", line: "#bae6fd", header: "rgba(255,255,255,.94)" },
+        { id: "relva", name: "Relva", accent: "#047857", countryMode: "theme", bg: "#effaf5", card: "#ffffff", panel: "#dcfce7", text: "#10231a", muted: "#475569", line: "#bbf7d0", header: "rgba(255,255,255,.94)" },
+        { id: "vinho", name: "Vinho", accent: "#9f1239", countryMode: "theme", bg: "#fff1f2", card: "#ffffff", panel: "#ffe4e6", text: "#1f1720", muted: "#5f4b55", line: "#fecdd3", header: "rgba(255,255,255,.94)" }
+      ],
+      dark: [
+        { id: "default", name: "Dark default", accent: "#94a3b8", countryMode: "normal", bg: "#0b1120", card: "#111827", panel: "#172033", text: "#f8fafc", muted: "#cbd5e1", line: "#334155", header: "rgba(17,24,39,.92)" },
+        { id: "aurora", name: "Aurora", accent: "#22c55e", countryMode: "theme", bg: "#06130e", card: "#0f1f18", panel: "#123225", text: "#f0fdf4", muted: "#bbf7d0", line: "#1f4a37", header: "rgba(15,31,24,.94)" },
+        { id: "noite", name: "Noite azul", accent: "#38bdf8", countryMode: "theme", bg: "#061221", card: "#0f2137", panel: "#12304d", text: "#eff6ff", muted: "#bfdbfe", line: "#1e3a5f", header: "rgba(15,33,55,.94)" },
+        { id: "uva", name: "Uva", accent: "#c084fc", countryMode: "theme", bg: "#12091f", card: "#1e1230", panel: "#2b1742", text: "#faf5ff", muted: "#e9d5ff", line: "#4c1d95", header: "rgba(30,18,48,.94)" }
+      ]
+    };
     const LIVE_REFRESH_MS = 15000;
     const IDLE_LOGOUT_MS = 30 * 60 * 1000;
     const AUTH_LOCK_MS = 1200;
@@ -2097,12 +2166,17 @@
     let availableUserColors = [...USER_COLOR_PALETTE];
     let usedUserColors = [];
     let profileColors = {};
+    let appThemeMode = "light";
+    let appThemePresetId = "default";
 
     const content = document.getElementById("content");
     const albumStats = document.getElementById("albumStats");
     const collectionProgress = document.getElementById("collectionProgress");
     const collectionProgressText = document.getElementById("collectionProgressText");
     const collectionProgressBar = document.getElementById("collectionProgressBar");
+    const albumHomeTitle = document.getElementById("albumHomeTitle");
+    const albumHomeTitleMain = document.getElementById("albumHomeTitleMain");
+    const albumHomeTitleSub = document.getElementById("albumHomeTitleSub");
     const albumToolbar = document.getElementById("albumToolbar");
     const countryTabsWrap = document.getElementById("countryTabsWrap");
     const countryTabs = document.getElementById("countryTabs");
@@ -2133,7 +2207,12 @@
     const settingsPanel = document.getElementById("settingsPanel");
     const themeColorInput = document.getElementById("themeColorInput");
     const themeColorTextInput = document.getElementById("themeColorTextInput");
+    const userColorPalette = document.getElementById("userColorPalette");
+    const appThemePalette = document.getElementById("appThemePalette");
+    const lightModeButton = document.getElementById("lightModeButton");
+    const darkModeButton = document.getElementById("darkModeButton");
     const settingsThemeMessage = document.getElementById("settingsThemeMessage");
+    const settingsAppearanceMessage = document.getElementById("settingsAppearanceMessage");
     const settingsCurrentPasswordInput = document.getElementById("settingsCurrentPasswordInput");
     const settingsNewPasswordInput = document.getElementById("settingsNewPasswordInput");
     const settingsConfirmPasswordInput = document.getElementById("settingsConfirmPasswordInput");
@@ -2517,6 +2596,12 @@
       return activePage === "friends" && hasSelectedFriend();
     }
 
+    function applyFriendColor(color = friendUserColor) {
+      friendUserColor = sanitizeUserColor(color);
+      document.documentElement.style.setProperty("--friend-color", friendUserColor);
+      document.documentElement.style.setProperty("--friend-color-soft", appThemeMode === "dark" ? darkenColor(friendUserColor, 0.24) : lightenColor(friendUserColor, 0.74));
+    }
+
     function currentAlbumStickers() {
       if (activePage === "friends") return hasSelectedFriend() ? friendStickers : [];
       return stickers;
@@ -2581,7 +2666,7 @@
         return;
       }
 
-      currentViewTitle.textContent = "A minha caderneta";
+      currentViewTitle.textContent = viewTitleText(currentView);
     }
 
     function updatePageVisibility() {
@@ -2593,11 +2678,17 @@
       }
       albumStats?.classList.toggle("hidden", !showAlbum);
       collectionProgress?.classList.toggle("hidden", !showAlbum);
+      albumHomeTitle?.classList.toggle("hidden", !showAlbum);
+      if (albumHomeTitleMain) albumHomeTitleMain.textContent = isFriendView() ? `Caderneta de ${friendProfile}` : "Seleções";
+      if (albumHomeTitleSub) albumHomeTitleSub.textContent = isFriendView()
+        ? "Consulta os cromos deste amigo sem alterar a tua caderneta."
+        : "Escolhe uma seleção para abrir a caderneta.";
       albumToolbar?.classList.toggle("hidden", !showAlbum);
       legacyImportPanel?.classList.add("hidden");
       friendModeBanner?.classList.toggle("hidden", !isFriendView());
       if (friendBannerName) friendBannerName.textContent = friendProfile ? `Caderneta de ${friendProfile}` : "Caderneta do amigo";
       document.body.classList.toggle("friend-view", isFriendView());
+      applyFriendColor(isFriendView() ? friendUserColor : DEFAULT_USER_COLOR);
       resultSummary?.classList.toggle("hidden", !showAlbum);
       countryTabsWrap?.classList.toggle("hidden", !showAlbum);
       content?.classList.toggle("hidden", !showAlbum);
@@ -2615,9 +2706,25 @@
       pulseViewTitle();
     }
 
+    function goHome() {
+      activePage = "album";
+      currentView = "all";
+      selectedCountry = "all";
+      countryModalOpen = false;
+      friendProfile = "";
+      friendStickers = [];
+      friendUpdatedAt = "";
+      friendUserColor = DEFAULT_USER_COLOR;
+      document.body.classList.remove("modal-open");
+      syncFriendSelects("");
+      closeUserMenu();
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     function updateActiveStat() {
       document.querySelectorAll(".stat[data-view]").forEach(stat => {
-        stat.classList.toggle("active", stat.dataset.view === currentView);
+        stat.classList.remove("active");
       });
     }
 
@@ -2746,22 +2853,30 @@
     }
 
     function countryColor(country) {
-      if (isFriendView()) return "#1d4ed8";
       const code = String(country).split(" ")[0];
-      return COUNTRY_COLORS[code] || "#111827";
+      const original = COUNTRY_COLORS[code] || "#111827";
+      if (isFriendView()) return friendUserColor || DEFAULT_USER_COLOR;
+      if (currentAppTheme().countryMode === "normal") return original;
+      return mixColors(original, currentAppTheme().accent, appThemeMode === "dark" ? 0.42 : 0.28);
     }
 
     function countrySecondaryColor(country) {
-      if (isFriendView()) return "#dbeafe";
       const code = String(country).split(" ")[0];
-      return COUNTRY_SECONDARY_COLORS[code] || "#111827";
+      const original = COUNTRY_SECONDARY_COLORS[code] || "#111827";
+      if (isFriendView()) return appThemeMode === "dark" ? darkenColor(friendUserColor || DEFAULT_USER_COLOR, 0.2) : lightenColor(friendUserColor || DEFAULT_USER_COLOR, 0.72);
+      if (currentAppTheme().countryMode === "normal") return original;
+      return appThemeMode === "dark"
+        ? mixColors(original, currentAppTheme().accent, 0.55)
+        : lightenColor(mixColors(original, currentAppTheme().accent, 0.35), 0.48);
     }
 
 
     function countryCheckboxColor(country) {
-      if (isFriendView()) return "#60a5fa";
       const code = String(country).split(" ")[0];
-      return COUNTRY_TERTIARY_COLORS[code] || COUNTRY_SECONDARY_COLORS[code] || "#111827";
+      const original = COUNTRY_TERTIARY_COLORS[code] || COUNTRY_SECONDARY_COLORS[code] || "#111827";
+      if (isFriendView()) return appThemeMode === "dark" ? lightenColor(friendUserColor || DEFAULT_USER_COLOR, 0.2) : darkenColor(friendUserColor || DEFAULT_USER_COLOR, 0.08);
+      if (currentAppTheme().countryMode === "normal") return original;
+      return mixColors(original, currentAppTheme().accent, appThemeMode === "dark" ? 0.35 : 0.18);
     }
     function readableTextColor(hex) {
       const normalized = String(hex).replace("#", "");
@@ -2790,6 +2905,19 @@
       return `#${mix(r)}${mix(g)}${mix(b)}`;
     }
 
+    function mixColors(a, b, amount = 0.5) {
+      const left = String(a || "#111827").replace("#", "");
+      const right = String(b || "#111827").replace("#", "");
+      const blend = (start, end) => Math.round(start * (1 - amount) + end * amount).toString(16).padStart(2, "0");
+      const ar = parseInt(left.slice(0, 2), 16);
+      const ag = parseInt(left.slice(2, 4), 16);
+      const ab = parseInt(left.slice(4, 6), 16);
+      const br = parseInt(right.slice(0, 2), 16);
+      const bg = parseInt(right.slice(2, 4), 16);
+      const bb = parseInt(right.slice(4, 6), 16);
+      return `#${blend(ar, br)}${blend(ag, bg)}${blend(ab, bb)}`;
+    }
+
 
     function hexToRgba(hex, alpha) {
       const normalized = String(hex).replace("#", "");
@@ -2799,39 +2927,107 @@
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
-    function sanitizeThemeColor(value) {
-      const color = String(value || "").trim();
-      return /^#[0-9a-f]{6}$/i.test(color) ? color.toLowerCase() : "";
+    function sanitizeUserColor(value) {
+      const color = String(value || "").trim().toLowerCase();
+      return USER_COLOR_PALETTE.includes(color) ? color : DEFAULT_USER_COLOR;
+    }
+
+    function currentAppTheme() {
+      const list = APP_THEMES[appThemeMode] || APP_THEMES.light;
+      return list.find(theme => theme.id === appThemePresetId) || list[0];
+    }
+
+    function applyAppTheme(saveLocal = true) {
+      const theme = currentAppTheme();
+      const root = document.documentElement;
+      root.style.setProperty("--bg", theme.bg);
+      root.style.setProperty("--card", theme.card);
+      root.style.setProperty("--panel", theme.panel);
+      root.style.setProperty("--text", theme.text);
+      root.style.setProperty("--muted", theme.muted);
+      root.style.setProperty("--line", theme.line);
+      root.style.setProperty("--main", theme.accent);
+      root.style.setProperty("--ok", theme.accent);
+      root.style.setProperty("--main-soft", lightenColor(theme.accent, appThemeMode === "dark" ? 0.18 : 0.34));
+      root.style.setProperty("--header-bg", theme.header);
+      document.body.dataset.themeMode = appThemeMode;
+      document.body.dataset.countryMode = theme.countryMode;
+
+      if (saveLocal) {
+        try {
+          localStorage.setItem(APP_THEME_KEY, JSON.stringify({ mode: appThemeMode, preset: appThemePresetId }));
+        } catch {}
+      }
+
+      renderAppThemePalette();
+      render();
+    }
+
+    function loadAppTheme() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(APP_THEME_KEY) || "{}");
+        if (saved.mode && APP_THEMES[saved.mode]) appThemeMode = saved.mode;
+        if (saved.preset && APP_THEMES[appThemeMode].some(theme => theme.id === saved.preset)) appThemePresetId = saved.preset;
+      } catch {}
+      applyAppTheme(false);
+    }
+
+    function setAppThemeMode(mode) {
+      if (!APP_THEMES[mode]) return;
+      appThemeMode = mode;
+      if (!APP_THEMES[appThemeMode].some(theme => theme.id === appThemePresetId)) appThemePresetId = "default";
+      applyAppTheme();
+      setSettingsMessage(settingsAppearanceMessage, `Tema ${mode === "dark" ? "dark" : "light"} aplicado.`);
+    }
+
+    function setAppThemePreset(id) {
+      if (!APP_THEMES[appThemeMode].some(theme => theme.id === id)) return;
+      appThemePresetId = id;
+      applyAppTheme();
+      setSettingsMessage(settingsAppearanceMessage, "Aparência aplicada.");
+    }
+
+    function renderAppThemePalette() {
+      if (!appThemePalette) return;
+      if (lightModeButton) lightModeButton.classList.toggle("active", appThemeMode === "light");
+      if (darkModeButton) darkModeButton.classList.toggle("active", appThemeMode === "dark");
+      appThemePalette.innerHTML = APP_THEMES[appThemeMode].map(theme => `
+        <button
+          class="color-swatch ${theme.id === appThemePresetId ? "is-active" : ""}"
+          type="button"
+          style="--swatch-color:${theme.accent}"
+          onclick="setAppThemePreset('${escapeJS(theme.id)}')"
+          aria-label="${escapeHTML(theme.name)}"
+          title="${escapeHTML(theme.name)}"
+        ></button>
+      `).join("");
+    }
+
+    function renderUserColorPalette() {
+      if (!userColorPalette) return;
+      const used = new Set(usedUserColors.map(sanitizeUserColor));
+      userColorPalette.innerHTML = availableUserColors.map(color => {
+        const disabled = color !== currentUserColor && color !== DEFAULT_USER_COLOR && used.has(color);
+        const title = disabled ? "Cor já usada por outro user" : color;
+        return `
+          <button
+            class="color-swatch ${color === currentUserColor ? "is-active" : ""}"
+            type="button"
+            style="--swatch-color:${color}"
+            onclick="chooseThemeColor('${color}')"
+            aria-label="${escapeHTML(title)}"
+            title="${escapeHTML(title)}"
+            ${disabled ? "disabled" : ""}
+          ></button>
+        `;
+      }).join("");
+      if (themeColorInput) themeColorInput.value = currentUserColor;
+      if (themeColorTextInput) themeColorTextInput.value = currentUserColor;
     }
 
     function syncThemeControls() {
-      if (themeColorInput) themeColorInput.value = currentThemeColor;
-      if (themeColorTextInput) themeColorTextInput.value = currentThemeColor;
-      document.querySelectorAll(".color-swatch").forEach(button => {
-        button.classList.toggle("is-active", button.getAttribute("onclick")?.includes(currentThemeColor));
-      });
-    }
-
-    function applyThemeColor(color, saveLocal = true) {
-      const themeColor = sanitizeThemeColor(color) || DEFAULT_THEME_COLOR;
-      currentThemeColor = themeColor;
-      document.documentElement.style.setProperty("--main", themeColor);
-      document.documentElement.style.setProperty("--ok", themeColor);
-      document.documentElement.style.setProperty("--main-soft", lightenColor(themeColor, 0.34));
-      if (saveLocal) {
-        try {
-          localStorage.setItem(THEME_COLOR_KEY, themeColor);
-        } catch {}
-      }
-      syncThemeControls();
-    }
-
-    function loadLocalThemeColor() {
-      let saved = "";
-      try {
-        saved = localStorage.getItem(THEME_COLOR_KEY) || "";
-      } catch {}
-      applyThemeColor(saved || DEFAULT_THEME_COLOR, false);
+      renderUserColorPalette();
+      renderAppThemePalette();
     }
 
     function setSettingsMessage(target, text, isError = false) {
@@ -2841,42 +3037,55 @@
     }
 
     function chooseThemeColor(color) {
-      applyThemeColor(color);
-      setSettingsMessage(settingsThemeMessage, "Cor aplicada. Guarda para ficar associada à tua conta.");
+      const chosen = sanitizeUserColor(color);
+      const used = new Set(usedUserColors.map(sanitizeUserColor));
+      if (chosen !== currentUserColor && chosen !== DEFAULT_USER_COLOR && used.has(chosen)) {
+        setSettingsMessage(settingsThemeMessage, "Essa cor já está a ser usada por outro user.", true);
+        return;
+      }
+      currentUserColor = chosen;
+      try {
+        localStorage.setItem(USER_COLOR_KEY, currentUserColor);
+      } catch {}
+      document.documentElement.style.setProperty("--user-color", currentUserColor);
+      renderUserColorPalette();
+      setSettingsMessage(settingsThemeMessage, "Cor escolhida. Guarda para ficar associada à tua conta.");
     }
 
     function previewThemeColor() {
-      const color = sanitizeThemeColor(themeColorTextInput?.value || themeColorInput?.value);
-      if (!color) {
-        setSettingsMessage(settingsThemeMessage, "Escreve uma cor no formato #123abc.", true);
-        return;
-      }
-      applyThemeColor(color);
-      setSettingsMessage(settingsThemeMessage, "Cor aplicada. Guarda para ficar associada à tua conta.");
+      chooseThemeColor(themeColorInput?.value || themeColorTextInput?.value);
     }
 
     async function saveThemeSettings() {
       if (!requireLiveLogin()) return;
-      const color = sanitizeThemeColor(themeColorTextInput?.value || themeColorInput?.value);
-      if (!color) {
-        setSettingsMessage(settingsThemeMessage, "Cor inválida. Usa o formato #123abc.", true);
-        return;
-      }
+      const color = sanitizeUserColor(currentUserColor);
 
       try {
-        applyThemeColor(color);
-        await authRequest("/api/auth/settings", { themeColor: color });
+        const data = await authRequest("/api/auth/settings", { userColor: color });
+        applyUserSettings(data.settings || {});
         setSettingsMessage(settingsThemeMessage, "Cor guardada com sucesso.");
-        setSaveStatus("Definições guardadas");
+        setSaveStatus("Cor do user guardada");
       } catch (error) {
         setSettingsMessage(settingsThemeMessage, error.message, true);
-        setSaveStatus("Erro ao guardar definições");
+        setSaveStatus("Erro ao guardar cor do user");
       }
     }
 
     function resetThemeColor() {
-      applyThemeColor(DEFAULT_THEME_COLOR);
-      saveThemeSettings();
+      chooseThemeColor(DEFAULT_USER_COLOR);
+    }
+
+    function applyUserSettings(settings = {}) {
+      currentUserColor = sanitizeUserColor(settings.userColor || currentUserColor);
+      availableUserColors = Array.isArray(settings.colorPalette) && settings.colorPalette.length
+        ? settings.colorPalette.map(sanitizeUserColor)
+        : [...USER_COLOR_PALETTE];
+      usedUserColors = Array.isArray(settings.usedColors) ? settings.usedColors.map(sanitizeUserColor) : [];
+      try {
+        localStorage.setItem(USER_COLOR_KEY, currentUserColor);
+      } catch {}
+      document.documentElement.style.setProperty("--user-color", currentUserColor);
+      renderUserColorPalette();
     }
 
     async function loadUserSettings() {
@@ -2884,7 +3093,7 @@
       const response = await fetch("/api/auth/settings", { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Não foi possível ler as definições");
-      if (data.settings?.themeColor) applyThemeColor(data.settings.themeColor, true);
+      applyUserSettings(data.settings || {});
     }
 
     function clearPasswordInputs(...inputs) {
@@ -2945,7 +3154,8 @@
         .trim()
         .toLowerCase()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "");
     }
 
     function stickerSearchRank(sticker, term) {
@@ -3089,17 +3299,16 @@
       const duplicateTotal = duplicates.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
       const missingLines = exportGroupedLines(missing, sticker => stickerExportNumber(sticker));
       const duplicateLines = exportGroupedLines(duplicates, sticker => `${stickerExportNumber(sticker)} (x${sticker.repetidos || 0})`);
-      const lines = [
-        isFriendView() ? `Caderneta de ${friendProfile}` : "A minha caderneta",
-        "",
-        `Cromos em Falta (${missing.length}):`,
-        "",
-        ...(missingLines.length ? missingLines : ["Sem cromos em falta"]),
-        "",
-        `Cromos Repetidos (${duplicateTotal}):`,
-        "",
-        ...(duplicateLines.length ? duplicateLines : ["Sem cromos repetidos"])
-      ];
+      const lines = [];
+      if (isFriendView()) lines.push(`Caderneta de ${friendProfile}`, "");
+      if (missingLines.length) {
+        lines.push(`Cromos em Falta (${missing.length}):`, "", ...missingLines);
+      }
+      if (duplicateLines.length) {
+        if (lines.length) lines.push("");
+        lines.push(`Cromos Repetidos (${duplicateTotal}):`, "", ...duplicateLines);
+      }
+      if (!lines.length) lines.push("Sem cromos em falta ou repetidos");
 
       const blob = new Blob([`${lines.join("\r\n")}\r\n`], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -3192,6 +3401,7 @@
       friendProfile = "";
       friendStickers = [];
       friendUpdatedAt = "";
+      friendUserColor = DEFAULT_USER_COLOR;
       syncFriendSelects("");
       if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
       liveComparison.innerHTML = `<div class="comparison-empty">Voltaste a tua caderneta.</div>`;
@@ -3207,6 +3417,7 @@
         friendProfile = "";
         friendStickers = [];
         friendUpdatedAt = "";
+        friendUserColor = DEFAULT_USER_COLOR;
         syncFriendSelects("");
         render();
         renderTradePanel();
@@ -3228,6 +3439,7 @@
         const data = await fetchLiveState(friend);
         friendProfile = friend;
         friendUpdatedAt = data.updatedAt || "";
+        friendUserColor = sanitizeUserColor(data.userColor || profileColors[friend] || DEFAULT_USER_COLOR);
         friendStickers = data.exists && data.csv ? parseTextFile(data.csv) : [];
         if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
         liveComparison.innerHTML = friendStickers.length
@@ -3832,6 +4044,11 @@
         .map(item => typeof item === "string" ? { profile: item } : item)
         .filter(item => item && item.profile && item.profile !== liveProfile);
 
+      profileColors = {};
+      profiles.forEach(item => {
+        profileColors[item.profile] = sanitizeUserColor(item.userColor || DEFAULT_USER_COLOR);
+      });
+
       const options = [
         `<option value="">${profiles.length ? "Escolhe um amigo" : "Ainda nao ha amigos live"}</option>`,
         ...profiles.map(item => `<option value="${escapeHTML(item.profile)}">${escapeHTML(item.profile)}</option>`)
@@ -3908,7 +4125,7 @@
         friendProfile = "";
         friendStickers = [];
         friendUpdatedAt = "";
-        if (user.themeColor) applyThemeColor(user.themeColor, true);
+        if (user.userColor) currentUserColor = sanitizeUserColor(user.userColor);
         liveUsernameInput.value = user.username;
         localStorage.setItem("caderneta_live_profile", user.username);
         liveStatusText.textContent = "A carregar caderneta online...";
@@ -4014,6 +4231,7 @@
       friendProfile = "";
       friendStickers = [];
       friendUpdatedAt = "";
+      friendUserColor = DEFAULT_USER_COLOR;
       tradeRequests = [];
       if (liveRefreshTimer) clearInterval(liveRefreshTimer);
       liveRefreshTimer = null;
@@ -4046,6 +4264,7 @@
           const activeFriend = friendProfile;
           const data = await fetchLiveState(activeFriend);
           friendUpdatedAt = data.updatedAt || friendUpdatedAt;
+          friendUserColor = sanitizeUserColor(data.userColor || profileColors[activeFriend] || friendUserColor);
           friendStickers = data.exists && data.csv ? parseTextFile(data.csv) : [];
           if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
           render();
@@ -4175,11 +4394,7 @@
     }
 
     function updateResultSummary(list) {
-      const term = search.value.trim();
-      const view = viewTitleText(currentView).toLowerCase();
-      const pieces = [currentAlbumLabel(), `${list.length} cromos`, view, currentCountryLabel()];
-      if (term) pieces.push(`pesquisa: ${term}`);
-      resultSummary.textContent = pieces.join(" - ");
+      if (resultSummary) resultSummary.textContent = "";
     }
 
     function emptyActionButtons() {
@@ -4311,12 +4526,9 @@
             <span>
               <span class="country-card-name">${escapeHTML(name)} <span class="country-card-code">${escapeHTML(code)}</span></span>
             </span>
-            <span class="country-card-count">${stats.owned}/${stats.total}</span>
+            <span class="country-card-count">${stats.owned}/${stats.total} - ${stats.percent}%</span>
           </span>
           <span class="country-card-progress" aria-hidden="true"><span></span></span>
-          <span class="country-card-meta">
-            <span>${stats.percent}% obtidos</span>
-          </span>
         </button>
       `;
     }
@@ -4332,6 +4544,23 @@
 
     function renderStickerSections(countryStickers) {
       const ordered = sortedCountryStickers(countryStickers);
+      const country = ordered[0]?.pais || "";
+      if (String(country).startsWith("FWC -")) {
+        const firstHistorical = ordered.filter(sticker => {
+          const number = stickerNumber(sticker);
+          return number >= 9 && number <= 13;
+        });
+        const secondHistorical = ordered.filter(sticker => {
+          const number = stickerNumber(sticker);
+          return number >= 14 && number <= 19;
+        });
+
+        return [
+          firstHistorical.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHistorical.map(renderStickerCard).join("")}</div></div>` : "",
+          secondHistorical.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHistorical.map(renderStickerCard).join("")}</div></div>` : ""
+        ].join("");
+      }
+
       const teamStickers = ordered.filter(isTeamAlbumSticker);
       const regularStickers = ordered.filter(sticker => !isTeamAlbumSticker(sticker));
       const firstHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) <= 10);
@@ -4654,7 +4883,7 @@
     countryScrollRight.addEventListener("blur", stopCountryScroll);
     window.addEventListener("resize", applyCountryTabsOffset);
     registerIdleActivityListeners();
-    loadLocalThemeColor();
+    loadAppTheme();
 
 
     async function loadBaseAlbum() {

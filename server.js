@@ -491,7 +491,16 @@ async function normalizeExistingUsersForIndexes(db) {
 
   await db.collection(COLLECTIONS.users).updateMany(
     { $or: [{ role: { $exists: false } }, { verified: { $exists: false } }, { userColor: { $exists: false } }] },
-    { $set: { role: "verificado", verified: true, userColor: DEFAULT_USER_COLOR, verifiedByLegacyUpgrade: true } }
+    [
+      {
+        $set: {
+          role: { $ifNull: ["$role", "verificado"] },
+          verified: { $ifNull: ["$verified", true] },
+          userColor: { $ifNull: ["$userColor", { $ifNull: ["$themeColor", DEFAULT_USER_COLOR] }] },
+          verifiedByLegacyUpgrade: true
+        }
+      }
+    ]
   );
 }
 
