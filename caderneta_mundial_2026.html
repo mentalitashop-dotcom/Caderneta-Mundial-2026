@@ -5496,6 +5496,15 @@
       `;
     }
 
+    function renderDuplicateStickerResults(list) {
+      return `
+        <section class="search-results" aria-label="Cromos repetidos">
+          <div class="search-results-title">Cromos repetidos</div>
+          <div class="sticker-grid">${list.map(renderStickerCard).join("")}</div>
+        </section>
+      `;
+    }
+
     function render() {
       const album = currentAlbumStickers();
       updateStats();
@@ -5509,8 +5518,17 @@
       const term = normalizeSearch(search.value);
       const list = filteredStickers();
       const grouped = groupByCountry(list);
+      const showDuplicateCardsOnly = currentView === "duplicates" && selectedCountry === "all" && !term;
+      if (showDuplicateCardsOnly) countryTabsWrap?.classList.add("hidden");
 
       if (album.length) {
+        if (showDuplicateCardsOnly) {
+          updateResultSummary(list);
+          content.innerHTML = list.length
+            ? renderDuplicateStickerResults(list)
+            : renderEmptyState(emptyViewMessage());
+          return;
+        }
         const visibleCountryCards = countryTabs.querySelectorAll(".country-card").length;
         const searchMatches = term
           ? searchResultStickers(album, term).filter(stickerMatchesCurrentView)
