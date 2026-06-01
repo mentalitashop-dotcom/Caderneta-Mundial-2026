@@ -663,6 +663,10 @@
       gap: 12px;
     }
 
+    .setting-card.password-card {
+      grid-column: 1 / -1;
+    }
+
     .setting-card {
       display: grid;
       gap: 12px;
@@ -865,6 +869,95 @@
 
     .trade-pagination button {
       padding: 8px 12px;
+    }
+
+    .trade-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--card);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      text-align: left;
+    }
+
+    .trade-row:hover {
+      border-color: var(--main);
+      transform: translateY(-1px);
+    }
+
+    .trade-row-main {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .trade-row-main strong {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .trade-row-main small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .trade-row-side {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--main);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .trade-open-icon {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--main);
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .trade-detail-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .trade-detail-sticker {
+      display: grid;
+      gap: 2px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--card);
+    }
+
+    .trade-detail-sticker strong {
+      color: var(--main);
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .trade-detail-sticker span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.2;
     }
 
     .trade-modal {
@@ -1807,20 +1900,23 @@
     }
 
     .country-modal-nav {
-      min-width: 54px;
-      height: 38px;
-      padding: 0 10px;
+      min-width: 46px;
+      height: 32px;
+      padding: 0 8px;
       display: grid;
       place-items: center;
       background: rgba(255,255,255,.14);
       color: inherit;
       border: 1px solid rgba(255,255,255,.26);
-      font-size: 22px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .04em;
       line-height: 1;
+      opacity: .78;
     }
 
     .country-modal-nav:disabled {
-      opacity: .32;
+      opacity: .22;
       cursor: not-allowed;
       filter: grayscale(.3);
     }
@@ -1828,6 +1924,7 @@
     .country-modal-nav:hover,
     .country-modal-close:hover {
       filter: brightness(1.08);
+      opacity: 1;
     }
 
     .country-modal-tabs {
@@ -2250,7 +2347,7 @@
 
     <section id="albumToolbar" class="toolbar">
       <div class="search-shell">
-        <input id="search" class="search" type="search" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
+        <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
         <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
       </div>
       <div class="toolbar-actions">
@@ -2375,7 +2472,7 @@
           <div id="settingsAppearanceMessage" class="settings-message" aria-live="polite"></div>
         </article>
 
-        <article class="setting-card">
+        <article class="setting-card password-card">
           <h2>Password</h2>
           <p>Escolhe uma nova password sem mexer nos teus cromos.</p>
           <div class="password-field">
@@ -2467,6 +2564,7 @@
     let tradeRequests = [];
     let tradeHistoryPage = 1;
     let tradeModalOpen = false;
+    let tradeDetailId = "";
     let selectedTradeGiveIds = [];
     let selectedTradeReceiveIds = [];
     let liveRefreshTimer = null;
@@ -2905,13 +3003,17 @@
       saveStatus.textContent = text;
     }
 
-    function stickerToastText(sticker) {
+    function stickerToastText(sticker, action = "owned") {
       const code = exportGroupLabel(sticker.pais);
       const number = stickerExportNumber(sticker);
-      return `CROMO ${code} ${number} COLADO NA CADERNETA`;
+      const label = `CROMO ${code} ${number}`;
+      if (action === "removed") return `${label} DESCOLADO DA CADERNETA`;
+      if (action === "duplicate-added") return `${label} POSTO NO MONTE DE REPETIDOS`;
+      if (action === "duplicate-removed") return `${label} RETIRADO DO MONTE DE REPETIDOS`;
+      return `${label} COLADO NA CADERNETA`;
     }
 
-    function showStickerToast(sticker) {
+    function showStickerToast(sticker, action = "owned") {
       const stackId = "stickerToastStack";
       let stack = document.getElementById(stackId);
       if (!stack) {
@@ -2923,7 +3025,7 @@
 
       const toast = document.createElement("div");
       toast.className = "sticker-toast";
-      toast.textContent = stickerToastText(sticker);
+      toast.textContent = stickerToastText(sticker, action);
       stack.appendChild(toast);
       setTimeout(() => toast.remove(), 2300);
     }
@@ -3500,19 +3602,33 @@
         .replace(/\s+/g, "");
     }
 
+    function normalizeSearchWords(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+    }
+
+    function playerNameSearchRank(name, term) {
+      if (!term) return 9;
+      const compactName = normalizeSearch(name);
+      const words = normalizeSearchWords(name).split(" ").filter(Boolean);
+      if (compactName === term) return 1;
+      if (words.some(word => word === term)) return 2;
+      if (term.length >= 4 && (compactName.includes(term) || words.some(word => word.includes(term)))) return 3;
+      return 9;
+    }
+
     function stickerSearchRank(sticker, term) {
       if (!term) return 0;
 
-      const countryCode = normalizeSearch(sticker.pais);
-      const countryName = normalizeSearch(countryFullName(sticker.pais));
       const code = normalizeSearch(sticker.codigo);
-      const name = normalizeSearch(sticker.nome);
 
       if (code === term) return 0;
-      if (name === term) return 1;
-      if (countryCode === term || countryName === term) return 2;
-      if (term.length >= 4 && name.includes(term)) return 3;
-      return 9;
+      return playerNameSearchRank(sticker.nome, term);
     }
 
     function stickerMatchesDirectSearch(sticker, term) {
@@ -3900,6 +4016,7 @@
         return;
       }
       resetTradeSelection();
+      tradeDetailId = "";
       tradeModalOpen = true;
       document.body.classList.add("modal-open");
       renderTradeModal();
@@ -3907,6 +4024,7 @@
 
     function closeTradeModal() {
       tradeModalOpen = false;
+      tradeDetailId = "";
       resetTradeSelection();
       if (!countryModalOpen) document.body.classList.remove("modal-open");
       if (tradeModal) {
@@ -3932,6 +4050,10 @@
       if (!tradeModalOpen) {
         tradeModal.classList.add("hidden");
         tradeModal.setAttribute("aria-hidden", "true");
+        return;
+      }
+      if (tradeDetailId) {
+        renderTradeDetailModal();
         return;
       }
 
@@ -4139,6 +4261,92 @@
         .join("<br>");
     }
 
+    function tradeStickerDetailList(list) {
+      if (!list || !list.length) return `<div class="trade-lines">Sem cromos</div>`;
+      return `
+        <div class="trade-detail-list">
+          ${list.map(sticker => `
+            <div class="trade-detail-sticker">
+              <strong>${escapeHTML(exportGroupLabel(sticker.pais))} ${escapeHTML(stickerExportNumber(sticker))}</strong>
+              <span>${escapeHTML(sticker.nome)}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function tradePartnerName(trade) {
+      return trade.direction === "incoming" ? trade.fromUser : trade.toUser;
+    }
+
+    function tradeReceivedStickers(trade) {
+      return trade.direction === "incoming" ? trade.give : trade.receive;
+    }
+
+    function tradeReceivedPreview(trade) {
+      const received = tradeReceivedStickers(trade) || [];
+      const first = received[0];
+      if (!first) return "Sem cromos recebidos";
+      const extra = received.length > 1 ? ` +${received.length - 1}` : "";
+      return `${exportGroupLabel(first.pais)} ${stickerExportNumber(first)}${extra}`;
+    }
+
+    function tradeRowTitle(trade) {
+      const partner = tradePartnerName(trade);
+      if (trade.status !== "pending") return `Troca feita com ${partner}: ${tradeReceivedPreview(trade)}`;
+      return trade.direction === "incoming" ? `${partner} propos uma troca` : `Proposta enviada a ${partner}`;
+    }
+
+    function openTradeDetail(tradeId) {
+      tradeDetailId = tradeId;
+      tradeModalOpen = true;
+      document.body.classList.add("modal-open");
+      renderTradeDetailModal();
+    }
+
+    function renderTradeDetailModal() {
+      if (!tradeModal || !tradeModalBody) return;
+      const trade = tradeRequests.find(item => item.id === tradeDetailId);
+      if (!trade) {
+        closeTradeModal();
+        return;
+      }
+      const giveLabel = trade.direction === "incoming" ? "Recebes" : "Das";
+      const receiveLabel = trade.direction === "incoming" ? "Das" : "Recebes";
+
+      tradeModal.classList.remove("hidden");
+      tradeModal.setAttribute("aria-hidden", "false");
+      tradeModalBody.innerHTML = `
+        <div class="trade-modal-head">
+          <div>
+            <h2 id="tradeModalTitle">${escapeHTML(tradeRowTitle(trade))}</h2>
+            <p>${escapeHTML(tradeReceivedPreview(trade))} - ${escapeHTML(tradeStatusText(trade.status))}</p>
+          </div>
+          <button class="trade-modal-close secondary" type="button" onclick="closeTradeModal()" aria-label="Fechar">x</button>
+        </div>
+        <div class="trade-pick-grid">
+          <div class="trade-pick-column">
+            <div class="trade-pick-column-title">
+              <span>${escapeHTML(giveLabel)}</span>
+              <span>${(trade.give || []).length}</span>
+            </div>
+            ${tradeStickerDetailList(trade.give)}
+          </div>
+          <div class="trade-pick-column">
+            <div class="trade-pick-column-title">
+              <span>${escapeHTML(receiveLabel)}</span>
+              <span>${(trade.receive || []).length}</span>
+            </div>
+            ${tradeStickerDetailList(trade.receive)}
+          </div>
+        </div>
+        <div class="trade-modal-actions">
+          <span class="trade-modal-balance">Podes aceitar, recusar ou fechar esta proposta.</span>
+          ${tradeActionButtons(trade)}
+        </div>
+      `;
+    }
+
     function tradeActionButtons(trade) {
       if (trade.status !== "pending") return "";
       if (trade.direction === "incoming") {
@@ -4175,21 +4383,21 @@
 
     function renderTradeCards(trades) {
       return trades.map(trade => {
-        const title = trade.direction === "incoming"
-          ? `${trade.fromUser} propos uma troca`
-          : `Proposta enviada a ${trade.toUser}`;
-        const giveLabel = trade.direction === "incoming" ? "Recebes" : "Das";
-        const receiveLabel = trade.direction === "incoming" ? "Das" : "Recebes";
+        const title = tradeRowTitle(trade);
+        const preview = trade.status === "pending"
+          ? tradeReceivedPreview(trade)
+          : "Ver detalhes da troca";
         return `
-          <div class="trade-card">
-            <div class="trade-card-head">
-              <div class="trade-card-title">${escapeHTML(title)}</div>
-              <div class="trade-status">${escapeHTML(tradeStatusText(trade.status))}</div>
-            </div>
-            <div class="trade-lines"><strong>${giveLabel}:</strong><br>${tradeStickerList(trade.give)}</div>
-            <div class="trade-lines"><strong>${receiveLabel}:</strong><br>${tradeStickerList(trade.receive)}</div>
-            ${tradeActionButtons(trade)}
-          </div>
+          <button class="trade-row" type="button" onclick="openTradeDetail('${escapeJS(trade.id)}')">
+            <span class="trade-row-main">
+              <strong>${escapeHTML(title)}</strong>
+              <small>${escapeHTML(preview)}</small>
+            </span>
+            <span class="trade-row-side">
+              <span class="trade-status">${escapeHTML(tradeStatusText(trade.status))}</span>
+              <span class="trade-open-icon" aria-hidden="true">&#128065;</span>
+            </span>
+          </button>
         `;
       }).join("");
     }
@@ -4298,6 +4506,7 @@
     }
 
     async function updateTradeStatus(tradeId, status) {
+      const shouldCloseDetail = Boolean(tradeDetailId);
       try {
         const response = await fetch("/api/live/trades/status", {
           method: "POST",
@@ -4311,6 +4520,7 @@
         await refreshOwnAlbumState();
         if (hasSelectedFriend()) await loadFriendAlbum(friendProfile, activePage);
         renderTradePanel();
+        if (shouldCloseDetail) closeTradeModal();
         setSaveStatus(status === "accepted" ? "Troca aceite e cadernetas atualizadas" : "Troca atualizada");
       } catch (error) {
         setSaveStatus(error.message);
@@ -5022,7 +5232,7 @@
 
       sticker.tenho = checked;
       if (!checked) sticker.repetidos = 0;
-      if (checked) showStickerToast(sticker);
+      showStickerToast(sticker, checked ? "owned" : "removed");
       saveState();
       render();
     }
@@ -5036,7 +5246,11 @@
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker || !sticker.tenho) return;
 
-      sticker.repetidos = normalizeDuplicates(value);
+      const currentDuplicates = sticker.repetidos || 0;
+      const nextDuplicates = normalizeDuplicates(value);
+      sticker.repetidos = nextDuplicates;
+      if (nextDuplicates > currentDuplicates) showStickerToast(sticker, "duplicate-added");
+      if (nextDuplicates < currentDuplicates) showStickerToast(sticker, "duplicate-removed");
       saveState();
       render();
     }
@@ -5057,6 +5271,7 @@
       }
 
       sticker.repetidos = Math.max(0, currentDuplicates + delta);
+      showStickerToast(sticker, delta > 0 ? "duplicate-added" : "duplicate-removed");
       saveState();
       render();
     }
