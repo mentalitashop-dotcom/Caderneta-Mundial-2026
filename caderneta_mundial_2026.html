@@ -713,6 +713,11 @@
       box-shadow: 0 0 0 1px var(--line);
     }
 
+    .app-theme-swatch {
+      background: linear-gradient(135deg, var(--swatch-color) 0 66%, var(--swatch-accent) 66% 100%);
+      box-shadow: 0 0 0 1px var(--swatch-line, var(--line));
+    }
+
     .color-swatch.is-active {
       box-shadow: 0 0 0 3px var(--main);
     }
@@ -1409,7 +1414,7 @@
     .country-tabs {
       width: 100%;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 8px;
       white-space: normal;
       transform: none !important;
@@ -1441,13 +1446,13 @@
     }
 
     .country-card {
-      min-height: 96px;
-      padding: 10px;
+      min-height: 98px;
+      padding: 10px 10px 9px;
       display: grid;
       align-content: space-between;
-      gap: 7px;
+      gap: 12px;
       border: 1px solid var(--country-border, var(--line));
-      border-radius: 12px;
+      border-radius: 14px;
       background: var(--country-soft, #fff);
       color: var(--country-text, var(--main));
       box-shadow: var(--shadow);
@@ -1470,21 +1475,32 @@
       align-items: flex-start;
     }
 
+    .country-card-bottom {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 8px;
+    }
+
     .country-card-name {
       display: block;
+      max-width: 100%;
       font-size: 13px;
       font-weight: 900;
       line-height: 1.15;
       color: var(--country-text, var(--main));
+      text-transform: uppercase;
     }
 
     .country-card-code {
       display: inline-flex;
-      margin-left: 4px;
       color: var(--country-muted, var(--muted));
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 900;
       letter-spacing: .04em;
+      line-height: 1.1;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .country-card-count {
@@ -1492,13 +1508,15 @@
       font-size: 11px;
       font-weight: 900;
       white-space: nowrap;
+      line-height: 1;
     }
 
     .country-card-progress {
       height: 6px;
       overflow: hidden;
       border-radius: 999px;
-      background: rgba(15, 23, 42, .13);
+      background: var(--country-track, rgba(15, 23, 42, .13));
+      align-self: end;
     }
 
     .country-card-progress span {
@@ -1929,23 +1947,6 @@
 
   <main>
 
-    <section id="albumToolbar" class="toolbar">
-      <div class="search-shell">
-        <input id="search" class="search" type="search" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
-        <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
-      </div>
-      <div class="toolbar-actions">
-        <button id="exportListButton" class="export-list-btn" type="button" onclick="exportMissingAndDuplicates()"><span>Exportar lista</span><small id="exportSummary">0 faltam - 0 rep.</small></button>
-      </div>
-    </section>
-
-    <section id="albumHomeTitle" class="album-home-title">
-      <div>
-        <strong id="albumHomeTitleMain">Seleções</strong>
-        <span id="albumHomeTitleSub">Escolhe uma seleção para abrir a caderneta.</span>
-      </div>
-    </section>
-
     <section id="collectionProgress" class="collection-progress">
       <div class="collection-progress-copy">
         <span>Progresso da coleção</span>
@@ -1961,6 +1962,23 @@
       <div class="stat" data-view="missing"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
       <div class="stat" data-view="owned"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
       <div class="stat" data-view="duplicates"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
+    </section>
+
+    <section id="albumToolbar" class="toolbar">
+      <div class="search-shell">
+        <input id="search" class="search" type="search" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
+        <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
+      </div>
+      <div class="toolbar-actions">
+        <button id="exportListButton" class="export-list-btn" type="button" onclick="exportMissingAndDuplicates()"><span>Exportar lista</span><small id="exportSummary">0 faltam - 0 rep.</small></button>
+      </div>
+    </section>
+
+    <section id="albumHomeTitle" class="album-home-title hidden">
+      <div>
+        <strong id="albumHomeTitleMain">Seleções</strong>
+        <span id="albumHomeTitleSub">Escolhe uma seleção para abrir a caderneta.</span>
+      </div>
     </section>
 
     <section id="legacyImportPanel" class="legacy-import-panel">
@@ -2113,6 +2131,7 @@
     const STORAGE_KEY = "caderneta_mundial_2026_estado_v1";
     const USER_COLOR_KEY = "caderneta_mundial_2026_user_color";
     const DEFAULT_USER_COLOR = "#111827";
+    const DEFAULT_THEME_COLOR = DEFAULT_USER_COLOR;
     const USER_COLOR_PALETTE = [
       "#111827", "#7f1d1d", "#dc2626", "#ea580c", "#f59e0b",
       "#eab308", "#84cc16", "#16a34a", "#059669", "#0d9488",
@@ -2122,16 +2141,17 @@
     const APP_THEME_KEY = "caderneta_mundial_2026_app_theme";
     const APP_THEMES = {
       light: [
-        { id: "default", name: "Light default", accent: "#111827", countryMode: "normal", bg: "#f6f7f9", card: "#ffffff", panel: "#f9fafb", text: "#171717", muted: "#6b7280", line: "#e5e7eb", header: "rgba(255,255,255,.92)" },
-        { id: "oceano", name: "Oceano", accent: "#0369a1", countryMode: "theme", bg: "#eef8ff", card: "#ffffff", panel: "#e0f2fe", text: "#0f172a", muted: "#475569", line: "#bae6fd", header: "rgba(255,255,255,.94)" },
-        { id: "relva", name: "Relva", accent: "#047857", countryMode: "theme", bg: "#effaf5", card: "#ffffff", panel: "#dcfce7", text: "#10231a", muted: "#475569", line: "#bbf7d0", header: "rgba(255,255,255,.94)" },
-        { id: "vinho", name: "Vinho", accent: "#9f1239", countryMode: "theme", bg: "#fff1f2", card: "#ffffff", panel: "#ffe4e6", text: "#1f1720", muted: "#5f4b55", line: "#fecdd3", header: "rgba(255,255,255,.94)" }
+        { id: "default", name: "Light default", accent: "#111827", countryMode: "normal", bg: "#f3f7fb", card: "#ffffff", panel: "#f8fafc", text: "#0f172a", muted: "#475569", line: "#dbeafe", header: "rgba(255,255,255,.94)" },
+        { id: "windows", name: "Windows azul", accent: "#0078d4", countryMode: "theme", bg: "#eef7ff", card: "#ffffff", panel: "#f7fbff", text: "#102033", muted: "#526579", line: "#b9ddff", header: "rgba(255,255,255,.94)" },
+        { id: "mint", name: "Menta", accent: "#00866d", countryMode: "theme", bg: "#edf8f4", card: "#ffffff", panel: "#f6fbf8", text: "#10231f", muted: "#4b625b", line: "#b9e4d6", header: "rgba(255,255,255,.94)" },
+        { id: "rose", name: "Rosa suave", accent: "#b4235a", countryMode: "theme", bg: "#fff3f7", card: "#ffffff", panel: "#fff8fb", text: "#26151c", muted: "#654a55", line: "#f5c6d6", header: "rgba(255,255,255,.94)" }
       ],
       dark: [
-        { id: "default", name: "Dark default", accent: "#94a3b8", countryMode: "normal", bg: "#0b1120", card: "#111827", panel: "#172033", text: "#f8fafc", muted: "#cbd5e1", line: "#334155", header: "rgba(17,24,39,.92)" },
-        { id: "aurora", name: "Aurora", accent: "#22c55e", countryMode: "theme", bg: "#06130e", card: "#0f1f18", panel: "#123225", text: "#f0fdf4", muted: "#bbf7d0", line: "#1f4a37", header: "rgba(15,31,24,.94)" },
-        { id: "noite", name: "Noite azul", accent: "#38bdf8", countryMode: "theme", bg: "#061221", card: "#0f2137", panel: "#12304d", text: "#eff6ff", muted: "#bfdbfe", line: "#1e3a5f", header: "rgba(15,33,55,.94)" },
-        { id: "uva", name: "Uva", accent: "#c084fc", countryMode: "theme", bg: "#12091f", card: "#1e1230", panel: "#2b1742", text: "#faf5ff", muted: "#e9d5ff", line: "#4c1d95", header: "rgba(30,18,48,.94)" }
+        { id: "default", name: "Dark default", accent: "#60a5fa", countryMode: "normal", bg: "#0f1117", card: "#171a21", panel: "#1f2430", text: "#f8fafc", muted: "#b8c2d1", line: "#303744", header: "rgba(17,20,28,.94)" },
+        { id: "windows", name: "Windows dark", accent: "#0078d4", countryMode: "theme", bg: "#0f0f10", card: "#1b1b1d", panel: "#242426", text: "#f5f5f5", muted: "#c7c7c7", line: "#3a3a3c", header: "rgba(31,31,33,.94)" },
+        { id: "graphite", name: "Grafite verde", accent: "#2dd4bf", countryMode: "theme", bg: "#0b1010", card: "#151c1c", panel: "#1c2828", text: "#f0fdfa", muted: "#b7c9c7", line: "#2b3d3d", header: "rgba(21,28,28,.94)" },
+        { id: "violet", name: "Noite violeta", accent: "#8b5cf6", countryMode: "theme", bg: "#100f16", card: "#1b1824", panel: "#252033", text: "#faf5ff", muted: "#cdc4d9", line: "#382f4c", header: "rgba(27,24,36,.94)" },
+        { id: "wine", name: "Carvão vinho", accent: "#fb7185", countryMode: "theme", bg: "#120f12", card: "#1d181c", panel: "#2a2027", text: "#fff1f2", muted: "#d4bec5", line: "#44303a", header: "rgba(29,24,28,.94)" }
       ]
     };
     const LIVE_REFRESH_MS = 15000;
@@ -2678,7 +2698,7 @@
       }
       albumStats?.classList.toggle("hidden", !showAlbum);
       collectionProgress?.classList.toggle("hidden", !showAlbum);
-      albumHomeTitle?.classList.toggle("hidden", !showAlbum);
+      albumHomeTitle?.classList.add("hidden");
       if (albumHomeTitleMain) albumHomeTitleMain.textContent = isFriendView() ? `Caderneta de ${friendProfile}` : "Seleções";
       if (albumHomeTitleSub) albumHomeTitleSub.textContent = isFriendView()
         ? "Consulta os cromos deste amigo sem alterar a tua caderneta."
@@ -2972,6 +2992,10 @@
       applyAppTheme(false);
     }
 
+    function loadLocalThemeColor() {
+      loadAppTheme();
+    }
+
     function setAppThemeMode(mode) {
       if (!APP_THEMES[mode]) return;
       appThemeMode = mode;
@@ -2993,9 +3017,9 @@
       if (darkModeButton) darkModeButton.classList.toggle("active", appThemeMode === "dark");
       appThemePalette.innerHTML = APP_THEMES[appThemeMode].map(theme => `
         <button
-          class="color-swatch ${theme.id === appThemePresetId ? "is-active" : ""}"
+          class="color-swatch app-theme-swatch ${theme.id === appThemePresetId ? "is-active" : ""}"
           type="button"
-          style="--swatch-color:${theme.accent}"
+          style="--swatch-color:${theme.card};--swatch-accent:${theme.accent};--swatch-line:${theme.line}"
           onclick="setAppThemePreset('${escapeJS(theme.id)}')"
           aria-label="${escapeHTML(theme.name)}"
           title="${escapeHTML(theme.name)}"
@@ -3203,10 +3227,17 @@
       const primary = countryColor(country);
       const secondary = countrySecondaryColor(country).toLowerCase();
       const base = secondary === "white" ? "#ffffff" : secondary;
+      if (appThemeMode === "dark") {
+        const theme = currentAppTheme();
+        const soft = mixColors(theme.card, primary, theme.countryMode === "normal" ? 0.16 : 0.22);
+        const border = mixColors(theme.line, primary, 0.55);
+        return `--country-primary:${primary};--country-soft:${soft};--country-border:${border};--country-text:#f8fafc;--country-muted:#cbd5e1;--country-track:rgba(255,255,255,.16);--country-shadow:rgba(0,0,0,.32)`;
+      }
+
       const soft = lightenColor(base, 0.38);
       const text = readableTextColor(soft);
       const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "#475569";
-      return `--country-primary:${primary};--country-soft:${soft};--country-border:${primary};--country-text:${text};--country-muted:${muted};--country-shadow:${hexToRgba(primary, .18)}`;
+      return `--country-primary:${primary};--country-soft:${soft};--country-border:${primary};--country-text:${text};--country-muted:${muted};--country-track:rgba(15,23,42,.13);--country-shadow:${hexToRgba(primary, .18)}`;
     }
 
     function renderCountryTabs() {
@@ -4523,12 +4554,13 @@
       return `
         <button class="country-card" type="button" style="${countryCardStyle(country)};--progress-width:${stats.percent}%" onclick="openCountryModal('${escapeJS(country)}')">
           <span class="country-card-top">
-            <span>
-              <span class="country-card-name">${escapeHTML(name)} <span class="country-card-code">${escapeHTML(code)}</span></span>
-            </span>
+            <span class="country-card-name">${escapeHTML(name)}</span>
+            <span class="country-card-code">${escapeHTML(code)}</span>
+          </span>
+          <span class="country-card-bottom">
+            <span class="country-card-progress" aria-hidden="true"><span></span></span>
             <span class="country-card-count">${stats.owned}/${stats.total} - ${stats.percent}%</span>
           </span>
-          <span class="country-card-progress" aria-hidden="true"><span></span></span>
         </button>
       `;
     }
