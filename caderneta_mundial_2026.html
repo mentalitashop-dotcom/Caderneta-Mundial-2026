@@ -1066,6 +1066,59 @@
       padding-right: 4px;
     }
 
+    .trade-grouped-summary {
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .trade-grouped-summary strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--main);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .trade-grouped-summary span {
+      display: block;
+    }
+
+    .trade-pick-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .trade-pick-pagination span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .trade-pick-pagination button {
+      min-width: 34px;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 13px;
+    }
+
+    .trade-pick-pagination button:disabled {
+      opacity: .42;
+      cursor: not-allowed;
+    }
+
     .trade-pick-card {
       width: 100%;
       min-width: 0;
@@ -2949,6 +3002,7 @@
     const IDLE_LOGOUT_MS = 30 * 60 * 1000;
     const AUTH_LOCK_MS = 1200;
     const TRADE_HISTORY_PAGE_SIZE = 5;
+    const TRADE_PICK_PAGE_SIZE = 12;
 
     let stickers = [];
     let activePage = "album";
@@ -2972,6 +3026,7 @@
     let tradeDetailId = "";
     let selectedTradeGiveIds = [];
     let selectedTradeReceiveIds = [];
+    let tradePickPages = { give: 1, receive: 1 };
     let modalTouchGesture = null;
     let liveRefreshTimer = null;
     let idleLogoutTimer = null;
@@ -4312,7 +4367,10 @@
       const duplicates = album.filter(sticker => sticker.tenho && (sticker.repetidos || 0) > 0);
       const duplicateTotal = duplicates.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
       const missingLines = exportGroupedLines(missing, sticker => stickerExportNumber(sticker));
-      const duplicateLines = exportGroupedLines(duplicates, sticker => `${stickerExportNumber(sticker)} (x${sticker.repetidos || 0})`);
+      const duplicateLines = exportGroupedLines(duplicates, sticker => {
+        const count = sticker.repetidos || 0;
+        return count > 1 ? `${stickerExportNumber(sticker)} (${count})` : stickerExportNumber(sticker);
+      });
       const lines = [];
       if (isFriendView()) lines.push(`Caderneta de ${friendProfile}`, "");
       if (missingLines.length) {
@@ -4549,9 +4607,56 @@
       `;
     }
 
+    function tradeSelectionIds(side) {
+      return side === "give" ? selectedTradeGiveIds : selectedTradeReceiveIds;
+    }
+
+    function tradeSelectedStickers(list, side) {
+      const ids = new Set(tradeSelectionIds(side));
+      return list.filter(sticker => ids.has(sticker.id));
+    }
+
+    function clampTradePickPage(side, totalItems) {
+      const totalPages = Math.max(1, Math.ceil(totalItems / TRADE_PICK_PAGE_SIZE));
+      const page = Math.max(1, Math.min(tradePickPages[side] || 1, totalPages));
+      tradePickPages[side] = page;
+      return { page, totalPages };
+    }
+
+    function paginatedTradePickList(list, side) {
+      const { page, totalPages } = clampTradePickPage(side, list.length);
+      const start = (page - 1) * TRADE_PICK_PAGE_SIZE;
+      return {
+        page,
+        totalPages,
+        items: list.slice(start, start + TRADE_PICK_PAGE_SIZE)
+      };
+    }
+
+    function setTradePickPage(side, page) {
+      tradePickPages[side] = Number(page) || 1;
+      renderTradeModal();
+    }
+
+    function renderTradePickPagination(side, page, totalPages) {
+      if (totalPages <= 1) return "";
+      return `
+        <div class="trade-pick-pagination">
+          <button class="secondary" type="button" onclick="setTradePickPage('${side}', ${page - 1})" ${page <= 1 ? "disabled" : ""}>‹</button>
+          <span>Página ${page}/${totalPages}</span>
+          <button class="secondary" type="button" onclick="setTradePickPage('${side}', ${page + 1})" ${page >= totalPages ? "disabled" : ""}>›</button>
+        </div>
+      `;
+    }
+
+    function renderTradeGroupedSummary(list, title = "Selecionados") {
+      return `<div class="trade-grouped-summary"><strong>${escapeHTML(title)}</strong><span>${tradeStickerList(list)}</span></div>`;
+    }
+
     function resetTradeSelection() {
       selectedTradeGiveIds = [];
       selectedTradeReceiveIds = [];
+      tradePickPages = { give: 1, receive: 1 };
     }
 
     function openTradeModal() {
@@ -4722,6 +4827,10 @@
       const receives = possibleTradeReceives();
       const balanced = tradeSelectionIsBalanced();
       const hasEnough = gives.length && receives.length;
+      const givePage = paginatedTradePickList(gives, "give");
+      const receivePage = paginatedTradePickList(receives, "receive");
+      const selectedGives = tradeSelectedStickers(gives, "give");
+      const selectedReceives = tradeSelectedStickers(receives, "receive");
       const balanceText = selectedTradeGiveIds.length === selectedTradeReceiveIds.length
         ? `${selectedTradeGiveIds.length} por ${selectedTradeReceiveIds.length}`
         : `${selectedTradeGiveIds.length} por ${selectedTradeReceiveIds.length} - escolhe a mesma quantidade`;
@@ -4744,14 +4853,18 @@
                 <span>Tu dás</span>
                 <span>${selectedTradeGiveIds.length}/${gives.length}</span>
               </div>
-              <div class="trade-pick-list" data-trade-side="give">${gives.map(sticker => tradePickCard(sticker, "give")).join("")}</div>
+              ${renderTradeGroupedSummary(selectedGives)}
+              <div class="trade-pick-list" data-trade-side="give">${givePage.items.map(sticker => tradePickCard(sticker, "give")).join("")}</div>
+              ${renderTradePickPagination("give", givePage.page, givePage.totalPages)}
             </div>
             <div class="trade-pick-column">
               <div class="trade-pick-column-title">
                 <span>Tu recebes</span>
                 <span>${selectedTradeReceiveIds.length}/${receives.length}</span>
               </div>
-              <div class="trade-pick-list" data-trade-side="receive">${receives.map(sticker => tradePickCard(sticker, "receive")).join("")}</div>
+              ${renderTradeGroupedSummary(selectedReceives)}
+              <div class="trade-pick-list" data-trade-side="receive">${receivePage.items.map(sticker => tradePickCard(sticker, "receive")).join("")}</div>
+              ${renderTradePickPagination("receive", receivePage.page, receivePage.totalPages)}
             </div>
           </div>
           <div class="trade-modal-actions">
@@ -4919,13 +5032,14 @@
       });
 
       return [...groups.entries()]
-        .map(([country, codes]) => `${escapeHTML(country)} ${[...new Set(codes)].map(escapeHTML).join(", ")}`)
+        .map(([country, codes]) => `${escapeHTML(country)}: ${[...new Set(codes)].map(escapeHTML).join(" ")}`)
         .join("<br>");
     }
 
     function tradeStickerDetailList(list) {
       if (!list || !list.length) return `<div class="trade-lines">Sem cromos</div>`;
       return `
+        ${renderTradeGroupedSummary(list, "Resumo")}
         <div class="trade-detail-list">
           ${list.map(sticker => `
             <div class="trade-detail-sticker">
