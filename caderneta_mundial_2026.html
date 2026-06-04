@@ -5037,18 +5037,7 @@
     }
 
     function tradeStickerDetailList(list) {
-      if (!list || !list.length) return `<div class="trade-lines">Sem cromos</div>`;
-      return `
-        ${renderTradeGroupedSummary(list, "Resumo")}
-        <div class="trade-detail-list">
-          ${list.map(sticker => `
-            <div class="trade-detail-sticker">
-              <strong>${escapeHTML(exportGroupLabel(sticker.pais))} ${escapeHTML(stickerExportNumber(sticker))}</strong>
-              <span>${escapeHTML(sticker.nome)}</span>
-            </div>
-          `).join("")}
-        </div>
-      `;
+      return renderTradeGroupedSummary(list || [], "Resumo");
     }
 
     function tradePartnerName(trade) {
