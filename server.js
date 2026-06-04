@@ -14,6 +14,7 @@ const COOKIE_NAME = "caderneta_session";
 const SESSION_IDLE_MINUTES = Number(process.env.SESSION_IDLE_MINUTES || 30);
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
+const MAX_TRADE_STICKERS_PER_SIDE = 50;
 const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
 const DEFAULT_USER_COLOR = "#111827";
 const USER_COLOR_PALETTE = [
@@ -876,7 +877,7 @@ function cleanStickerIdList(value) {
     list
       .map(item => String(item || "").trim().slice(0, 160))
       .filter(Boolean)
-  )].slice(0, 12);
+  )];
 }
 
 function publicTradeSticker(sticker) {
@@ -1036,6 +1037,7 @@ async function createTradeProposal(db, user, payload) {
   const receiveIds = cleanStickerIdList(payload.receiveStickerIds || payload.receiveIds || payload.receive);
   if (!giveIds.length || !receiveIds.length) throw new HttpError(400, "Escolhe pelo menos um cromo para dar e um para receber.");
   if (giveIds.length !== receiveIds.length) throw new HttpError(400, "A troca tem de ter o mesmo numero de cromos dos dois lados.");
+  if (giveIds.length > MAX_TRADE_STICKERS_PER_SIDE) throw new HttpError(400, `A troca pode ter no maximo ${MAX_TRADE_STICKERS_PER_SIDE} cromos de cada lado.`);
 
   const [myStickers, friendStickers] = await Promise.all([
     getUserStickerState(db, user),

@@ -996,6 +996,10 @@
       background: var(--card);
       border: 1px solid var(--line);
       box-shadow: 0 30px 90px rgba(0,0,0,.3);
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+      transition: transform .18s ease;
+      will-change: transform;
     }
 
     .trade-modal-head {
@@ -1918,6 +1922,15 @@
       background: var(--card);
       border: 1px solid var(--line);
       box-shadow: 0 30px 90px rgba(0, 0, 0, .3);
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+      transition: transform .18s ease;
+      will-change: transform;
+    }
+
+    .country-modal-panel.is-touching,
+    .trade-modal-panel.is-touching {
+      transition: none;
     }
 
     .country-modal-inner {
@@ -2959,6 +2972,7 @@
     let tradeDetailId = "";
     let selectedTradeGiveIds = [];
     let selectedTradeReceiveIds = [];
+    let modalTouchGesture = null;
     let liveRefreshTimer = null;
     let idleLogoutTimer = null;
     let authRequestLocked = false;
@@ -4561,6 +4575,104 @@
         tradeModal.classList.add("hidden");
         tradeModal.setAttribute("aria-hidden", "true");
       }
+    }
+
+    function modalTouchPanel(type) {
+      return type === "country"
+        ? countryModalPanel
+        : tradeModal?.querySelector(".trade-modal-panel");
+    }
+
+    function modalTouchPoint(event) {
+      return event.changedTouches?.[0] || event.touches?.[0] || null;
+    }
+
+    function startModalTouchGesture(event, type) {
+      if (!event.touches || event.touches.length !== 1) return;
+      const target = event.target;
+      if (target?.closest?.("button, input, select, textarea, a, .trade-pick-list, .duplicate-controls")) return;
+      if (type === "country" && (!countryModalOpen || selectedCountry === "all")) return;
+      if (type === "trade" && !tradeModalOpen) return;
+
+      const point = modalTouchPoint(event);
+      const panel = modalTouchPanel(type);
+      if (!point || !panel) return;
+
+      modalTouchGesture = {
+        type,
+        panel,
+        startX: point.clientX,
+        startY: point.clientY,
+        lastX: point.clientX,
+        lastY: point.clientY,
+        scrollTop: panel.scrollTop || 0,
+        direction: ""
+      };
+      panel.classList.add("is-touching");
+    }
+
+    function moveModalTouchGesture(event) {
+      if (!modalTouchGesture || !event.touches || event.touches.length !== 1) return;
+      const point = modalTouchPoint(event);
+      if (!point) return;
+
+      const gesture = modalTouchGesture;
+      const dx = point.clientX - gesture.startX;
+      const dy = point.clientY - gesture.startY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      gesture.lastX = point.clientX;
+      gesture.lastY = point.clientY;
+
+      if (!gesture.direction && Math.max(absX, absY) > 14) {
+        gesture.direction = absX > absY * 1.2 ? "x" : "y";
+      }
+
+      if (gesture.type === "country" && gesture.direction === "x") {
+        event.preventDefault();
+        gesture.panel.style.transform = `translateX(${Math.max(-90, Math.min(90, dx * 0.35))}px)`;
+        return;
+      }
+
+      if (gesture.direction === "y" && dy > 0 && gesture.scrollTop <= 2 && absY > absX * 1.15) {
+        event.preventDefault();
+        gesture.panel.style.transform = `translateY(${Math.min(130, dy * 0.42)}px)`;
+      }
+    }
+
+    function clearModalTouchTransform(panel) {
+      if (!panel) return;
+      panel.classList.remove("is-touching");
+      panel.style.transform = "";
+    }
+
+    function endModalTouchGesture() {
+      const gesture = modalTouchGesture;
+      modalTouchGesture = null;
+      if (!gesture) return;
+
+      const dx = gesture.lastX - gesture.startX;
+      const dy = gesture.lastY - gesture.startY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      clearModalTouchTransform(gesture.panel);
+
+      if (dy > 92 && absY > absX * 1.15 && gesture.scrollTop <= 2) {
+        if (gesture.type === "country") closeCountryModal();
+        else closeTradeModal();
+        return;
+      }
+
+      if (gesture.type === "country" && absX > 76 && absX > absY * 1.25) {
+        moveCountryModal(dx < 0 ? 1 : -1);
+      }
+    }
+
+    function cancelModalTouchGesture() {
+      const panel = modalTouchGesture?.panel;
+      modalTouchGesture = null;
+      clearModalTouchTransform(panel);
     }
 
     function tradePickScrollState() {
@@ -6282,6 +6394,14 @@
     countryScrollRight.addEventListener("focus", () => startCountryScroll(1));
     countryScrollLeft.addEventListener("blur", stopCountryScroll);
     countryScrollRight.addEventListener("blur", stopCountryScroll);
+    countryModal?.addEventListener("touchstart", event => startModalTouchGesture(event, "country"), { passive: true });
+    countryModal?.addEventListener("touchmove", moveModalTouchGesture, { passive: false });
+    countryModal?.addEventListener("touchend", endModalTouchGesture, { passive: true });
+    countryModal?.addEventListener("touchcancel", cancelModalTouchGesture, { passive: true });
+    tradeModal?.addEventListener("touchstart", event => startModalTouchGesture(event, "trade"), { passive: true });
+    tradeModal?.addEventListener("touchmove", moveModalTouchGesture, { passive: false });
+    tradeModal?.addEventListener("touchend", endModalTouchGesture, { passive: true });
+    tradeModal?.addEventListener("touchcancel", cancelModalTouchGesture, { passive: true });
     window.addEventListener("resize", applyCountryTabsOffset);
     registerIdleActivityListeners();
     loadCountrySortMode();
