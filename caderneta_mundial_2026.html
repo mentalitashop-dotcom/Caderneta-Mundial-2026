@@ -1055,6 +1055,7 @@
 
     .trade-pick-list {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 7px;
       max-height: 360px;
       overflow: auto;
@@ -1063,6 +1064,7 @@
 
     .trade-pick-card {
       width: 100%;
+      min-width: 0;
       padding: 9px 10px;
       border-radius: 12px;
       border: 1px solid var(--line);
@@ -1078,6 +1080,7 @@
       color: var(--main);
       font-size: 13px;
       line-height: 1.2;
+      overflow-wrap: anywhere;
     }
 
     .trade-pick-card span {
@@ -1085,6 +1088,7 @@
       font-size: 11px;
       font-weight: 800;
       line-height: 1.2;
+      overflow-wrap: anywhere;
     }
 
     .trade-pick-card.is-selected {
@@ -4559,19 +4563,38 @@
       }
     }
 
+    function tradePickScrollState() {
+      const state = {};
+      document.querySelectorAll(".trade-pick-list[data-trade-side]").forEach(list => {
+        state[list.dataset.tradeSide] = list.scrollTop;
+      });
+      return state;
+    }
+
+    function restoreTradePickScrollState(state) {
+      if (!state) return;
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".trade-pick-list[data-trade-side]").forEach(list => {
+          const value = state[list.dataset.tradeSide];
+          if (Number.isFinite(value)) list.scrollTop = value;
+        });
+      });
+    }
+
     function toggleTradeSelection(side, stickerId) {
+      const scrollState = tradePickScrollState();
       const list = side === "give" ? selectedTradeGiveIds : selectedTradeReceiveIds;
       const index = list.indexOf(stickerId);
       if (index >= 0) list.splice(index, 1);
       else list.push(stickerId);
-      renderTradeModal();
+      renderTradeModal(scrollState);
     }
 
     function tradeSelectionIsBalanced() {
       return selectedTradeGiveIds.length > 0 && selectedTradeGiveIds.length === selectedTradeReceiveIds.length;
     }
 
-    function renderTradeModal() {
+    function renderTradeModal(scrollState = null) {
       if (!tradeModal || !tradeModalBody) return;
       if (!tradeModalOpen) {
         tradeModal.classList.add("hidden");
@@ -4609,14 +4632,14 @@
                 <span>Tu dás</span>
                 <span>${selectedTradeGiveIds.length}/${gives.length}</span>
               </div>
-              <div class="trade-pick-list">${gives.map(sticker => tradePickCard(sticker, "give")).join("")}</div>
+              <div class="trade-pick-list" data-trade-side="give">${gives.map(sticker => tradePickCard(sticker, "give")).join("")}</div>
             </div>
             <div class="trade-pick-column">
               <div class="trade-pick-column-title">
                 <span>Tu recebes</span>
                 <span>${selectedTradeReceiveIds.length}/${receives.length}</span>
               </div>
-              <div class="trade-pick-list">${receives.map(sticker => tradePickCard(sticker, "receive")).join("")}</div>
+              <div class="trade-pick-list" data-trade-side="receive">${receives.map(sticker => tradePickCard(sticker, "receive")).join("")}</div>
             </div>
           </div>
           <div class="trade-modal-actions">
@@ -4625,6 +4648,7 @@
           </div>
         ` : `<div class="comparison-empty">Não há cromos suficientes para montar uma troca equilibrada.</div>`}
       `;
+      restoreTradePickScrollState(scrollState);
     }
 
     function renderTradeSuggestions() {
