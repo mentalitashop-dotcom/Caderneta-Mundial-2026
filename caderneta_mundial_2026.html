@@ -1693,6 +1693,77 @@
       transform: none !important;
     }
 
+    .country-list-toolbar {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .country-list-title span,
+    .country-sort-label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .country-list-title strong {
+      display: block;
+      margin-top: 2px;
+      color: var(--main);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .country-sort-control {
+      display: grid;
+      gap: 4px;
+      min-width: min(230px, 100%);
+    }
+
+    .country-sort-select {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 34px 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      outline: none;
+      box-shadow: var(--shadow);
+    }
+
+    .country-sort-select:focus {
+      border-color: var(--main);
+      box-shadow: 0 0 0 4px rgba(17, 24, 39, .08);
+    }
+
+    body[data-theme-mode="dark"] .country-sort-select:focus {
+      box-shadow: 0 0 0 4px rgba(96, 165, 250, .16);
+    }
+
+    .country-group-title {
+      grid-column: 1 / -1;
+      margin: 8px 0 0;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--main);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
     .country-gallery-head {
       margin-bottom: 10px;
       display: flex;
@@ -2426,6 +2497,31 @@
         gap: 6px;
       }
 
+      .country-list-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .country-list-title strong {
+        font-size: 16px;
+      }
+
+      .country-sort-control {
+        min-width: 0;
+      }
+
+      .country-sort-select {
+        min-height: 36px;
+        font-size: 12px;
+      }
+
+      .country-group-title {
+        margin-top: 6px;
+        padding: 6px 8px;
+        font-size: 10px;
+      }
+
       .country-card {
         min-height: 78px;
         padding: 7px;
@@ -2772,6 +2868,20 @@
 
     <section id="countryTabsWrap" class="country-tabs-wrap" aria-label="Países da caderneta">
       <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver países anteriores">‹</button>
+      <div class="country-list-toolbar">
+        <div class="country-list-title">
+          <span>PaÃ­ses</span>
+          <strong>SeleÃ§Ãµes da caderneta</strong>
+        </div>
+        <label class="country-sort-control">
+          <span class="country-sort-label">Ordenar</span>
+          <select id="countrySortSelect" class="country-sort-select" aria-label="Ordenar paÃ­ses">
+            <option value="album">Ordem da caderneta</option>
+            <option value="alpha">Ordem crescente A-Z</option>
+            <option value="groups">Grupos oficiais</option>
+          </select>
+        </label>
+      </div>
       <div class="country-tabs-viewport">
         <div id="countryTabs" class="country-tabs"></div>
       </div>
@@ -2793,6 +2903,7 @@
   <script>
     const STORAGE_KEY = "caderneta_mundial_2026_estado_v1";
     const USER_COLOR_KEY = "caderneta_mundial_2026_user_color";
+    const COUNTRY_SORT_KEY = "caderneta_mundial_2026_country_sort";
     const DEFAULT_USER_COLOR = "#111827";
     const DEFAULT_THEME_COLOR = DEFAULT_USER_COLOR;
     const USER_COLOR_PALETTE = [
@@ -2825,7 +2936,9 @@
     let stickers = [];
     let activePage = "album";
     let currentView = "all";
+    let modalView = "all";
     let selectedCountry = "all";
+    let countrySortMode = "album";
     let countryModalOpen = false;
     let saveTimer = null;
     let countryScrollFrame = null;
@@ -2867,6 +2980,7 @@
     const albumToolbar = document.getElementById("albumToolbar");
     const countryTabsWrap = document.getElementById("countryTabsWrap");
     const countryTabs = document.getElementById("countryTabs");
+    const countrySortSelect = document.getElementById("countrySortSelect");
     const countryScrollLeft = document.getElementById("countryScrollLeft");
     const countryScrollRight = document.getElementById("countryScrollRight");
     const search = document.getElementById("search");
@@ -3146,6 +3260,26 @@
       GHA: "GANA",
       PAN: "PANAMÁ"
     };
+    const OFFICIAL_WORLD_CUP_GROUPS = {
+      "Grupo A": ["MEX", "RSA", "KOR", "CZE"],
+      "Grupo B": ["CAN", "BIH", "QAT", "SUI"],
+      "Grupo C": ["BRA", "MAR", "HAI", "SCO"],
+      "Grupo D": ["USA", "PAR", "AUS", "TUR"],
+      "Grupo E": ["GER", "CUW", "CIV", "ECU"],
+      "Grupo F": ["NED", "JPN", "SWE", "TUN"],
+      "Grupo G": ["BEL", "EGV", "IRN", "NZL"],
+      "Grupo H": ["ESP", "CPV", "KSA", "URU"],
+      "Grupo I": ["FRA", "SEN", "IRQ", "NOR"],
+      "Grupo J": ["ARG", "ALG", "AUT", "JOR"],
+      "Grupo K": ["POR", "COD", "UZB", "COL"],
+      "Grupo L": ["ENG", "CRO", "GHA", "PAN"]
+    };
+    const OFFICIAL_GROUP_ORDER = ["FWC", ...Object.keys(OFFICIAL_WORLD_CUP_GROUPS), "Outros"];
+    const OFFICIAL_GROUP_BY_CODE = Object.entries(OFFICIAL_WORLD_CUP_GROUPS).reduce((acc, [group, codes]) => {
+      codes.forEach(code => acc[code] = group);
+      return acc;
+    }, {});
+
     function normalizeOwned(value) {
       if (typeof value === "boolean") return value;
       const v = String(value || "").trim().toLowerCase();
@@ -3391,6 +3525,7 @@
       if (!showAlbum && countryModalOpen) {
         countryModalOpen = false;
         selectedCountry = "all";
+        modalView = "all";
         document.body.classList.remove("modal-open");
       }
       if (activePage !== "trades" && tradeModalOpen) {
@@ -3429,6 +3564,7 @@
     function goHome() {
       activePage = "album";
       currentView = "all";
+      modalView = "all";
       selectedCountry = "all";
       countryModalOpen = false;
       friendProfile = "";
@@ -3456,6 +3592,10 @@
 
     function setView(view) {
       currentView = view;
+      modalView = "all";
+      selectedCountry = "all";
+      countryModalOpen = false;
+      document.body.classList.remove("modal-open");
       updateViewTitle();
       updateActiveStat();
       pulseViewTitle();
@@ -3522,6 +3662,7 @@
 
     function openCountryModal(country) {
       selectedCountry = country;
+      modalView = "all";
       countryModalOpen = true;
       document.body.classList.add("modal-open");
       render();
@@ -3530,28 +3671,28 @@
     function closeCountryModal() {
       countryModalOpen = false;
       selectedCountry = "all";
+      modalView = "all";
       document.body.classList.remove("modal-open");
       render();
     }
 
     function setModalView(view) {
-      currentView = view;
-      updateActiveStat();
-      updateViewTitle();
-      render();
+      modalView = view;
+      renderCountryModal();
     }
 
     function filteredStickers(options = {}) {
       const term = normalizeSearch(search.value);
       const countryFilter = options.country || selectedCountry;
       const album = options.album || currentAlbumStickers();
+      const viewFilter = options.view || currentView;
 
       return album.filter(sticker => {
         const matchesView =
-          currentView === "all" ||
-          (currentView === "missing" && !sticker.tenho) ||
-          (currentView === "owned" && sticker.tenho) ||
-          (currentView === "duplicates" && sticker.tenho && (sticker.repetidos || 0) > 0);
+          viewFilter === "all" ||
+          (viewFilter === "missing" && !sticker.tenho) ||
+          (viewFilter === "owned" && sticker.tenho) ||
+          (viewFilter === "duplicates" && sticker.tenho && (sticker.repetidos || 0) > 0);
 
         const matchesCountry =
           countryFilter === "all" ||
@@ -3685,6 +3826,23 @@
         if (saved.preset && APP_THEMES[appThemeMode].some(theme => theme.id === saved.preset)) appThemePresetId = saved.preset;
       } catch {}
       applyAppTheme(false);
+    }
+
+    function loadCountrySortMode() {
+      try {
+        const saved = localStorage.getItem(COUNTRY_SORT_KEY);
+        if (["album", "alpha", "groups"].includes(saved)) countrySortMode = saved;
+      } catch {}
+      if (countrySortSelect) countrySortSelect.value = countrySortMode;
+    }
+
+    function setCountrySortMode(mode) {
+      countrySortMode = ["album", "alpha", "groups"].includes(mode) ? mode : "album";
+      if (countrySortSelect) countrySortSelect.value = countrySortMode;
+      try {
+        localStorage.setItem(COUNTRY_SORT_KEY, countrySortMode);
+      } catch {}
+      render();
     }
 
     function loadLocalThemeColor() {
@@ -3876,6 +4034,65 @@
       return COUNTRY_NAMES[code] || "";
     }
 
+    function countryDisplayName(country) {
+      return countryFullName(country) || country;
+    }
+
+    function officialGroupForCountry(country) {
+      const code = exportGroupLabel(country);
+      if (country === "FWC" || String(country).startsWith("FWC -")) return "FWC";
+      return OFFICIAL_GROUP_BY_CODE[code] || "Outros";
+    }
+
+    function officialGroupRank(country) {
+      const group = officialGroupForCountry(country);
+      const index = OFFICIAL_GROUP_ORDER.indexOf(group);
+      return index >= 0 ? index : OFFICIAL_GROUP_ORDER.length;
+    }
+
+    function officialGroupCountryRank(country) {
+      const group = officialGroupForCountry(country);
+      const code = exportGroupLabel(country);
+      const codes = OFFICIAL_WORLD_CUP_GROUPS[group] || [];
+      const index = codes.indexOf(code);
+      return index >= 0 ? index : 99;
+    }
+
+    function compareCountryAlpha(a, b) {
+      return countryDisplayName(a).localeCompare(countryDisplayName(b), "pt-PT", { sensitivity: "base" });
+    }
+
+    function sortedCountriesForList(countries, album, term = "") {
+      const albumOrder = new Map(albumCountries().map((country, index) => [country, index]));
+      const grouped = groupByCountry(album);
+
+      return [...countries].sort((a, b) => {
+        if (term) {
+          const rank = countrySearchRank(a, grouped[a] || [], term) - countrySearchRank(b, grouped[b] || [], term);
+          if (rank) return rank;
+        }
+
+        if (countrySortMode === "alpha") {
+          return compareCountryAlpha(a, b) || (albumOrder.get(a) ?? 0) - (albumOrder.get(b) ?? 0);
+        }
+
+        if (countrySortMode === "groups") {
+          const groupRank = officialGroupRank(a) - officialGroupRank(b);
+          if (groupRank) return groupRank;
+          const countryRank = officialGroupCountryRank(a) - officialGroupCountryRank(b);
+          if (countryRank) return countryRank;
+          return (albumOrder.get(a) ?? 0) - (albumOrder.get(b) ?? 0);
+        }
+
+        return (albumOrder.get(a) ?? 0) - (albumOrder.get(b) ?? 0);
+      });
+    }
+
+    function renderCountryGroupTitle(group) {
+      const label = group === "FWC" ? "FWC" : group;
+      return `<div class="country-group-title">${escapeHTML(label)}</div>`;
+    }
+
     function normalizeSearch(value) {
       return String(value || "")
         .trim()
@@ -3991,15 +4208,21 @@
           if (!term) return true;
           const countryStickers = album.filter(sticker => sticker.pais === country);
           return countrySearchRank(country, countryStickers, term) < 9;
-        })
-        .sort((a, b) => {
-          if (!term) return countries.indexOf(a) - countries.indexOf(b);
-          const grouped = groupByCountry(album);
-          const rank = countrySearchRank(a, grouped[a] || [], term) - countrySearchRank(b, grouped[b] || [], term);
-          return rank || countries.indexOf(a) - countries.indexOf(b);
         });
+      const orderedCountries = sortedCountriesForList(visibleCountries, album, term);
 
-      countryTabs.innerHTML = visibleCountries.map(country => renderCountryCard(country, album)).join("");
+      if (countrySortMode === "groups") {
+        let previousGroup = "";
+        countryTabs.innerHTML = orderedCountries.map(country => {
+          const group = officialGroupForCountry(country);
+          const heading = group !== previousGroup ? renderCountryGroupTitle(group) : "";
+          previousGroup = group;
+          return `${heading}${renderCountryCard(country, album)}`;
+        }).join("");
+        return;
+      }
+
+      countryTabs.innerHTML = orderedCountries.map(country => renderCountryCard(country, album)).join("");
     }
 
 
@@ -4032,19 +4255,19 @@
       return "Não tem nenhum cromo desta seleção";
     }
 
-    function emptyViewMessage() {
+    function emptyViewMessage(view = currentView, country = selectedCountry) {
       if (normalizeSearch(search.value)) return "Não há cromos para mostrar nesta pesquisa.";
 
-      if (selectedCountry === "all") {
-        if (currentView === "missing") return isFriendView() ? `${friendProfile} ja completou a caderneta.` : "Já completaste a caderneta.";
-        if (currentView === "owned") return isFriendView() ? `${friendProfile} ainda nao tem nenhum cromo obtido.` : "Ainda não tens nenhum cromo obtido.";
-        if (currentView === "duplicates") return isFriendView() ? `${friendProfile} nao tem nenhum cromo repetido.` : "Não tens nenhum cromo repetido.";
+      if (country === "all") {
+        if (view === "missing") return isFriendView() ? `${friendProfile} ja completou a caderneta.` : "Já completaste a caderneta.";
+        if (view === "owned") return isFriendView() ? `${friendProfile} ainda nao tem nenhum cromo obtido.` : "Ainda não tens nenhum cromo obtido.";
+        if (view === "duplicates") return isFriendView() ? `${friendProfile} nao tem nenhum cromo repetido.` : "Não tens nenhum cromo repetido.";
         return "Não há cromos para mostrar nesta vista.";
       }
 
-      if (currentView === "missing") return countryCompleteMessage(selectedCountry);
-      if (currentView === "owned") return countryOwnedEmptyMessage(selectedCountry);
-      if (currentView === "duplicates") return countryDuplicateEmptyMessage(selectedCountry);
+      if (view === "missing") return countryCompleteMessage(country);
+      if (view === "owned") return countryOwnedEmptyMessage(country);
+      if (view === "duplicates") return countryDuplicateEmptyMessage(country);
       return "Não há cromos para mostrar nesta seleção.";
     }
 
@@ -5482,8 +5705,8 @@
       return actions.length ? `<div class="empty-actions">${actions.join("")}</div>` : "";
     }
 
-    function renderEmptyState(message) {
-      return `<div class="empty"><strong>${escapeHTML(message)}</strong>${emptyActionButtons()}</div>`;
+    function renderEmptyState(message, actions = emptyActionButtons()) {
+      return `<div class="empty"><strong>${escapeHTML(message)}</strong>${actions}</div>`;
     }
     function updateStats() {
       const album = currentAlbumStickers();
@@ -5658,12 +5881,13 @@
     }
 
     function moveCountryModal(direction) {
-      const countries = albumCountries();
+      const countries = sortedCountriesForList(albumCountries(), currentAlbumStickers());
       if (!countries.length) return;
       const currentIndex = countries.indexOf(selectedCountry);
       const nextIndex = currentIndex + direction;
       if (currentIndex < 0 || nextIndex < 0 || nextIndex >= countries.length) return;
       selectedCountry = countries[nextIndex];
+      modalView = "all";
       countryModalOpen = true;
       render();
       requestAnimationFrame(() => {
@@ -5682,21 +5906,21 @@
 
       const album = currentAlbumStickers();
       const country = selectedCountry;
-      const countries = albumCountries();
+      const countries = sortedCountriesForList(albumCountries(), album);
       const countryIndex = countries.indexOf(country);
       const previousCountry = countryIndex > 0 ? countries[countryIndex - 1] : "";
       const nextCountry = countryIndex >= 0 && countryIndex < countries.length - 1 ? countries[countryIndex + 1] : "";
       const stats = countryStats(country, album);
       const name = countryFullName(country) || country;
       const code = exportGroupLabel(country);
-      const list = filteredStickers({ country, album });
+      const list = filteredStickers({ country, album, view: modalView });
       const viewCounts = {
         all: album.filter(sticker => sticker.pais === country).length,
         missing: album.filter(sticker => sticker.pais === country && !sticker.tenho).length,
         owned: album.filter(sticker => sticker.pais === country && sticker.tenho).length,
         duplicates: album.filter(sticker => sticker.pais === country && sticker.tenho && (sticker.repetidos || 0) > 0).length
       };
-      const tabButton = view => `<button type="button" class="${currentView === view ? "active" : ""}" onclick="setModalView('${view}')">${viewTitleText(view)} (${viewCounts[view]})</button>`;
+      const tabButton = view => `<button type="button" class="${modalView === view ? "active" : ""}" onclick="setModalView('${view}')">${viewTitleText(view)} (${viewCounts[view]})</button>`;
 
       countryModal.classList.remove("hidden");
       countryModal.setAttribute("aria-hidden", "false");
@@ -5723,7 +5947,7 @@
             </div>
           </header>
           <div class="country-modal-content">
-            ${list.length ? `<div class="stickers">${renderStickerSections(list)}</div>` : renderEmptyState(emptyViewMessage())}
+            ${list.length ? `<div class="stickers">${renderStickerSections(list)}</div>` : renderEmptyState(emptyViewMessage(modalView, country), "")}
           </div>
         </div>
       `;
@@ -6012,6 +6236,9 @@
       previewThemeColor();
     });
     themeColorTextInput.addEventListener("input", previewThemeColor);
+    countrySortSelect?.addEventListener("change", event => {
+      setCountrySortMode(event.target.value);
+    });
     window.addEventListener("keydown", event => {
       if (event.key === "Escape" && countryModalOpen) closeCountryModal();
       if (event.key === "Escape" && tradeModalOpen) closeTradeModal();
@@ -6033,6 +6260,7 @@
     countryScrollRight.addEventListener("blur", stopCountryScroll);
     window.addEventListener("resize", applyCountryTabsOffset);
     registerIdleActivityListeners();
+    loadCountrySortMode();
     loadAppTheme();
 
 
