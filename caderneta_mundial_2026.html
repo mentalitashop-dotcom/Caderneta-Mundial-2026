@@ -598,6 +598,128 @@
       line-height: 1.55;
     }
 
+    .list-compare-panel {
+      display: grid;
+      gap: 12px;
+    }
+
+    .list-compare-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .list-compare-tab {
+      min-height: 54px;
+      display: grid;
+      gap: 3px;
+      align-content: center;
+      justify-items: start;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      color: var(--text);
+      text-align: left;
+      white-space: normal;
+    }
+
+    .list-compare-tab strong {
+      color: inherit;
+      font-size: 13px;
+      line-height: 1.15;
+    }
+
+    .list-compare-tab span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .list-compare-tab.active {
+      background: var(--main);
+      color: #fff;
+      border-color: var(--main);
+    }
+
+    .list-compare-tab.active span {
+      color: rgba(255,255,255,.78);
+    }
+
+    .list-compare-input {
+      width: 100%;
+      min-height: 210px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      background: var(--card);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.45;
+      outline: none;
+    }
+
+    .list-compare-input:focus {
+      border-color: var(--main);
+      box-shadow: 0 0 0 4px rgba(17, 24, 39, .08);
+    }
+
+    .list-compare-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .list-compare-result {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(220px, .6fr);
+      gap: 10px;
+    }
+
+    .list-compare-card {
+      display: grid;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: var(--panel);
+    }
+
+    .list-compare-card h2 {
+      margin: 0;
+      color: var(--main);
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .list-compare-card small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .list-compare-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .list-compare-pill {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--main);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
     .live-controls {
       display: flex;
       flex-wrap: wrap;
@@ -2429,6 +2551,11 @@
         grid-template-columns: 1fr;
       }
 
+      .list-compare-tabs,
+      .list-compare-result {
+        grid-template-columns: 1fr;
+      }
+
       .trade-pick-grid {
         grid-template-columns: 1fr;
       }
@@ -2759,6 +2886,8 @@
           <button type="button" role="menuitem" onclick="showMyAlbum()">A minha caderneta</button>
           <button type="button" role="menuitem" onclick="openDuplicatesView()">Cromos repetidos</button>
           <button type="button" role="menuitem" onclick="openFriendsPage()">Amigos</button>
+          <button type="button" role="menuitem" onclick="openListComparePanel()">Comparar listas</button>
+          <button type="button" role="menuitem" onclick="openBulkAddPanel()">Adicionar lista</button>
           <button type="button" role="menuitem" onclick="openTradesPanel()">Trocas</button>
           <button type="button" role="menuitem" onclick="openSettingsPanel()">Definições</button>
           <button class="danger" type="button" role="menuitem" onclick="logoutLiveAccount()">Logout</button>
@@ -2870,6 +2999,47 @@
         <span>Recebidas e enviadas por ti.</span>
       </div>
       <div id="tradeList" class="trade-list" aria-live="polite"></div>
+    </section>
+
+    <section id="listComparePanel" class="share-panel list-compare-panel hidden" aria-label="Comparar listas">
+      <div class="share-panel-head">
+        <div class="share-panel-title">
+          <strong>Comparar listas</strong>
+          <span>Cola a lista de outra pessoa e compara com a tua caderneta.</span>
+        </div>
+      </div>
+      <div class="list-compare-tabs" role="tablist" aria-label="Tipo de lista a comparar">
+        <button id="compareDuplicatesTab" class="list-compare-tab active" type="button" role="tab" aria-selected="true" onclick="setListCompareMode('duplicates')">
+          <strong>Repetidos da pessoa</strong>
+          <span>Mostra quais desses cromos te faltam.</span>
+        </button>
+        <button id="compareMissingTab" class="list-compare-tab" type="button" role="tab" aria-selected="false" onclick="setListCompareMode('missing')">
+          <strong>Faltas da pessoa</strong>
+          <span>Mostra quais consegues dar com os teus repetidos.</span>
+        </button>
+      </div>
+      <textarea id="listCompareInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui uma lista, por exemplo:&#10;&#10;FWC 📜: 13, 16&#10;MEX 🇲🇽: 14, 17&#10;GER 🇩🇪: 1, 5, 6, 7, 11,"></textarea>
+      <div class="list-compare-actions">
+        <button type="button" onclick="renderListComparison()">Comparar lista</button>
+        <button class="secondary" type="button" onclick="clearListComparison()">Limpar</button>
+      </div>
+      <div id="listCompareResult" class="list-compare-result" aria-live="polite"></div>
+    </section>
+
+    <section id="bulkAddPanel" class="share-panel list-compare-panel hidden" aria-label="Adicionar lista">
+      <div class="share-panel-head">
+        <div class="share-panel-title">
+          <strong>Adicionar lista</strong>
+          <span>Cola uma lista de cromos recebidos e adiciona tudo de uma vez.</span>
+        </div>
+      </div>
+      <textarea id="bulkAddInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui os cromos recebidos, por exemplo:&#10;&#10;FWC 📜: 13, 16&#10;MEX 🇲🇽: 14, 17&#10;GER 🇩🇪: 1, 5, 6, 7, 11,"></textarea>
+      <div class="list-compare-actions">
+        <button type="button" onclick="renderBulkAddPreview()">Pre-visualizar</button>
+        <button type="button" onclick="applyBulkAddList()">Adicionar a caderneta</button>
+        <button class="secondary" type="button" onclick="clearBulkAddList()">Limpar</button>
+      </div>
+      <div id="bulkAddResult" class="list-compare-result" aria-live="polite"></div>
     </section>
 
     <section id="tradeModal" class="trade-modal hidden" aria-hidden="true">
@@ -3003,6 +3173,18 @@
     const AUTH_LOCK_MS = 1200;
     const TRADE_HISTORY_PAGE_SIZE = 5;
     const TRADE_PICK_PAGE_SIZE = 12;
+    const LIST_COMPARE_MODE_COPY = {
+      duplicates: {
+        resultTitle: "Cromos que essa pessoa tem repetidos e te faltam",
+        emptyText: "Nao precisas de nenhum cromo dessa lista.",
+        helpText: "Leste uma lista de repetidos de outra pessoa. A app cruza essa lista com os cromos que te faltam."
+      },
+      missing: {
+        resultTitle: "Cromos que podes dar com os teus repetidos",
+        emptyText: "Nao tens repetidos para ajudar essa lista.",
+        helpText: "Leste uma lista de cromos em falta de outra pessoa. A app cruza essa lista com os teus repetidos."
+      }
+    };
 
     let stickers = [];
     let activePage = "album";
@@ -3027,6 +3209,7 @@
     let selectedTradeGiveIds = [];
     let selectedTradeReceiveIds = [];
     let tradePickPages = { give: 1, receive: 1 };
+    let listCompareMode = "duplicates";
     let modalTouchGesture = null;
     let liveRefreshTimer = null;
     let idleLogoutTimer = null;
@@ -3081,6 +3264,14 @@
     const tradeList = document.getElementById("tradeList");
     const tradeModal = document.getElementById("tradeModal");
     const tradeModalBody = document.getElementById("tradeModalBody");
+    const listComparePanel = document.getElementById("listComparePanel");
+    const listCompareInput = document.getElementById("listCompareInput");
+    const listCompareResult = document.getElementById("listCompareResult");
+    const compareDuplicatesTab = document.getElementById("compareDuplicatesTab");
+    const compareMissingTab = document.getElementById("compareMissingTab");
+    const bulkAddPanel = document.getElementById("bulkAddPanel");
+    const bulkAddInput = document.getElementById("bulkAddInput");
+    const bulkAddResult = document.getElementById("bulkAddResult");
     const settingsPanel = document.getElementById("settingsPanel");
     const themeColorInput = document.getElementById("themeColorInput");
     const themeColorTextInput = document.getElementById("themeColorTextInput");
@@ -3585,6 +3776,16 @@
         return;
       }
 
+      if (activePage === "compare") {
+        currentViewTitle.textContent = "Comparar listas";
+        return;
+      }
+
+      if (activePage === "bulk-add") {
+        currentViewTitle.textContent = "Adicionar lista";
+        return;
+      }
+
       if (activePage === "settings") {
         currentViewTitle.textContent = "Definições";
         return;
@@ -3622,6 +3823,8 @@
       content?.classList.toggle("hidden", !showAlbum);
       livePanel?.classList.toggle("hidden", activePage !== "friends");
       tradePanel?.classList.toggle("hidden", activePage !== "trades");
+      listComparePanel?.classList.toggle("hidden", activePage !== "compare");
+      bulkAddPanel?.classList.toggle("hidden", activePage !== "bulk-add");
       settingsPanel?.classList.toggle("hidden", activePage !== "settings");
       updateViewTitle();
     }
@@ -4412,6 +4615,406 @@
       const lines = compactComparisonLines(list);
       if (!lines.length) return `<div class="comparison-empty">${escapeHTML(emptyText)}</div>`;
       return `<div class="comparison-lines">${lines.map(escapeHTML).join("<br>")}</div>`;
+    }
+
+    function normalizeListLabel(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "");
+    }
+
+    function listCountryAliases() {
+      const aliases = new Map();
+      const addAlias = (alias, code) => {
+        const normalized = normalizeListLabel(alias);
+        if (normalized && code && !aliases.has(normalized)) aliases.set(normalized, code);
+      };
+      const manualAliases = {
+        FWC: ["FWC", "TROFEUS", "TROFEUS INICIAIS", "TROFÉUS", "TROFÉUS INICIAIS", "EQUIPAS HISTORICAS", "EQUIPAS HISTÓRICAS"],
+        MEX: ["MEXICO", "MÉXICO"],
+        RSA: ["AFRICA DO SUL", "ÁFRICA DO SUL", "SOUTH AFRICA"],
+        KOR: ["COREIA DO SUL", "KOREIA", "KOREA", "SOUTH KOREA"],
+        CZE: ["TCHEQUIA", "TCHÉQUIA", "CHEQUIA", "CHÉQUIA", "CZECHIA"],
+        CAN: ["CANADA", "CANADÁ"],
+        BIH: ["BOSNIA", "BÓSNIA", "BOSNIA E HERZEGOVINA", "BÓSNIA E HERZEGOVINA"],
+        QAT: ["CATAR", "QATAR"],
+        SUI: ["SUICA", "SUÍÇA", "SWITZERLAND"],
+        BRA: ["BRASIL", "BRAZIL"],
+        MAR: ["MARROCOS", "MOROCCO"],
+        HAI: ["HAITI", "HAITI"],
+        SCO: ["ESCOCIA", "ESCÓCIA", "SCOTLAND"],
+        USA: ["ESTADOS UNIDOS", "UNITED STATES", "EUA"],
+        PAR: ["PARAGUAI", "PARAGUAY"],
+        AUS: ["AUSTRALIA", "AUSTRÁLIA"],
+        TUR: ["TURQUIA", "TURKEY"],
+        GER: ["ALEMANHA", "GERMANY", "DEUTSCHLAND"],
+        CUW: ["CURACAO", "CURAÇAO", "CURAÇAO", "CURACAO"],
+        CIV: ["COSTA DO MARFIM", "COTE DIVOIRE", "CÔTE DIVOIRE", "IVORY COAST"],
+        ECU: ["EQUADOR", "ECUADOR"],
+        NED: ["PAISES BAIXOS", "PAÍSES BAIXOS", "HOLANDA", "NETHERLANDS"],
+        JPN: ["JAPAO", "JAPÃO", "JAPAN"],
+        SWE: ["SUECIA", "SUÉCIA", "SWEDEN"],
+        TUN: ["TUNISIA", "TUNÍSIA"],
+        BEL: ["BELGICA", "BÉLGICA", "BELGIUM"],
+        EGV: ["EGITO", "EGYPT"],
+        IRN: ["IRAO", "IRÃO", "IRAN"],
+        NZL: ["NOVA ZELANDIA", "NOVA ZELÂNDIA", "NEW ZEALAND"],
+        ESP: ["ESPANHA", "SPAIN"],
+        CPV: ["CABO VERDE", "CAPE VERDE"],
+        KSA: ["ARABIA SAUDITA", "ARÁBIA SAUDITA", "SAUDI ARABIA"],
+        URU: ["URUGUAI", "URUGUAY"],
+        FRA: ["FRANCA", "FRANÇA", "FRANCE"],
+        SEN: ["SENEGAL", "SÉNÉGAL"],
+        IRQ: ["IRAQUE", "IRAQ"],
+        NOR: ["NORUEGA", "NORWAY"],
+        ARG: ["ARGENTINA"],
+        ALG: ["ARGELIA", "ARGÉLIA", "ALGERIA"],
+        AUT: ["AUSTRIA", "ÁUSTRIA"],
+        JOR: ["JORDANIA", "JORDÂNIA", "JORDAN"],
+        POR: ["PORTUGAL"],
+        COD: ["CONGO", "REP DEM DO CONGO", "REP DEMOCRATICA DO CONGO", "REP. DEM. DO CONGO", "DR CONGO"],
+        UZB: ["UZBEQUISTAO", "UZBEQUISTÃO", "UZBEKISTAN"],
+        COL: ["COLOMBIA", "COLÔMBIA", "COLÓMBIA"],
+        ENG: ["INGLATERRA", "ENGLAND"],
+        CRO: ["CROACIA", "CROÁCIA", "CROATIA"],
+        GHA: ["GANA", "GHANA"],
+        PAN: ["PANAMA", "PANAMÁ"]
+      };
+
+      Object.entries(manualAliases).forEach(([code, names]) => {
+        addAlias(code, code);
+        names.forEach(name => addAlias(name, code));
+      });
+
+      Object.entries(COUNTRY_NAMES || {}).forEach(([code, name]) => {
+        addAlias(code, code);
+        addAlias(name, code);
+      });
+
+      stickers.forEach(sticker => {
+        const code = exportGroupLabel(sticker.pais);
+        const country = String(sticker.pais || "").trim();
+        const withoutCode = country.replace(/^[A-Z0-9]{2,4}\s*[-\u2013\u2014]?\s*/i, "").trim();
+        [code, country, withoutCode].forEach(alias => addAlias(alias, code));
+      });
+      return aliases;
+    }
+    function listStickerLookup() {
+      const lookup = new Map();
+      stickers.forEach(sticker => {
+        const code = normalizeListLabel(exportGroupLabel(sticker.pais));
+        lookup.set(`${code}|${stickerExportNumber(sticker)}`, sticker);
+      });
+      return lookup;
+    }
+
+    function sortedListAliases(aliases) {
+      return [...aliases.entries()].sort((a, b) => b[0].length - a[0].length);
+    }
+
+    function looksLikeListHeader(line) {
+      const normalized = normalizeListLabel(line);
+      return /^(CROMOS|LISTA|TOTAL|FALTAM|FALTA|REPETIDOS|REPETIDO|OBTIDOS|OBTIDO)/.test(normalized);
+    }
+
+    function findCountryCodeInListLine(line, aliases) {
+      const normalizedLine = normalizeListLabel(line);
+      if (!normalizedLine) return "";
+
+      const directLabel = normalizeListLabel(String(line).split(/[:;|=]/)[0]);
+      for (const [alias, code] of sortedListAliases(aliases)) {
+        if (directLabel === alias) return code;
+        if (directLabel.startsWith(alias) && !/[A-Z]/.test(directLabel.charAt(alias.length) || "")) return code;
+      }
+
+      if (looksLikeListHeader(line)) return "";
+
+      for (const [alias, code] of sortedListAliases(aliases)) {
+        const index = normalizedLine.indexOf(alias);
+        if (index < 0) continue;
+        const before = normalizedLine.charAt(index - 1) || "";
+        const after = normalizedLine.charAt(index + alias.length) || "";
+        const cleanBefore = !before || !/[A-Z]/.test(before);
+        const cleanAfter = !after || !/[A-Z]/.test(after);
+        if (cleanBefore && cleanAfter) return code;
+      }
+
+      return "";
+    }
+
+    function listLineNumberText(line) {
+      const afterSeparator = String(line).split(/[:;|=]/).slice(1).join(" ").trim();
+      if (afterSeparator) return afterSeparator;
+      const firstNumber = String(line).search(/\b00\b|\d/);
+      return firstNumber >= 0 ? String(line).slice(firstNumber) : "";
+    }
+
+    function listNumberItems(value) {
+      const items = [];
+      const matcher = /(00|\d{1,3})(?:\s*(?:-|\u2013|\u2014|a|ate|até)\s*(\d{1,3}))?(?:\s*\(\s*x?\s*(\d+)\s*\))?/gi;
+      let match;
+      while ((match = matcher.exec(String(value || ""))) !== null) {
+        const start = match[1].toUpperCase() === "00" ? 0 : Number(match[1]);
+        const end = match[2] ? Number(match[2]) : start;
+        const count = Math.max(1, Number(match[3] || 1));
+
+        if (match[1].toUpperCase() === "00") {
+          items.push({ number: "00", count });
+          continue;
+        }
+
+        if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+        const rangeSize = Math.abs(end - start) + 1;
+        if (match[2] && rangeSize <= 30) {
+          const step = start <= end ? 1 : -1;
+          for (let value = start; value !== end + step; value += step) {
+            items.push({ number: String(value), count });
+          }
+        } else {
+          items.push({ number: String(start), count });
+        }
+      }
+      return items;
+    }
+
+    function addParsedListEntry(entries, sticker, count) {
+      const current = entries.get(sticker.id) || { sticker, count: 0 };
+      current.count += count;
+      entries.set(sticker.id, current);
+    }
+
+    function parsePastedStickerList(text) {
+      const aliases = listCountryAliases();
+      const lookup = listStickerLookup();
+      const entries = new Map();
+      const unknown = [];
+      let totalItems = 0;
+
+      String(text || "").split(/\r?\n/).forEach(line => {
+        const cleanLine = line.trim();
+        if (!cleanLine) return;
+
+        const code = findCountryCodeInListLine(cleanLine, aliases);
+        if (!code) return;
+
+        const numberItems = listNumberItems(listLineNumberText(cleanLine));
+        if (!numberItems.length) return;
+
+        let foundInLine = false;
+        numberItems.forEach(item => {
+          const sticker = lookup.get(`${normalizeListLabel(code)}|${item.number}`);
+          if (!sticker) {
+            unknown.push(`${code} ${item.number}`);
+            return;
+          }
+          addParsedListEntry(entries, sticker, item.count);
+          totalItems += item.count;
+          foundInLine = true;
+        });
+
+        if (!foundInLine) unknown.push(cleanLine);
+      });
+
+      return { entries: [...entries.values()], unknown: [...new Set(unknown)], totalItems };
+    }
+    function groupedListFromEntries(entries, formatter) {
+      const byId = new Map(entries.map(entry => [entry.sticker.id, entry]));
+      return albumCountries()
+        .map(country => {
+          const values = stickers
+            .filter(sticker => sticker.pais === country && byId.has(sticker.id))
+            .sort((a, b) => stickerNumber(a) - stickerNumber(b))
+            .map(sticker => formatter(byId.get(sticker.id)));
+          if (!values.length) return "";
+          return `${exportGroupLabel(country)}: ${values.join(", ")}`;
+        })
+        .filter(Boolean);
+    }
+
+    function formatCountedSticker(entry, count = entry.count) {
+      const number = stickerExportNumber(entry.sticker);
+      return count > 1 ? `${number} (${count})` : number;
+    }
+
+    function renderGroupedEntries(entries, emptyText, formatter = formatCountedSticker) {
+      const lines = groupedListFromEntries(entries, formatter);
+      if (!lines.length) return `<div class="comparison-empty">${escapeHTML(emptyText)}</div>`;
+      return `<div class="comparison-lines">${lines.map(escapeHTML).join("<br>")}</div>`;
+    }
+
+    function renderListComparison() {
+      if (!listCompareResult) return;
+      const mode = LIST_COMPARE_MODE_COPY[listCompareMode] ? listCompareMode : "duplicates";
+      compareDuplicatesTab?.classList.toggle("active", mode === "duplicates");
+      compareMissingTab?.classList.toggle("active", mode === "missing");
+      compareDuplicatesTab?.setAttribute("aria-selected", String(mode === "duplicates"));
+      compareMissingTab?.setAttribute("aria-selected", String(mode === "missing"));
+
+      const text = listCompareInput?.value || "";
+      if (!text.trim()) {
+        listCompareResult.innerHTML = `
+          <article class="list-compare-card" style="grid-column:1/-1">
+            <h2>Cola uma lista para comparar</h2>
+            <small>${escapeHTML(LIST_COMPARE_MODE_COPY[mode].helpText)}</small>
+          </article>
+        `;
+        return;
+      }
+
+      const parsed = parsePastedStickerList(text);
+      const matches = mode === "duplicates"
+        ? parsed.entries.filter(entry => !entry.sticker.tenho)
+        : parsed.entries.filter(entry => entry.sticker.tenho && (entry.sticker.repetidos || 0) > 0);
+      const formatter = mode === "duplicates"
+        ? entry => formatCountedSticker(entry, entry.count)
+        : entry => formatCountedSticker(entry, entry.sticker.repetidos || 0);
+      const unknownList = parsed.unknown.slice(0, 10);
+
+      listCompareResult.innerHTML = `
+        <article class="list-compare-card">
+          <h2>${escapeHTML(LIST_COMPARE_MODE_COPY[mode].resultTitle)} (${matches.length})</h2>
+          <small>${escapeHTML(LIST_COMPARE_MODE_COPY[mode].helpText)}</small>
+          ${renderGroupedEntries(matches, LIST_COMPARE_MODE_COPY[mode].emptyText, formatter)}
+        </article>
+        <article class="list-compare-card">
+          <h2>Leitura da lista</h2>
+          <div class="list-compare-meta">
+            <span class="list-compare-pill">${parsed.entries.length} cromos lidos</span>
+            <span class="list-compare-pill">${parsed.totalItems} no total</span>
+            <span class="list-compare-pill">${matches.length} encontrados</span>
+          </div>
+          ${unknownList.length ? `<small>Nao consegui reconhecer: ${escapeHTML(unknownList.join(", "))}${parsed.unknown.length > unknownList.length ? "..." : ""}</small>` : `<small>Lista lida com sucesso.</small>`}
+        </article>
+      `;
+    }
+
+    function setListCompareMode(mode) {
+      listCompareMode = LIST_COMPARE_MODE_COPY[mode] ? mode : "duplicates";
+      renderListComparison();
+    }
+
+    function clearListComparison() {
+      if (listCompareInput) listCompareInput.value = "";
+      renderListComparison();
+      listCompareInput?.focus();
+    }
+
+    function bulkAddAnalysis() {
+      const parsed = parsePastedStickerList(bulkAddInput?.value || "");
+      const newOwned = [];
+      const addedDuplicates = [];
+      let newOwnedCount = 0;
+      let duplicateCopies = 0;
+
+      parsed.entries.forEach(entry => {
+        const sticker = stickers.find(item => item.id === entry.sticker.id) || entry.sticker;
+        const count = Math.max(1, Number(entry.count || 1));
+        if (!sticker.tenho) {
+          newOwned.push({ sticker, count });
+          newOwnedCount += 1;
+          if (count > 1) {
+            addedDuplicates.push({ sticker, count: count - 1 });
+            duplicateCopies += count - 1;
+          }
+        } else {
+          addedDuplicates.push({ sticker, count });
+          duplicateCopies += count;
+        }
+      });
+
+      return { parsed, newOwned, addedDuplicates, newOwnedCount, duplicateCopies };
+    }
+
+    function renderBulkAddPreview(message = "") {
+      if (!bulkAddResult) return;
+      const text = bulkAddInput?.value || "";
+      if (!text.trim()) {
+        bulkAddResult.innerHTML = `
+          <article class="list-compare-card" style="grid-column:1/-1">
+            <h2>Cola uma lista para adicionar</h2>
+            <small>Quando aplicares, os cromos que ainda faltam ficam obtidos. Os que ja tens somam aos repetidos.</small>
+          </article>
+        `;
+        return;
+      }
+
+      const analysis = bulkAddAnalysis();
+      const unknownList = analysis.parsed.unknown.slice(0, 10);
+      bulkAddResult.innerHTML = `
+        <article class="list-compare-card">
+          <h2>${message ? escapeHTML(message) : "Pre-visualizacao"}</h2>
+          <div class="list-compare-meta">
+            <span class="list-compare-pill">${analysis.parsed.entries.length} cromos lidos</span>
+            <span class="list-compare-pill">${analysis.newOwnedCount} novos</span>
+            <span class="list-compare-pill">${analysis.duplicateCopies} repetidos</span>
+          </div>
+          <small>Novos obtidos</small>
+          ${renderGroupedEntries(analysis.newOwned, "Nao ha cromos novos nesta lista.")}
+        </article>
+        <article class="list-compare-card">
+          <h2>Repetidos a somar</h2>
+          ${renderGroupedEntries(analysis.addedDuplicates, "Nao ha repetidos para somar.")}
+          ${unknownList.length ? `<small>Nao consegui reconhecer: ${escapeHTML(unknownList.join(", "))}${analysis.parsed.unknown.length > unknownList.length ? "..." : ""}</small>` : `<small>Lista lida com sucesso.</small>`}
+        </article>
+      `;
+    }
+
+    function applyBulkAddList() {
+      if (!bulkAddInput?.value.trim()) {
+        renderBulkAddPreview();
+        return;
+      }
+
+      const analysis = bulkAddAnalysis();
+      if (!analysis.parsed.entries.length) {
+        renderBulkAddPreview("Nenhum cromo reconhecido");
+        setSaveStatus("Nenhum cromo reconhecido na lista");
+        return;
+      }
+
+      analysis.parsed.entries.forEach(entry => {
+        const sticker = stickers.find(item => item.id === entry.sticker.id) || entry.sticker;
+        const count = Math.max(1, Number(entry.count || 1));
+        const currentDuplicates = normalizeDuplicates(sticker.repetidos);
+        if (!sticker.tenho) {
+          sticker.tenho = true;
+          sticker.repetidos = currentDuplicates + Math.max(0, count - 1);
+        } else {
+          sticker.repetidos = currentDuplicates + count;
+        }
+      });
+
+      saveState();
+      render();
+      if (bulkAddResult) {
+        const unknownList = analysis.parsed.unknown.slice(0, 10);
+        bulkAddResult.innerHTML = `
+          <article class="list-compare-card">
+            <h2>Adicionados ${analysis.newOwnedCount} novos e ${analysis.duplicateCopies} repetidos</h2>
+            <div class="list-compare-meta">
+              <span class="list-compare-pill">${analysis.parsed.entries.length} cromos lidos</span>
+              <span class="list-compare-pill">${analysis.newOwnedCount} novos</span>
+              <span class="list-compare-pill">${analysis.duplicateCopies} repetidos</span>
+            </div>
+            <small>Novos obtidos</small>
+            ${renderGroupedEntries(analysis.newOwned, "Nao foram adicionados cromos novos.")}
+          </article>
+          <article class="list-compare-card">
+            <h2>Repetidos somados</h2>
+            ${renderGroupedEntries(analysis.addedDuplicates, "Nao foram somados repetidos.")}
+            ${unknownList.length ? `<small>Nao consegui reconhecer: ${escapeHTML(unknownList.join(", "))}${analysis.parsed.unknown.length > unknownList.length ? "..." : ""}</small>` : `<small>Lista aplicada com sucesso.</small>`}
+          </article>
+        `;
+      }
+      setSaveStatus(`Lista adicionada: ${analysis.newOwnedCount} novos, ${analysis.duplicateCopies} repetidos`);
+    }
+
+    function clearBulkAddList() {
+      if (bulkAddInput) bulkAddInput.value = "";
+      renderBulkAddPreview();
+      bulkAddInput?.focus();
     }
 
 
@@ -5309,6 +5912,26 @@
       loadLiveProfiles().catch(() => {});
       renderTradePanel();
       loadTradeRequests().catch(() => {});
+    }
+
+    function openListComparePanel() {
+      activePage = "compare";
+      closeUserMenu();
+      closeCountryModal();
+      updatePageVisibility();
+      renderListComparison();
+      pulseViewTitle();
+      setTimeout(() => listCompareInput?.focus(), 0);
+    }
+
+    function openBulkAddPanel() {
+      activePage = "bulk-add";
+      closeUserMenu();
+      closeCountryModal();
+      updatePageVisibility();
+      renderBulkAddPreview();
+      pulseViewTitle();
+      setTimeout(() => bulkAddInput?.focus(), 0);
     }
 
     function openSettingsPanel() {
