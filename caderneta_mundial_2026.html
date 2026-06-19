@@ -198,20 +198,60 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       padding: 9px 10px;
+      border: 1px solid transparent;
       border-radius: 10px;
-      background: var(--card);
+      background: transparent;
       color: var(--main);
       text-align: left;
     }
 
-    .user-menu-panel button:hover {
-      background: #f3f4f6;
+    .user-menu-panel button:hover,
+    .user-menu-panel button:focus-visible {
+      background: var(--panel);
+      border-color: var(--line);
     }
 
     .user-menu-panel button.danger {
-      background: #fff;
       color: var(--danger);
+    }
+
+    .user-menu-panel button.danger:hover,
+    .user-menu-panel button.danger:focus-visible {
+      background: color-mix(in srgb, var(--danger) 9%, var(--card));
+      border-color: color-mix(in srgb, var(--danger) 32%, var(--line));
+    }
+
+    .user-menu-section-title {
+      margin-top: 6px;
+      padding: 10px 10px 4px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .user-menu-header + .user-menu-section-title {
+      margin-top: 0;
+      border-top: 0;
+    }
+
+    .user-menu-panel button .menu-badge {
+      min-width: 22px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: var(--main);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .user-menu-panel button .menu-badge.hidden {
+      display: none;
     }
 
     button {
@@ -718,6 +758,65 @@
       color: var(--main);
       font-size: 11px;
       font-weight: 900;
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .insight-card {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+
+    .insight-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .insight-card strong {
+      color: var(--main);
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .insight-card small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .undo-bar {
+      position: fixed;
+      left: 16px;
+      bottom: 48px;
+      z-index: 180;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: min(520px, calc(100vw - 32px));
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--text);
+      box-shadow: 0 18px 45px rgba(17, 24, 39, .18);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .undo-bar button {
+      padding: 7px 10px;
+      font-size: 12px;
     }
 
     .live-controls {
@@ -2883,14 +2982,20 @@
             <span>Utilizador</span>
             <strong id="userMenuProfile">Conta</strong>
           </div>
-          <button type="button" role="menuitem" onclick="showMyAlbum()">A minha caderneta</button>
-          <button type="button" role="menuitem" onclick="openDuplicatesView()">Cromos repetidos</button>
-          <button type="button" role="menuitem" onclick="openFriendsPage()">Amigos</button>
-          <button type="button" role="menuitem" onclick="openListComparePanel()">Comparar listas</button>
-          <button type="button" role="menuitem" onclick="openBulkAddPanel()">Adicionar lista</button>
-          <button type="button" role="menuitem" onclick="openTradesPanel()">Trocas</button>
-          <button type="button" role="menuitem" onclick="openSettingsPanel()">Definições</button>
-          <button class="danger" type="button" role="menuitem" onclick="logoutLiveAccount()">Logout</button>
+          <div class="user-menu-section-title">Caderneta</div>
+          <button type="button" role="menuitem" onclick="showMyAlbum()"><span>A minha caderneta</span></button>
+          <button type="button" role="menuitem" onclick="openDuplicatesView()"><span>Cromos repetidos</span></button>
+          <div class="user-menu-section-title">Social</div>
+          <button type="button" role="menuitem" onclick="openFriendsPage()"><span>Amigos</span></button>
+          <button type="button" role="menuitem" onclick="openTradesPanel()"><span>Trocas</span><span id="tradeMenuBadge" class="menu-badge hidden">0</span></button>
+          <button type="button" role="menuitem" onclick="openNotificationsPanel()"><span>Notificacoes</span><span id="notificationMenuBadge" class="menu-badge hidden">0</span></button>
+          <div class="user-menu-section-title">Ferramentas</div>
+          <button type="button" role="menuitem" onclick="openListComparePanel()"><span>Comparar listas</span></button>
+          <button type="button" role="menuitem" onclick="openBulkAddPanel()"><span>Adicionar lista</span></button>
+          <button type="button" role="menuitem" onclick="openHistoryPanel()"><span>Historico</span></button>
+          <div class="user-menu-section-title">Conta</div>
+          <button type="button" role="menuitem" onclick="openSettingsPanel()"><span>Definicoes</span></button>
+          <button class="danger" type="button" role="menuitem" onclick="logoutLiveAccount()"><span>Logout</span></button>
         </div>
       </div>
     </div>
@@ -2977,7 +3082,9 @@
           <option value="">Escolhe um amigo</option>
         </select>
         <button type="button" onclick="showMyAlbum()">A minha caderneta</button>
+        <button class="secondary" type="button" onclick="refreshFriendInsights()">Atualizar ranking</button>
       </div>
+      <div id="friendInsights" class="share-comparison" aria-live="polite"></div>
       <div id="liveComparison" class="share-comparison" aria-live="polite"></div>
     </section>
 
@@ -3040,6 +3147,27 @@
         <button class="secondary" type="button" onclick="clearBulkAddList()">Limpar</button>
       </div>
       <div id="bulkAddResult" class="list-compare-result" aria-live="polite"></div>
+    </section>
+
+    <section id="notificationsPanel" class="share-panel list-compare-panel hidden" aria-label="Notificacoes">
+      <div class="share-panel-head">
+        <div class="share-panel-title">
+          <strong>Notificacoes</strong>
+          <span>Propostas de troca pendentes e atividade recente.</span>
+        </div>
+      </div>
+      <div id="notificationsResult" class="share-comparison" aria-live="polite"></div>
+    </section>
+
+    <section id="historyPanel" class="share-panel list-compare-panel hidden" aria-label="Historico">
+      <div class="share-panel-head">
+        <div class="share-panel-title">
+          <strong>Historico</strong>
+          <span>Ultimas alteracoes feitas na tua caderneta neste browser.</span>
+        </div>
+        <button class="secondary" type="button" onclick="clearHistoryLog()">Limpar</button>
+      </div>
+      <div id="historyResult" class="share-comparison" aria-live="polite"></div>
     </section>
 
     <section id="tradeModal" class="trade-modal hidden" aria-hidden="true">
@@ -3153,6 +3281,7 @@
       "#a21caf", "#db2777", "#be123c", "#92400e", "#4b5563"
     ];
     const APP_THEME_KEY = "caderneta_mundial_2026_app_theme";
+    const HISTORY_KEY = "caderneta_mundial_2026_history";
     const APP_THEMES = {
       light: [
         { id: "default", name: "Light default", accent: "#111827", countryMode: "normal", bg: "#f3f7fb", card: "#ffffff", panel: "#f8fafc", text: "#0f172a", muted: "#475569", line: "#dbeafe", header: "rgba(255,255,255,.94)" },
@@ -3203,6 +3332,9 @@
     let friendStickers = [];
     let friendUpdatedAt = "";
     let tradeRequests = [];
+    let liveProfilesList = [];
+    let undoState = null;
+    let undoTimer = null;
     let tradeHistoryPage = 1;
     let tradeModalOpen = false;
     let tradeDetailId = "";
@@ -3258,12 +3390,17 @@
     const liveStatusText = document.getElementById("liveStatusText");
     const liveFriendSelect = document.getElementById("liveFriendSelect");
     const liveComparison = document.getElementById("liveComparison");
+    const friendInsights = document.getElementById("friendInsights");
     const tradePanel = document.getElementById("tradePanel");
     const tradeFriendSelect = document.getElementById("tradeFriendSelect");
     const tradeSuggestions = document.getElementById("tradeSuggestions");
     const tradeList = document.getElementById("tradeList");
     const tradeModal = document.getElementById("tradeModal");
     const tradeModalBody = document.getElementById("tradeModalBody");
+    const notificationsPanel = document.getElementById("notificationsPanel");
+    const notificationsResult = document.getElementById("notificationsResult");
+    const historyPanel = document.getElementById("historyPanel");
+    const historyResult = document.getElementById("historyResult");
     const listComparePanel = document.getElementById("listComparePanel");
     const listCompareInput = document.getElementById("listCompareInput");
     const listCompareResult = document.getElementById("listCompareResult");
@@ -3312,6 +3449,8 @@
     const userMenu = document.getElementById("userMenu");
     const userMenuButton = document.getElementById("userMenuButton");
     const userMenuPanel = document.getElementById("userMenuPanel");
+    const tradeMenuBadge = document.getElementById("tradeMenuBadge");
+    const notificationMenuBadge = document.getElementById("notificationMenuBadge");
     const userMenuName = document.getElementById("userMenuName");
     const userMenuProfile = document.getElementById("userMenuProfile");
     const userMenuInitial = document.getElementById("userMenuInitial");
@@ -3786,6 +3925,16 @@
         return;
       }
 
+      if (activePage === "notifications") {
+        currentViewTitle.textContent = "Notificacoes";
+        return;
+      }
+
+      if (activePage === "history") {
+        currentViewTitle.textContent = "Historico";
+        return;
+      }
+
       if (activePage === "settings") {
         currentViewTitle.textContent = "Definições";
         return;
@@ -3825,11 +3974,23 @@
       tradePanel?.classList.toggle("hidden", activePage !== "trades");
       listComparePanel?.classList.toggle("hidden", activePage !== "compare");
       bulkAddPanel?.classList.toggle("hidden", activePage !== "bulk-add");
+      notificationsPanel?.classList.toggle("hidden", activePage !== "notifications");
+      historyPanel?.classList.toggle("hidden", activePage !== "history");
       settingsPanel?.classList.toggle("hidden", activePage !== "settings");
       updateViewTitle();
     }
 
-    function setActivePage(page) {
+    function clearAlbumFilters() {
+      currentView = "all";
+      modalView = "all";
+      selectedCountry = "all";
+      countryModalOpen = false;
+      if (search) search.value = "";
+      document.body.classList.remove("modal-open");
+    }
+
+    function switchAppPage(page, options = {}) {
+      if (options.clearFilters !== false) clearAlbumFilters();
       activePage = page;
       closeUserMenu();
       updatePageVisibility();
@@ -3837,17 +3998,17 @@
       pulseViewTitle();
     }
 
+    function setActivePage(page) {
+      switchAppPage(page);
+    }
+
     function goHome() {
+      clearAlbumFilters();
       activePage = "album";
-      currentView = "all";
-      modalView = "all";
-      selectedCountry = "all";
-      countryModalOpen = false;
       friendProfile = "";
       friendStickers = [];
       friendUpdatedAt = "";
       friendUserColor = DEFAULT_USER_COLOR;
-      document.body.classList.remove("modal-open");
       syncFriendSelects("");
       closeUserMenu();
       render();
@@ -3892,28 +4053,50 @@
       return countries;
     }
 
+
+
     function maxCountryTabsOffset() {
-      return 0;
+      const viewport = countryTabs?.closest?.(".country-tabs-viewport");
+      if (!countryTabs || !viewport) return 0;
+      return Math.max(0, countryTabs.scrollWidth - viewport.clientWidth);
     }
 
     function applyCountryTabsOffset() {
-      countryTabsOffset = 0;
-      countryTabs.style.transform = "";
+      if (!countryTabs) return;
+      const maxOffset = maxCountryTabsOffset();
+      countryTabsOffset = Math.max(0, Math.min(countryTabsOffset, maxOffset));
+      countryTabs.style.transform = countryTabsOffset ? "translateX(" + (-countryTabsOffset) + "px)" : "";
     }
 
     function focusSelectedCountryTab() {
+      const selected = countryTabs?.querySelector?.(".country-card.active, .country-tab.active");
+      const viewport = countryTabs?.closest?.(".country-tabs-viewport");
+      if (!selected || !viewport) {
+        applyCountryTabsOffset();
+        return;
+      }
+      const selectedLeft = selected.offsetLeft;
+      const selectedRight = selectedLeft + selected.offsetWidth;
+      if (selectedLeft < countryTabsOffset) countryTabsOffset = selectedLeft - 12;
+      if (selectedRight > countryTabsOffset + viewport.clientWidth) countryTabsOffset = selectedRight - viewport.clientWidth + 12;
       applyCountryTabsOffset();
     }
 
     function scrollCountryTabs(direction) {
+      countryTabsOffset += direction * 180;
       applyCountryTabsOffset();
     }
 
     function startCountryScroll(direction) {
       stopCountryScroll();
       const step = () => {
-        countryTabsOffset += direction * 5;
+        const previousOffset = countryTabsOffset;
+        countryTabsOffset += direction * 2.8;
         applyCountryTabsOffset();
+        if (countryTabsOffset === previousOffset && (countryTabsOffset <= 0 || countryTabsOffset >= maxCountryTabsOffset())) {
+          stopCountryScroll();
+          return;
+        }
         countryScrollFrame = requestAnimationFrame(step);
       };
       countryScrollFrame = requestAnimationFrame(step);
@@ -4785,14 +4968,33 @@
       entries.set(sticker.id, current);
     }
 
+    function expandPastedListLines(text) {
+      const rawLines = String(text || "").split(/\r?\n/);
+      const codes = [...new Set(stickers.map(sticker => exportGroupLabel(sticker.pais)).filter(Boolean))]
+        .sort((a, b) => b.length - a.length);
+      if (!codes.length) return rawLines;
+
+      const escapedCodes = codes.map(code => code.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+      const codePattern = new RegExp("\\b(" + escapedCodes.join("|") + ")\\b", "gi");
+
+      return rawLines.flatMap(line => {
+        const matches = [...line.matchAll(codePattern)];
+        if (matches.length <= 1) return [line];
+        return matches
+          .map((match, index) => line.slice(match.index, matches[index + 1]?.index ?? line.length).trim())
+          .filter(Boolean);
+      });
+    }
+
     function parsePastedStickerList(text) {
+
       const aliases = listCountryAliases();
       const lookup = listStickerLookup();
       const entries = new Map();
       const unknown = [];
       let totalItems = 0;
 
-      String(text || "").split(/\r?\n/).forEach(line => {
+      expandPastedListLines(text).forEach(line => {
         const cleanLine = line.trim();
         if (!cleanLine) return;
 
@@ -4974,6 +5176,7 @@
         return;
       }
 
+      pushUndoState("Lista adicionada");
       analysis.parsed.entries.forEach(entry => {
         const sticker = stickers.find(item => item.id === entry.sticker.id) || entry.sticker;
         const count = Math.max(1, Number(entry.count || 1));
@@ -4987,6 +5190,7 @@
       });
 
       saveState();
+      recordHistory(`Lista adicionada: ${analysis.newOwnedCount} novos, ${analysis.duplicateCopies} repetidos`);
       render();
       if (bulkAddResult) {
         const unknownList = analysis.parsed.unknown.slice(0, 10);
@@ -5015,6 +5219,291 @@
       if (bulkAddInput) bulkAddInput.value = "";
       renderBulkAddPreview();
       bulkAddInput?.focus();
+    }
+
+
+    function stickerShortLabel(sticker) {
+      return `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}`;
+    }
+
+    function albumSnapshot() {
+      return stickers.map(sticker => ({ id: sticker.id, tenho: Boolean(sticker.tenho), repetidos: normalizeDuplicates(sticker.repetidos) }));
+    }
+
+    function restoreAlbumSnapshot(snapshot) {
+      const byId = new Map((snapshot || []).map(item => [item.id, item]));
+      stickers.forEach(sticker => {
+        const saved = byId.get(sticker.id);
+        if (!saved) return;
+        sticker.tenho = Boolean(saved.tenho);
+        sticker.repetidos = normalizeDuplicates(saved.repetidos);
+      });
+      saveState();
+      render();
+    }
+
+    function hideUndoBar() {
+      const bar = document.getElementById("undoBar");
+      if (bar) bar.remove();
+      if (undoTimer) clearTimeout(undoTimer);
+      undoTimer = null;
+    }
+
+    function showUndoBar(label) {
+      hideUndoBar();
+      const bar = document.createElement("div");
+      bar.id = "undoBar";
+      bar.className = "undo-bar";
+      bar.setAttribute("role", "status");
+      bar.innerHTML = `<span>${escapeHTML(label)}</span><button type="button" onclick="undoLastAlbumAction()">Desfazer</button>`;
+      document.body.appendChild(bar);
+      undoTimer = setTimeout(hideUndoBar, 5200);
+    }
+
+    function pushUndoState(label) {
+      if (isFriendView()) return;
+      undoState = { snapshot: albumSnapshot(), label, time: Date.now() };
+      showUndoBar(label || "Alteracao feita");
+    }
+
+    function undoLastAlbumAction() {
+      if (!undoState) return;
+      const label = undoState.label || "Alteracao";
+      restoreAlbumSnapshot(undoState.snapshot);
+      recordHistory(`Desfeito: ${label}`);
+      undoState = null;
+      hideUndoBar();
+      setSaveStatus("Alteracao desfeita");
+    }
+
+    function historyStorageKey() {
+      return `${HISTORY_KEY}_${liveProfile || "local"}`;
+    }
+
+    function readHistoryLog() {
+      try {
+        const data = JSON.parse(localStorage.getItem(historyStorageKey()) || "[]");
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function writeHistoryLog(items) {
+      try {
+        localStorage.setItem(historyStorageKey(), JSON.stringify(items.slice(0, 80)));
+      } catch {}
+    }
+
+    function recordHistory(text) {
+      if (!text) return;
+      const items = readHistoryLog();
+      items.unshift({ text, at: new Date().toISOString() });
+      writeHistoryLog(items);
+      if (activePage === "history") renderHistoryPanel();
+      if (activePage === "notifications") renderNotificationsPanel();
+    }
+
+    function historyTimeLabel(value) {
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) return "Agora";
+      return date.toLocaleString("pt-PT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    }
+
+    function renderHistoryPanel() {
+      if (!historyResult) return;
+      const items = readHistoryLog();
+      if (!items.length) {
+        historyResult.innerHTML = `<div class="comparison-empty">Ainda nao ha alteracoes no historico deste browser.</div>`;
+        return;
+      }
+      historyResult.innerHTML = `
+        <div class="insight-grid">
+          ${items.slice(0, 24).map(item => `
+            <article class="insight-card">
+              <div class="insight-card-head">
+                <strong>${escapeHTML(item.text)}</strong>
+                <small>${escapeHTML(historyTimeLabel(item.at))}</small>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function clearHistoryLog() {
+      writeHistoryLog([]);
+      renderHistoryPanel();
+      setSaveStatus("Historico limpo");
+    }
+
+    function openHistoryPanel() {
+      switchAppPage("history");
+      renderHistoryPanel();
+    }
+
+    function incomingPendingTrades() {
+      return tradeRequests.filter(trade => trade.status === "pending" && trade.direction === "incoming");
+    }
+
+    function outgoingPendingTrades() {
+      return tradeRequests.filter(trade => trade.status === "pending" && trade.direction !== "incoming");
+    }
+
+    function updateTradeBadges() {
+      const pending = tradeRequests.filter(trade => trade.status === "pending").length;
+      const incoming = incomingPendingTrades().length;
+      if (tradeMenuBadge) {
+        tradeMenuBadge.textContent = pending;
+        tradeMenuBadge.classList.toggle("hidden", pending <= 0);
+      }
+      if (notificationMenuBadge) {
+        notificationMenuBadge.textContent = incoming;
+        notificationMenuBadge.classList.toggle("hidden", incoming <= 0);
+      }
+    }
+
+    function renderNotificationsPanel() {
+      if (!notificationsResult) return;
+      updateTradeBadges();
+      const incoming = incomingPendingTrades();
+      const outgoing = outgoingPendingTrades();
+      const history = readHistoryLog().slice(0, 4);
+      notificationsResult.innerHTML = `
+        <div class="insight-grid">
+          <article class="insight-card">
+            <div class="insight-card-head"><strong>Propostas recebidas</strong><small>${incoming.length}</small></div>
+            ${incoming.length ? renderTradeCards(incoming) : `<small>Nao tens propostas por responder.</small>`}
+          </article>
+          <article class="insight-card">
+            <div class="insight-card-head"><strong>Propostas enviadas</strong><small>${outgoing.length}</small></div>
+            ${outgoing.length ? renderTradeCards(outgoing) : `<small>Nao tens propostas pendentes enviadas.</small>`}
+          </article>
+          <article class="insight-card">
+            <div class="insight-card-head"><strong>Atividade recente</strong><small>${history.length}</small></div>
+            ${history.length ? history.map(item => `<small>${escapeHTML(historyTimeLabel(item.at))} - ${escapeHTML(item.text)}</small>`).join("") : `<small>Sem atividade recente.</small>`}
+          </article>
+        </div>
+      `;
+    }
+
+    function openNotificationsPanel() {
+      switchAppPage("notifications");
+      notificationsResult.innerHTML = `<div class="comparison-empty">A carregar notificacoes...</div>`;
+      loadTradeRequests()
+        .catch(() => {})
+        .finally(renderNotificationsPanel);
+    }
+
+    function stickerStatsFor(album) {
+      const total = album.length;
+      const owned = album.filter(sticker => sticker.tenho).length;
+      const missing = total - owned;
+      const duplicates = album.reduce((sum, sticker) => sum + normalizeDuplicates(sticker.repetidos), 0);
+      const percent = total ? Math.round((owned / total) * 100) : 0;
+      return { total, owned, missing, duplicates, percent };
+    }
+
+    function compatibilityWithFriend(profile, album, userColor = DEFAULT_USER_COLOR) {
+      const friendById = new Map(album.map(sticker => [sticker.id, sticker]));
+      const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
+      const canGive = stickers.filter(sticker => {
+        const friendSticker = friendById.get(sticker.id);
+        return sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0 && friendSticker && !friendSticker.tenho;
+      });
+      const canReceive = album.filter(sticker => {
+        const mine = mineById.get(sticker.id);
+        return sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0 && mine && !mine.tenho;
+      });
+      const stats = stickerStatsFor(album);
+      return {
+        profile,
+        userColor: sanitizeUserColor(userColor),
+        canGive,
+        canReceive,
+        tradeSize: Math.min(canGive.length, canReceive.length),
+        stats
+      };
+    }
+
+    function renderFriendInsights(items = null) {
+      if (!friendInsights) return;
+      const list = Array.isArray(items) ? items : [];
+      if (!list.length) {
+        friendInsights.innerHTML = `<div class="comparison-empty">Atualiza o ranking para veres quem combina melhor contigo nas trocas.</div>`;
+        return;
+      }
+      friendInsights.innerHTML = `
+        <div class="insight-grid">
+          ${list.map(item => `
+            <article class="insight-card" style="border-color:${escapeHTML(item.userColor)}">
+              <div class="insight-card-head">
+                <strong>${escapeHTML(item.profile)}</strong>
+                <small>${item.stats.owned}/${item.stats.total} - ${item.stats.percent}%</small>
+              </div>
+              <small>Podes dar ${item.canGive.length} e receber ${item.canReceive.length}. Troca equilibrada ate ${item.tradeSize} cromos.</small>
+              <div class="trade-actions">
+                <button type="button" onclick="loadFriendAlbum('${escapeJS(item.profile)}', 'friends')">Ver caderneta</button>
+                <button class="secondary" type="button" onclick="openTradesForFriend('${escapeJS(item.profile)}')">Trocar</button>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    async function refreshFriendInsights() {
+      if (!friendInsights) return;
+      if (!liveEnabled || !liveProfile) {
+        renderFriendInsights([]);
+        return;
+      }
+      friendInsights.innerHTML = `<div class="comparison-empty">A calcular compatibilidade com os amigos...</div>`;
+      if (!liveProfilesList.length) await loadLiveProfiles();
+      const profiles = liveProfilesList.slice(0, 30);
+      const results = await Promise.all(profiles.map(async item => {
+        try {
+          const data = await fetchLiveState(item.profile);
+          const album = data.csv ? parseTextFile(data.csv) : [];
+          return compatibilityWithFriend(item.profile, album, item.userColor || profileColors[item.profile]);
+        } catch {
+          return null;
+        }
+      }));
+      const ordered = results
+        .filter(Boolean)
+        .sort((a, b) => b.tradeSize - a.tradeSize || b.canReceive.length - a.canReceive.length || a.profile.localeCompare(b.profile, "pt-PT"));
+      renderFriendInsights(ordered);
+    }
+
+    async function openTradesForFriend(profile) {
+      switchAppPage("trades");
+      syncFriendSelects(profile);
+      await loadFriendAlbum(profile, "trades");
+      renderTradePanel();
+      loadTradeRequests().catch(() => {});
+    }
+
+    function autoTradeSuggestion(maxItems = 5) {
+      const gives = possibleTradeGivesFriendNeeds();
+      const receives = possibleTradeReceives();
+      const size = Math.min(Math.max(1, maxItems), gives.length, receives.length);
+      return { size, gives: gives.slice(0, size), receives: receives.slice(0, size) };
+    }
+
+    function openSuggestedTrade(maxItems = 5) {
+      const suggestion = autoTradeSuggestion(maxItems);
+      if (!suggestion.size) {
+        setSaveStatus("Ainda nao ha troca automatica possivel");
+        return;
+      }
+      resetTradeSelection();
+      selectedTradeGiveIds = suggestion.gives.map(sticker => sticker.id);
+      selectedTradeReceiveIds = suggestion.receives.map(sticker => sticker.id);
+      tradeDetailId = "";
+      tradeModalOpen = true;
+      document.body.classList.add("modal-open");
+      renderTradeModal();
     }
 
 
@@ -5061,9 +5550,9 @@
     }
 
     function openFriendsPage() {
-      activePage = "friends";
-      closeUserMenu();
-      loadLiveProfiles().catch(() => {});
+      switchAppPage("friends");
+      renderFriendInsights([]);
+      loadLiveProfiles().then(() => refreshFriendInsights()).catch(() => renderFriendInsights([]));
       liveComparison.innerHTML = hasSelectedFriend()
         ? `<div class="comparison-empty">A ver a caderneta de ${escapeHTML(friendProfile)}.</div>`
         : `<div class="comparison-empty">Escolhe um user para abrir a caderneta dele.</div>`;
@@ -5072,18 +5561,19 @@
     }
 
     function showMyAlbum() {
+      clearAlbumFilters();
       activePage = "album";
       friendProfile = "";
       friendStickers = [];
       friendUpdatedAt = "";
       friendUserColor = DEFAULT_USER_COLOR;
       syncFriendSelects("");
-      if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
       liveComparison.innerHTML = `<div class="comparison-empty">Voltaste a tua caderneta.</div>`;
       setSaveStatus("A ver a tua caderneta");
       closeUserMenu();
       render();
       renderTradePanel();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function openDuplicatesView() {
@@ -5485,89 +5975,7 @@
       if (!hasSelectedFriend()) {
         tradeSuggestions.innerHTML = `
           <div class="comparison-empty">
-            Escolhe um amigo para veres apenas os repetidos que podem entrar numa troca.
-          </div>
-        `;
-        return;
-      }
-
-      const gives = possibleTradeGives();
-      const givesFriendNeeds = possibleTradeGivesFriendNeeds();
-      const givesFriendAlreadyHas = possibleTradeGivesFriendAlreadyHas();
-      const receives = possibleTradeReceives();
-
-      if (!receives.length) {
-        tradeSuggestions.innerHTML = `
-          <div class="trade-select-grid">
-            <div class="trade-card">
-              <div class="trade-card-title">Repetidos que o ${escapeHTML(friendProfile)} já tem</div>
-              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendAlreadyHas)}</div>
-            </div>
-            <div class="trade-card">
-              <div class="trade-card-title">Cromos que o ${escapeHTML(friendProfile)} precisa</div>
-              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendNeeds)}</div>
-            </div>
-            <div class="trade-card">
-              <div class="trade-card-title">Cromos do ${escapeHTML(friendProfile)} que te faltam</div>
-              <div class="trade-lines">Não há troca possível, ${escapeHTML(friendProfile)} não tem nenhum cromo que tu precises.</div>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      if (!gives.length) {
-        tradeSuggestions.innerHTML = `
-          <div class="comparison-empty">
-            Não há troca possível, não tens nenhum cromo repetido para oferecer.
-          </div>
-        `;
-        return;
-      }
-
-      tradeSuggestions.innerHTML = `
-        <div class="trade-builder">
-          <div class="trade-card-title">Nova proposta para ${escapeHTML(friendProfile)}</div>
-          <div class="trade-select-grid">
-            <div class="trade-card">
-              <div class="trade-card-title">Repetidos que o ${escapeHTML(friendProfile)} já tem</div>
-              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendAlreadyHas)}</div>
-            </div>
-            <div class="trade-card">
-              <div class="trade-card-title">Cromos que o ${escapeHTML(friendProfile)} precisa</div>
-              <div class="trade-lines is-scrollable">${tradeStickerList(givesFriendNeeds)}</div>
-            </div>
-          </div>
-          <div class="trade-select-grid">
-            <div class="trade-card">
-              <div class="trade-card-title">Cromos do ${escapeHTML(friendProfile)} que te faltam</div>
-              <div class="trade-lines is-scrollable">${tradeStickerList(receives)}</div>
-            </div>
-          </div>
-          <div class="trade-select-grid">
-            <div class="trade-field">
-              <label for="tradeGiveSelect">Cromos Repetidos</label>
-              <select id="tradeGiveSelect" class="live-input">${gives.map(tradeOption).join("")}</select>
-            </div>
-            <div class="trade-field">
-              <label for="tradeReceiveSelect">Cromo que recebes</label>
-              <select id="tradeReceiveSelect" class="live-input">${receives.map(tradeOption).join("")}</select>
-            </div>
-          </div>
-          <div class="trade-actions">
-            <button type="button" onclick="proposeTrade()">Propor troca</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderTradeSuggestions() {
-      if (!tradeSuggestions) return;
-
-      if (!hasSelectedFriend()) {
-        tradeSuggestions.innerHTML = `
-          <div class="comparison-empty">
-            Escolhe um amigo para veres as trocas possíveis.
+            Escolhe um amigo para veres as trocas possiveis.
           </div>
         `;
         closeTradeModal();
@@ -5576,6 +5984,7 @@
 
       const givesFriendNeeds = possibleTradeGivesFriendNeeds();
       const receives = possibleTradeReceives();
+      const suggestion = autoTradeSuggestion(5);
 
       if (!givesFriendNeeds.length || !receives.length) {
         tradeSuggestions.innerHTML = `
@@ -5589,7 +5998,7 @@
               <div class="trade-lines is-scrollable">${tradeStickerList(receives)}</div>
             </div>
           </div>
-          <div class="comparison-empty">Ainda não há cromos suficientes para uma troca equilibrada com este amigo.</div>
+          <div class="comparison-empty">Ainda nao ha cromos suficientes para uma troca equilibrada com este amigo.</div>
         `;
         closeTradeModal();
         return;
@@ -5608,8 +6017,15 @@
               <div class="trade-lines is-scrollable">${tradeStickerList(receives)}</div>
             </div>
           </div>
+          <div class="trade-select-grid">
+            <div class="trade-card">
+              <div class="trade-card-title">Sugestao automatica</div>
+              <div class="trade-lines">${suggestion.size} por ${suggestion.size}<br>${tradeStickerList(suggestion.gives)}<br><br>${tradeStickerList(suggestion.receives)}</div>
+            </div>
+          </div>
           <div class="trade-actions">
-            <button type="button" onclick="openTradeModal()">Criar proposta</button>
+            <button type="button" onclick="openSuggestedTrade(5)">Montar sugestao ${suggestion.size} por ${suggestion.size}</button>
+            <button class="secondary" type="button" onclick="openTradeModal()">Escolher manualmente</button>
           </div>
         </div>
       `;
@@ -5772,6 +6188,7 @@
 
     function renderTradeRequests() {
       if (!tradeList) return;
+      updateTradeBadges();
       if (!tradeRequests.length) {
         tradeList.innerHTML = `<div class="comparison-empty">Ainda nao ha propostas de troca.</div>`;
         return;
@@ -5798,46 +6215,20 @@
     }
 
     async function loadTradeRequests() {
-      if (!liveEnabled || !liveProfile) return;
+      if (!liveEnabled || !liveProfile) {
+        updateTradeBadges();
+        return;
+      }
       const response = await fetch("/api/live/trades", { cache: "no-store" });
-      if (!response.ok) return;
+      if (!response.ok) {
+        updateTradeBadges();
+        return;
+      }
       const data = await response.json().catch(() => ({}));
       tradeRequests = Array.isArray(data.trades) ? data.trades : [];
       tradeHistoryPage = Math.max(1, tradeHistoryPage);
       renderTradeRequests();
-    }
-
-    async function proposeTrade() {
-      if (!hasSelectedFriend()) {
-        setSaveStatus("Escolhe primeiro um amigo");
-        return;
-      }
-
-      const giveId = document.getElementById("tradeGiveSelect")?.value || "";
-      const receiveId = document.getElementById("tradeReceiveSelect")?.value || "";
-      if (!giveId || !receiveId) {
-        setSaveStatus("Escolhe os dois cromos da troca");
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/live/trades", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            toUser: friendProfile,
-            giveStickerIds: [giveId],
-            receiveStickerIds: [receiveId]
-          })
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || "Nao foi possivel propor troca");
-        setSaveStatus(`Troca proposta a ${friendProfile}`);
-        await loadTradeRequests();
-        renderTradePanel();
-      } catch (error) {
-        setSaveStatus(error.message);
-      }
+      if (activePage === "notifications") renderNotificationsPanel();
     }
 
     async function proposeTrade() {
@@ -5847,7 +6238,7 @@
       }
 
       if (!tradeSelectionIsBalanced()) {
-        setSaveStatus("A troca tem de ter o mesmo número de cromos dos dois lados");
+        setSaveStatus("A troca tem de ter o mesmo numero de cromos dos dois lados");
         renderTradeModal();
         return;
       }
@@ -5865,6 +6256,7 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "Nao foi possivel propor troca");
         setSaveStatus(`Troca proposta a ${friendProfile}`);
+        recordHistory(`Troca proposta a ${friendProfile}: ${selectedTradeGiveIds.length} por ${selectedTradeReceiveIds.length}`);
         closeTradeModal();
         await loadTradeRequests();
         renderTradePanel();
@@ -5905,9 +6297,7 @@
     }
 
     function openTradesPanel() {
-      activePage = "trades";
-      closeUserMenu();
-      updatePageVisibility();
+      switchAppPage("trades");
       syncFriendSelects();
       loadLiveProfiles().catch(() => {});
       renderTradePanel();
@@ -5915,34 +6305,22 @@
     }
 
     function openListComparePanel() {
-      activePage = "compare";
-      closeUserMenu();
-      closeCountryModal();
-      updatePageVisibility();
+      switchAppPage("compare");
       renderListComparison();
-      pulseViewTitle();
       setTimeout(() => listCompareInput?.focus(), 0);
     }
 
     function openBulkAddPanel() {
-      activePage = "bulk-add";
-      closeUserMenu();
-      closeCountryModal();
-      updatePageVisibility();
+      switchAppPage("bulk-add");
       renderBulkAddPreview();
-      pulseViewTitle();
       setTimeout(() => bulkAddInput?.focus(), 0);
     }
 
     function openSettingsPanel() {
-      activePage = "settings";
-      closeUserMenu();
-      closeCountryModal();
+      switchAppPage("settings");
       syncThemeControls();
       setSettingsMessage(settingsThemeMessage, "");
       setSettingsMessage(settingsPasswordMessage, "");
-      updatePageVisibility();
-      pulseViewTitle();
       setTimeout(() => themeColorInput?.focus(), 0);
     }
 
@@ -6205,6 +6583,7 @@
       const profiles = (data.profiles || [])
         .map(item => typeof item === "string" ? { profile: item } : item)
         .filter(item => item && item.profile && item.profile !== liveProfile);
+      liveProfilesList = profiles;
 
       profileColors = {};
       profiles.forEach(item => {
@@ -6395,6 +6774,7 @@
       friendUpdatedAt = "";
       friendUserColor = DEFAULT_USER_COLOR;
       tradeRequests = [];
+      updateTradeBadges();
       if (liveRefreshTimer) clearInterval(liveRefreshTimer);
       liveRefreshTimer = null;
       stopIdleLogoutTimer();
@@ -6612,16 +6992,19 @@
       if (!requireLiveLogin()) return;
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker) return;
+      if (Boolean(sticker.tenho) === Boolean(checked)) return;
 
       if (!checked && !confirm(`Confirmas que queres remover o cromo ${sticker.codigo} dos obtidos?`)) {
         render();
         return;
       }
 
+      pushUndoState(checked ? `Colaste ${stickerShortLabel(sticker)}` : `Removeste ${stickerShortLabel(sticker)}`);
       sticker.tenho = checked;
       if (!checked) sticker.repetidos = 0;
       showStickerToast(sticker, checked ? "owned" : "removed");
       saveState();
+      recordHistory(checked ? `Colado: ${stickerShortLabel(sticker)}` : `Removido: ${stickerShortLabel(sticker)}`);
       render();
     }
 
@@ -6634,12 +7017,15 @@
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker || !sticker.tenho) return;
 
-      const currentDuplicates = sticker.repetidos || 0;
+      const currentDuplicates = normalizeDuplicates(sticker.repetidos);
       const nextDuplicates = normalizeDuplicates(value);
+      if (nextDuplicates === currentDuplicates) return;
+      pushUndoState(`Repetidos alterados em ${stickerShortLabel(sticker)}`);
       sticker.repetidos = nextDuplicates;
       if (nextDuplicates > currentDuplicates) showStickerToast(sticker, "duplicate-added");
       if (nextDuplicates < currentDuplicates) showStickerToast(sticker, "duplicate-removed");
       saveState();
+      recordHistory(`Repetidos em ${stickerShortLabel(sticker)}: ${currentDuplicates} -> ${nextDuplicates}`);
       render();
     }
 
@@ -6652,17 +7038,20 @@
       const sticker = stickers.find(s => s.id === stickerId);
       if (!sticker || !sticker.tenho) return;
 
-      const currentDuplicates = sticker.repetidos || 0;
+      const currentDuplicates = normalizeDuplicates(sticker.repetidos);
       if (delta < 0 && currentDuplicates <= 0) return;
-      if (delta < 0 && currentDuplicates === 1 && !confirm(`Confirmas que queres remover o último repetido do cromo ${sticker.codigo}?`)) {
+      if (delta < 0 && currentDuplicates === 1 && !confirm(`Confirmas que queres remover o ultimo repetido do cromo ${sticker.codigo}?`)) {
         return;
       }
 
+      pushUndoState(delta > 0 ? `Adicionaste repetido ${stickerShortLabel(sticker)}` : `Retiraste repetido ${stickerShortLabel(sticker)}`);
       sticker.repetidos = Math.max(0, currentDuplicates + delta);
       showStickerToast(sticker, delta > 0 ? "duplicate-added" : "duplicate-removed");
       saveState();
+      recordHistory(delta > 0 ? `Repetido adicionado: ${stickerShortLabel(sticker)}` : `Repetido retirado: ${stickerShortLabel(sticker)}`);
       render();
     }
+
     function isTeamAlbumSticker(sticker) {
       const name = sticker.nome.trim().toLowerCase();
       return name === "cromo emblema" || name === "cromo equipa" || name === "team logo" || name === "team photo";
@@ -6749,7 +7138,6 @@
       const nextIndex = currentIndex + direction;
       if (currentIndex < 0 || nextIndex < 0 || nextIndex >= countries.length) return;
       selectedCountry = countries[nextIndex];
-      modalView = "all";
       countryModalOpen = true;
       render();
       requestAnimationFrame(() => {
@@ -7108,6 +7496,8 @@
       if (event.key === "ArrowRight" && countryModalOpen) moveCountryModal(1);
     });
 
+    countryScrollLeft.addEventListener("click", () => scrollCountryTabs(-1));
+    countryScrollRight.addEventListener("click", () => scrollCountryTabs(1));
     countryScrollLeft.addEventListener("mouseenter", () => startCountryScroll(-1));
     countryScrollRight.addEventListener("mouseenter", () => startCountryScroll(1));
     countryScrollLeft.addEventListener("mouseleave", stopCountryScroll);
