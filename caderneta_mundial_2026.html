@@ -214,13 +214,16 @@
     }
 
     .user-menu-panel button.danger {
-      color: var(--danger);
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
     }
 
     .user-menu-panel button.danger:hover,
     .user-menu-panel button.danger:focus-visible {
-      background: color-mix(in srgb, var(--danger) 9%, var(--card));
-      border-color: color-mix(in srgb, var(--danger) 32%, var(--line));
+      background: color-mix(in srgb, var(--danger) 86%, #000);
+      border-color: color-mix(in srgb, var(--danger) 86%, #000);
+      color: #fff;
     }
 
     .user-menu-section-title {
@@ -5310,23 +5313,89 @@
       return date.toLocaleString("pt-PT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
     }
 
-    function renderHistoryPanel() {
+    function historyBaselineItems() {
+      const album = stickers || [];
+      if (!album.length) return [];
+
+      const owned = album.filter(sticker => sticker.tenho);
+      const repeated = album.filter(sticker => normalizeDuplicates(sticker.repetidos) > 0);
+      const duplicateCopies = repeated.reduce((sum, sticker) => sum + normalizeDuplicates(sticker.repetidos), 0);
+      if (!owned.length && !duplicateCopies) return [];
+
+      const repeatedLines = exportGroupedLines(repeated, sticker => {
+        const copies = normalizeDuplicates(sticker.repetidos);
+        return copies > 1 ? `${stickerExportNumber(sticker)} (${copies})` : stickerExportNumber(sticker);
+      });
+
+      return [{
+        text: `Estado antigo/importado: ${owned.length} obtidos, ${duplicateCopies} repetidos`,
+        at: liveUpdatedAt || "",
+        timeLabel: liveUpdatedAt ? `Ultima atualizacao: ${historyTimeLabel(liveUpdatedAt)}` : "Antes do histórico",
+        detail: repeatedLines.length
+          ? `Repetidos ja existentes:<br>${repeatedLines.slice(0, 18).map(escapeHTML).join("<br>")}${repeatedLines.length > 18 ? "<br>..." : ""}`
+          : "Nao havia repetidos registados nesse estado."
+      }];
+    }
+
+    function tradeHistoryAt(trade) {
+      return trade.acceptedAt || trade.rejectedAt || trade.cancelledAt || trade.updatedAt || trade.createdAt || new Date().toISOString();
+    }
+
+    function tradeHistoryText(trade) {
+      const partner = tradePartnerName(trade);
+      if (trade.status === "accepted") return `Troca aceite com ${partner}: ${tradeReceivedPreview(trade)}`;
+      if (trade.status === "rejected") return `Troca recusada com ${partner}: ${tradeReceivedPreview(trade)}`;
+      if (trade.status === "cancelled") return `Troca cancelada com ${partner}: ${tradeReceivedPreview(trade)}`;
+      return trade.direction === "incoming" ? `${partner} propos uma troca` : `Proposta enviada a ${partner}`;
+    }
+
+    function tradeHistoryItems() {
+      return (tradeRequests || []).map(trade => ({
+        text: tradeHistoryText(trade),
+        at: tradeHistoryAt(trade),
+        detail: `Tu das:<br>${tradeStickerList(trade.give || [])}<br><br>Tu recebes:<br>${tradeStickerList(trade.receive || [])}`
+      }));
+    }
+
+    function historyItemTime(item) {
+      return item.timeLabel || historyTimeLabel(item.at);
+    }
+
+    function renderHistoryItem(item) {
+      return `
+        <article class="insight-card">
+          <div class="insight-card-head">
+            <strong>${escapeHTML(item.text)}</strong>
+            <small>${escapeHTML(historyItemTime(item))}</small>
+          </div>
+          ${item.detail ? `<small>${item.detail}</small>` : ""}
+        </article>
+      `;
+    }
+
+    function renderHistoryPanel(message = "") {
       if (!historyResult) return;
-      const items = readHistoryLog();
+      const items = [
+        ...readHistoryLog(),
+        ...tradeHistoryItems(),
+        ...historyBaselineItems()
+      ].sort((a, b) => {
+        const aFixedLabel = a.timeLabel && !a.at;
+        const bFixedLabel = b.timeLabel && !b.at;
+        if (aFixedLabel && !bFixedLabel) return 1;
+        if (!aFixedLabel && bFixedLabel) return -1;
+        return new Date(b.at || 0) - new Date(a.at || 0);
+      });
+
       if (!items.length) {
-        historyResult.innerHTML = `<div class="comparison-empty">Ainda nao ha alteracoes no historico deste browser.</div>`;
+        historyResult.innerHTML = `<div class="comparison-empty">${escapeHTML(message || "Ainda nao ha alteracoes no historico.")}</div>`;
         return;
       }
+
       historyResult.innerHTML = `
+        ${message ? `<div class="comparison-empty">${escapeHTML(message)}</div>` : ""}
         <div class="insight-grid">
-          ${items.slice(0, 24).map(item => `
-            <article class="insight-card">
-              <div class="insight-card-head">
-                <strong>${escapeHTML(item.text)}</strong>
-                <small>${escapeHTML(historyTimeLabel(item.at))}</small>
-              </div>
-            </article>
-          `).join("")}
+          ${items.slice(0, 40).map(renderHistoryItem).join("")}
         </div>
       `;
     }
@@ -5339,7 +5408,11 @@
 
     function openHistoryPanel() {
       switchAppPage("history");
-      renderHistoryPanel();
+      renderHistoryPanel("A carregar historico antigo...");
+      Promise.all([
+        refreshOwnAlbumState().catch(() => {}),
+        loadTradeRequests().catch(() => {})
+      ]).finally(() => renderHistoryPanel());
     }
 
     function incomingPendingTrades() {
