@@ -1202,7 +1202,7 @@
 
     .trade-list {
       display: grid;
-      gap: 10px;
+      gap: 5px;
     }
 
     .trade-card {
@@ -1266,13 +1266,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      padding: 11px 12px;
+      gap: 8px;
+      padding: 6px 8px;
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 8px;
       background: var(--card);
       color: var(--text);
-      box-shadow: var(--shadow);
+      box-shadow: none;
       text-align: left;
     }
 
@@ -1282,44 +1282,65 @@
     }
 
     .trade-row-main {
+      flex: 1 1 auto;
       min-width: 0;
-      display: grid;
-      gap: 3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
     }
 
     .trade-row-main strong {
+      flex: 0 0 auto;
       color: var(--text);
-      font-size: 13px;
-      line-height: 1.2;
+      font-size: 11px;
+      line-height: 1.1;
+      white-space: nowrap;
     }
 
-    .trade-row-main small {
+    .trade-row-exchange {
+      min-width: 0;
+      display: block;
       color: var(--muted);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
-      line-height: 1.25;
+      line-height: 1.1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .trade-row-exchange b {
+      color: var(--text);
+      font-weight: 900;
+    }
+
+    .trade-row-separator {
+      padding: 0 4px;
+      color: var(--main);
+      font-weight: 900;
     }
 
     .trade-row-side {
       flex: 0 0 auto;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
       color: var(--main);
-      font-size: 12px;
+      font-size: 9px;
       font-weight: 900;
     }
 
     .trade-open-icon {
-      width: 32px;
-      height: 32px;
+      width: 22px;
+      height: 22px;
       display: grid;
       place-items: center;
       border: 1px solid var(--line);
       border-radius: 999px;
       background: var(--panel);
       color: var(--main);
-      font-size: 14px;
+      font-size: 11px;
       line-height: 1;
     }
 
@@ -2694,7 +2715,7 @@
     }
 
     .trade-list {
-      gap: 8px;
+      gap: 5px;
     }
 
     .trade-lines {
@@ -2981,9 +3002,11 @@
       .quick-trade-hero span { font-size: 11px; }
       .quick-trade-hero button { min-height: 34px; padding: 7px 10px; font-size: 11px; }
       .trade-card, .trade-builder { padding: 9px; border-radius: 12px; }
-      .trade-row { padding: 9px; border-radius: 12px; }
-      .trade-row-main strong { font-size: 12px; }
-      .trade-row-main small, .trade-row-side { font-size: 10px; }
+      .trade-row { gap: 5px; padding: 5px 7px; border-radius: 8px; }
+      .trade-row-main { gap: 5px; }
+      .trade-row-main strong { max-width: 72px; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
+      .trade-row-exchange, .trade-row-side { font-size: 8.5px; }
+      .trade-open-icon { width: 20px; height: 20px; font-size: 10px; }
       .trade-modal-panel, .country-modal-panel { width: calc(100vw - 12px); max-height: calc(100vh - 18px); border-radius: 16px; }
       .trade-modal-head h2, .country-modal-title h2 { font-size: 17px; }
       .trade-pick-column { padding: 8px; border-radius: 12px; }
@@ -3799,7 +3822,7 @@
     };
     const LIVE_REFRESH_MS = 15000;
     const IDLE_LOGOUT_MS = 30 * 60 * 1000;
-    const AUTH_LOCK_MS = 1200;
+    const AUTH_REQUEST_TIMEOUT_MS = 30000;
     const TRADE_HISTORY_PAGE_SIZE = 5;
     const TRADE_PICK_PAGE_SIZE = 12;
     const LIST_COMPARE_MODE_COPY = {
@@ -6908,6 +6931,20 @@
         .join("<br>");
     }
 
+    function tradeStickerInlineList(list) {
+      if (!list || !list.length) return "Sem cromos";
+      const groups = new Map();
+      list.forEach(sticker => {
+        const country = exportGroupLabel(sticker.pais);
+        if (!groups.has(country)) groups.set(country, []);
+        groups.get(country).push(stickerExportNumber(sticker));
+      });
+
+      return [...groups.entries()]
+        .map(([country, codes]) => `${escapeHTML(country)} ${[...new Set(codes)].map(escapeHTML).join(", ")}`)
+        .join(" · ");
+    }
+
     function tradeStickerDetailList(list) {
       return renderTradeGroupedSummary(list || [], "Resumo");
     }
@@ -6918,6 +6955,10 @@
 
     function tradeReceivedStickers(trade) {
       return trade.direction === "incoming" ? trade.give : trade.receive;
+    }
+
+    function tradeSentStickers(trade) {
+      return trade.direction === "incoming" ? trade.receive : trade.give;
     }
 
     function tradeReceivedPreview(trade) {
@@ -7020,15 +7061,14 @@
 
     function renderTradeCards(trades) {
       return trades.map(trade => {
-        const title = tradeRowTitle(trade);
-        const preview = trade.status === "pending"
-          ? tradeReceivedPreview(trade)
-          : "Ver detalhes da troca";
+        const partner = tradePartnerName(trade);
+        const sent = tradeStickerInlineList(tradeSentStickers(trade));
+        const received = tradeStickerInlineList(tradeReceivedStickers(trade));
         return `
           <button class="trade-row" type="button" onclick="openTradeDetail('${escapeJS(trade.id)}')">
             <span class="trade-row-main">
-              <strong>${escapeHTML(title)}</strong>
-              <small>${escapeHTML(preview)}</small>
+              <strong>${escapeHTML(partner)}</strong>
+              <span class="trade-row-exchange"><b>Envio:</b> ${sent}<span class="trade-row-separator">x</span><b>Recebes:</b> ${received}</span>
             </span>
             <span class="trade-row-side">
               <span class="trade-status">${escapeHTML(tradeStatusText(trade.status))}</span>
@@ -7366,7 +7406,7 @@
       livePasswordInput.closest(".password-field")?.classList.toggle("hidden", loggedIn);
       liveLoginButton.classList.toggle("hidden", loggedIn);
       liveRegisterButton.classList.toggle("hidden", true);
-      liveLoginButton.disabled = !liveEnabled;
+      liveLoginButton.disabled = !liveEnabled || authRequestLocked;
       liveRegisterButton.disabled = true;
       liveLogoutButton.classList.toggle("hidden", !loggedIn);
       liveFriendSelect.disabled = !loggedIn;
@@ -7374,15 +7414,15 @@
 
       authLoginUsernameInput.disabled = loggedIn || !liveEnabled;
       authLoginPasswordInput.disabled = loggedIn || !liveEnabled;
-      authLoginButton.disabled = !liveEnabled;
+      authLoginButton.disabled = !liveEnabled || authRequestLocked;
       authRegisterUsernameInput.disabled = loggedIn || !liveEnabled || !inviteValid;
       authRegisterPasswordInput.disabled = loggedIn || !liveEnabled || !inviteValid;
-      authCreateAccountButton.disabled = !liveEnabled || !inviteValid;
+      authCreateAccountButton.disabled = !liveEnabled || !inviteValid || authRequestLocked;
       if (authPasswordUsernameInput) authPasswordUsernameInput.disabled = !liveEnabled;
       if (authCurrentPasswordInput) authCurrentPasswordInput.disabled = !liveEnabled;
       if (authNewPasswordInput) authNewPasswordInput.disabled = !liveEnabled;
       if (authConfirmPasswordInput) authConfirmPasswordInput.disabled = !liveEnabled;
-      if (authChangePasswordButton) authChangePasswordButton.disabled = !liveEnabled;
+      if (authChangePasswordButton) authChangePasswordButton.disabled = !liveEnabled || authRequestLocked;
 
       if (!loggedIn) {
         activePage = "album";
@@ -7401,23 +7441,43 @@
       return Boolean(response.ok && data.valid);
     }
     async function authRequest(path, payload = {}) {
-      const response = await fetch(path, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Pedido de login falhou");
-      return data;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), AUTH_REQUEST_TIMEOUT_MS);
+
+      try {
+        const response = await fetch(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          signal: controller.signal,
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Pedido de login falhou");
+        return data;
+      } catch (error) {
+        if (error?.name === "AbortError") {
+          throw new Error("O servidor demorou demasiado a responder. Tenta novamente.");
+        }
+        if (error instanceof TypeError) {
+          throw new Error("Não foi possível contactar o servidor. Tenta novamente.");
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeout);
+      }
     }
 
-    function lockAuthRequestBriefly() {
+    function beginAuthRequest() {
       if (authRequestLocked) return false;
       authRequestLocked = true;
-      setTimeout(() => {
-        authRequestLocked = false;
-      }, AUTH_LOCK_MS);
+      updateLiveLoginUI();
       return true;
+    }
+
+    function endAuthRequest() {
+      authRequestLocked = false;
+      updateLiveLoginUI();
     }
 
     function openPasswordChangeFromLogin() {
@@ -7439,7 +7499,6 @@
 
     async function changePasswordFromLogin() {
       if (!liveEnabled) return;
-      if (!lockAuthRequestBriefly()) return;
 
       const username = cleanLiveProfileName(authPasswordUsernameInput.value);
       const currentPassword = authCurrentPasswordInput.value;
@@ -7451,6 +7510,7 @@
         setAuthMessage(validationMessage, "password");
         return;
       }
+      if (!beginAuthRequest()) return;
 
       try {
         setAuthMessage("", "password");
@@ -7463,6 +7523,8 @@
       } catch (error) {
         setAuthMessage(error.message, "password");
         setSaveStatus("Erro ao mudar password");
+      } finally {
+        endAuthRequest();
       }
     }
 
@@ -7596,18 +7658,24 @@
     }
 
     async function finishLiveLogin(user) {
-      const previousProfile = liveProfile;
+      if (!user?.username) throw new Error("Resposta de login inválida.");
+
+      liveProfile = user.username;
+      friendProfile = "";
+      friendStickers = [];
+      friendUpdatedAt = "";
+      if (user.userColor) currentUserColor = sanitizeUserColor(user.userColor);
+      liveUsernameInput.value = user.username;
+      localStorage.setItem("caderneta_live_profile", user.username);
+      clearPasswordInputs(authLoginPasswordInput, authRegisterPasswordInput, livePasswordInput);
+      setAuthMode("app");
+      updateLiveLoginUI();
+      liveStatusText.textContent = "A carregar caderneta online...";
+      setSaveStatus("Login concluído. A carregar caderneta...");
+      startLiveRefresh();
+      resetIdleLogoutTimer();
 
       try {
-        liveProfile = user.username;
-        friendProfile = "";
-        friendStickers = [];
-        friendUpdatedAt = "";
-        if (user.userColor) currentUserColor = sanitizeUserColor(user.userColor);
-        liveUsernameInput.value = user.username;
-        localStorage.setItem("caderneta_live_profile", user.username);
-        liveStatusText.textContent = "A carregar caderneta online...";
-
         const data = await fetchLiveState();
         if (data.exists && data.csv) {
           loadStickers(parseTextFile(data.csv));
@@ -7616,26 +7684,23 @@
           await loadBaseAlbum();
           await writeLiveStateNow();
         }
-
-        setAuthMode("app");
-        updateLiveLoginUI();
         liveStatusText.textContent = "Online ativo.";
         setSaveStatus("Online ligado com sucesso");
-        startLiveRefresh();
-        resetIdleLogoutTimer();
-        loadUserSettings().catch(() => {});
-        await loadLiveProfiles();
-        await loadTradeRequests();
       } catch (error) {
-        liveProfile = previousProfile || "";
-        updateLiveLoginUI();
-        throw error;
+        console.error("Login concluído, mas a caderneta não carregou.", error);
+        liveStatusText.textContent = "Sessão iniciada. Não foi possível carregar a caderneta.";
+        setSaveStatus("Login concluído, mas houve um erro ao carregar os cromos");
       }
+
+      await Promise.allSettled([
+        loadUserSettings(),
+        loadLiveProfiles(),
+        loadTradeRequests()
+      ]);
     }
 
     async function loginLiveAccount() {
       if (!liveEnabled) return;
-      if (!lockAuthRequestBriefly()) return;
 
       const credentials = liveCredentials("login");
       if (!credentials.username || !credentials.password) {
@@ -7643,6 +7708,7 @@
         setSaveStatus("Escreve username e password");
         return;
       }
+      if (!beginAuthRequest()) return;
 
       try {
         setAuthMessage("", "login");
@@ -7652,12 +7718,13 @@
         setAuthMessage(error.message, "login");
         liveStatusText.textContent = error.message;
         setSaveStatus("Erro no login");
+      } finally {
+        endAuthRequest();
       }
     }
 
     async function registerLiveAccount() {
       if (!liveEnabled) return;
-      if (!lockAuthRequestBriefly()) return;
       if (!inviteValid || !inviteToken) {
         setAuthMessage("Abre o link de convite para criar conta", "register");
         return;
@@ -7675,6 +7742,7 @@
         setSaveStatus("Password demasiado curta");
         return;
       }
+      if (!beginAuthRequest()) return;
 
       try {
         setAuthMessage("", "register");
@@ -7694,6 +7762,8 @@
         setAuthMessage(error.message, "register");
         liveStatusText.textContent = error.message;
         setSaveStatus("Erro ao criar conta");
+      } finally {
+        endAuthRequest();
       }
     }
 
@@ -7835,14 +7905,16 @@
           setSaveStatus("Login apenas");
         }
         updateLiveLoginUI();
-      } catch {
-        liveEnabled = false;
+      } catch (error) {
+        console.error("Não foi possível verificar a sessão online.", error);
+        liveEnabled = true;
         liveProfile = "";
         inviteValid = false;
-        setAuthMode("denied");
-        liveStatusText.textContent = "Nao foi possivel ligar ao online.";
+        setAuthMode("login");
+        setAuthMessage("Não foi possível verificar a sessão. Podes tentar fazer login novamente.", "login");
+        liveStatusText.textContent = "Não foi possível verificar a sessão online.";
         updateLiveLoginUI();
-        setSaveStatus("Online indisponivel");
+        setSaveStatus("Não foi possível verificar a sessão");
       }
     }
     function updateSearchControls() {

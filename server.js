@@ -243,9 +243,23 @@ function hashPassword(password, salt) {
 }
 
 function passwordMatches(password, salt, expectedHash) {
-  const hash = Buffer.from(hashPassword(password, salt), "hex");
-  const expected = Buffer.from(expectedHash, "hex");
-  return hash.length === expected.length && crypto.timingSafeEqual(hash, expected);
+  if (
+    typeof password !== "string" ||
+    typeof salt !== "string" ||
+    !salt ||
+    typeof expectedHash !== "string" ||
+    !/^[a-f0-9]{64}$/i.test(expectedHash)
+  ) {
+    return false;
+  }
+
+  try {
+    const hash = Buffer.from(hashPassword(password, salt), "hex");
+    const expected = Buffer.from(expectedHash, "hex");
+    return hash.length === expected.length && crypto.timingSafeEqual(hash, expected);
+  } catch {
+    return false;
+  }
 }
 
 function parseCookies(req) {
@@ -1441,7 +1455,6 @@ async function handleAuthRoute(req, res, url) {
       throw error;
     }
 
-    await ensureUserStickerRows(db, publicUser(user));
     const token = await createSession(db, user);
 
     return sendJson(res, 200, {
@@ -1470,7 +1483,6 @@ async function handleAuthRoute(req, res, url) {
       return sendJson(res, 403, { error: "Esta conta ainda nao esta verificada." });
     }
 
-    await ensureUserStickerRows(db, publicUser(user));
     const token = await createSession(db, user);
     return sendJson(res, 200, {
       ok: true,
