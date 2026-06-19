@@ -4706,10 +4706,11 @@
     }
 
     function filteredStickers(options = {}) {
-      const term = normalizeSearch(search.value);
+      const term = search.value.trim();
       const countryFilter = options.country || selectedCountry;
       const album = options.album || currentAlbumStickers();
       const viewFilter = options.view || currentView;
+      const searchingSelectedCountry = countryFilter !== "all" && searchTermMatchesCountry(countryFilter, term);
 
       return album.filter(sticker => {
         const matchesView =
@@ -4724,6 +4725,7 @@
 
         const matchesSearch =
           !term ||
+          searchingSelectedCountry ||
           stickerSearchRank(sticker, term) < 9;
 
         return matchesView && matchesCountry && matchesSearch;
@@ -5138,25 +5140,65 @@
 
     function playerNameSearchRank(name, term) {
       if (!term) return 9;
+      const compactTerm = normalizeSearch(term);
       const compactName = normalizeSearch(name);
       const words = normalizeSearchWords(name).split(" ").filter(Boolean);
-      if (compactName === term) return 1;
-      if (words.some(word => word === term)) return 2;
-      if (term.length >= 4 && (compactName.includes(term) || words.some(word => word.includes(term)))) return 3;
+      if (compactName === compactTerm) return 1;
+      if (words.some(word => word === compactTerm)) return 2;
+      if (compactTerm.length >= 4 && (compactName.includes(compactTerm) || words.some(word => word.includes(compactTerm)))) return 3;
       return 9;
+    }
+
+    function stickerSearchFields(sticker) {
+      const name = normalizeSearchWords(sticker.nome);
+      const countryCode = normalizeSearchWords(exportGroupLabel(sticker.pais));
+      const countryName = normalizeSearchWords(countryFullName(sticker.pais));
+      const code = normalizeSearchWords(sticker.codigo);
+      const fields = [name, countryCode, countryName, code];
+
+      if (/cromo equipa|team photo|team|equipa/.test(name)) {
+        fields.push("equipa team foto fotografia teamphoto");
+      }
+      if (/cromo emblema|emblem|logo|emblema/.test(name)) {
+        fields.push("emblema emblem logo simbolo");
+      }
+
+      return fields.filter(Boolean);
+    }
+
+    function stickerMatchesSearchTokens(sticker, term) {
+      const tokens = normalizeSearchWords(term).split(" ").filter(Boolean);
+      if (!tokens.length) return false;
+      const fields = stickerSearchFields(sticker);
+      return tokens.every(token => fields.some(field =>
+        field.split(" ").some(word => word === token || (token.length >= 3 && word.includes(token)))
+      ));
     }
 
     function stickerSearchRank(sticker, term) {
       if (!term) return 0;
 
       const code = normalizeSearch(sticker.codigo);
+      const compactTerm = normalizeSearch(term);
 
-      if (code === term) return 0;
-      return playerNameSearchRank(sticker.nome, term);
+      if (code === compactTerm) return 0;
+      const nameRank = playerNameSearchRank(sticker.nome, term);
+      if (nameRank < 9) return nameRank;
+      if (stickerMatchesSearchTokens(sticker, term)) return 5;
+      return 9;
     }
 
     function stickerMatchesDirectSearch(sticker, term) {
       return stickerSearchRank(sticker, term) < 9;
+    }
+
+    function searchTermMatchesCountry(country, term) {
+      if (!term) return false;
+      const compactTerm = normalizeSearch(term);
+      const countryCode = normalizeSearch(exportGroupLabel(country));
+      const countryName = normalizeSearch(countryFullName(country));
+      if (countryCode === compactTerm || countryName === compactTerm) return true;
+      return compactTerm.length >= 4 && countryName.includes(compactTerm);
     }
 
     function countrySearchRank(country, countryStickers, term) {
@@ -5164,9 +5206,10 @@
 
       const countryCode = normalizeSearch(country);
       const countryName = normalizeSearch(countryFullName(country));
+      const compactTerm = normalizeSearch(term);
 
-      if (countryCode === term || countryName === term) return 0;
-      if (countryCode.includes(term) || countryName.includes(term)) return 1;
+      if (countryCode === compactTerm || countryName === compactTerm) return 0;
+      if (compactTerm.length >= 4 && countryName.includes(compactTerm)) return 1;
       if (countryStickers.some(sticker => stickerMatchesDirectSearch(sticker, term))) return 2;
       return 9;
     }
@@ -5225,7 +5268,7 @@
 
     function renderCountryTabs() {
       const countries = albumCountries();
-      const term = normalizeSearch(search.value);
+      const term = search.value.trim();
       const album = currentAlbumStickers();
       const visibleCountries = countries
         .filter(country => {
@@ -8204,7 +8247,7 @@
     }
 
     function sortedCountryStickers(list) {
-      const term = normalizeSearch(search.value);
+      const term = search.value.trim();
       return [...list].sort((a, b) => {
         const rank = term ? stickerSearchRank(a, term) - stickerSearchRank(b, term) : 0;
         if (rank) return rank;
@@ -8384,7 +8427,7 @@
       updatePageVisibility();
       renderCountryModal();
 
-      const term = normalizeSearch(search.value);
+      const term = search.value.trim();
       const list = filteredStickers();
       const grouped = groupByCountry(list);
       const showDuplicateCardsOnly = currentView === "duplicates" && selectedCountry === "all" && !term;
