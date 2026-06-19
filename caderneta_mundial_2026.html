@@ -2763,11 +2763,182 @@
     .mobile-bottom-nav { display: none; }
     body.auth-locked .mobile-bottom-nav { display: none !important; }
 
+    .mobile-nav-icon,
+    .mobile-account-avatar {
+      width: 30px;
+      height: 30px;
+      display: inline-grid;
+      place-items: center;
+      position: relative;
+      color: currentColor;
+    }
+
+    .mobile-nav-home-icon::before,
+    .mobile-nav-home-icon::after,
+    .mobile-nav-trade-icon::before,
+    .mobile-nav-trade-icon::after,
+    .mobile-nav-people-icon::before,
+    .mobile-nav-people-icon::after,
+    .mobile-nav-card-icon::before,
+    .mobile-nav-card-icon::after {
+      content: "";
+      position: absolute;
+      box-sizing: border-box;
+    }
+
+    .mobile-nav-home-icon::before {
+      width: 18px;
+      height: 18px;
+      border: 3px solid currentColor;
+      border-top: 0;
+      border-radius: 4px;
+      bottom: 4px;
+    }
+
+    .mobile-nav-home-icon::after {
+      width: 16px;
+      height: 16px;
+      border-left: 3px solid currentColor;
+      border-top: 3px solid currentColor;
+      transform: rotate(45deg);
+      top: 2px;
+      border-radius: 3px 0 0 0;
+    }
+
+    .mobile-nav-people-icon::before {
+      width: 13px;
+      height: 13px;
+      border: 3px solid currentColor;
+      border-radius: 50%;
+      left: 4px;
+      top: 4px;
+      box-shadow: 10px 2px 0 -3px var(--card), 10px 2px 0 0 currentColor;
+    }
+
+    .mobile-nav-people-icon::after {
+      width: 25px;
+      height: 12px;
+      border: 3px solid currentColor;
+      border-top-left-radius: 14px;
+      border-top-right-radius: 14px;
+      border-bottom: 0;
+      left: 2px;
+      bottom: 4px;
+    }
+
+    .mobile-nav-trade-icon::before {
+      width: 22px;
+      height: 22px;
+      border-top: 3px solid currentColor;
+      border-right: 3px solid currentColor;
+      border-radius: 50%;
+      transform: rotate(40deg);
+    }
+
+    .mobile-nav-trade-icon::after {
+      width: 22px;
+      height: 22px;
+      border-bottom: 3px solid currentColor;
+      border-left: 3px solid currentColor;
+      border-radius: 50%;
+      transform: rotate(40deg);
+    }
+
+    .mobile-nav-card-icon::before {
+      width: 19px;
+      height: 24px;
+      border: 3px solid currentColor;
+      border-radius: 5px;
+      transform: rotate(-7deg);
+    }
+
+    .mobile-nav-card-icon::after {
+      content: "x2";
+      width: auto;
+      height: auto;
+      right: -2px;
+      top: -4px;
+      padding: 2px 4px;
+      border-radius: 999px;
+      background: var(--main);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 1000;
+      line-height: 1;
+      box-shadow: 0 0 0 2px var(--card);
+    }
+
+    .mobile-account-avatar,
+    .profile-photo-preview {
+      border-radius: 50%;
+      background: var(--main);
+      color: #fff;
+      overflow: hidden;
+      font-weight: 1000;
+      object-fit: cover;
+    }
+
+    .profile-photo-setting {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .profile-photo-preview {
+      flex: 0 0 auto;
+      width: 58px;
+      height: 58px;
+      display: inline-grid;
+      place-items: center;
+      font-size: 22px;
+      border: 2px solid var(--line);
+    }
+
+    .profile-photo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .profile-photo-actions label,
+    .profile-photo-actions button {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      background: var(--main);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .profile-photo-actions button.secondary {
+      background: var(--panel);
+      color: var(--text);
+    }
+
+    .profile-photo-actions input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
     @media (max-width: 760px) {
-      .mobile-bottom-nav { position: fixed; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 140; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 7px; border: 1px solid color-mix(in srgb, var(--line) 76%, transparent); border-radius: 22px; background: color-mix(in srgb, var(--card) 92%, transparent); box-shadow: 0 18px 50px rgba(15, 23, 42, .22); backdrop-filter: blur(14px); }
-      .mobile-bottom-nav button { min-width: 0; min-height: 48px; padding: 5px 3px; border: 0; border-radius: 16px; background: transparent; color: var(--muted); display: grid; justify-items: center; align-content: center; gap: 2px; font-size: 10px; font-weight: 900; line-height: 1; }
+      .mobile-bottom-nav { position: fixed; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 140; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 7px; border: 1px solid color-mix(in srgb, var(--line) 76%, transparent); border-radius: 22px; background: color-mix(in srgb, var(--card) 94%, transparent); box-shadow: 0 18px 50px rgba(15, 23, 42, .22); backdrop-filter: blur(14px); }
+      .mobile-bottom-nav button { pointer-events: auto; cursor: pointer; min-width: 0; min-height: 50px; padding: 4px; border: 0; border-radius: 17px; background: transparent; color: var(--muted); display: grid; place-items: center; line-height: 1; }
       .mobile-bottom-nav button.active { background: var(--main); color: #fff; }
-      .mobile-bottom-nav .nav-icon { font-size: 17px; line-height: 1; }
+      .mobile-bottom-nav button.active .mobile-nav-card-icon::after { background: #fff; color: var(--main); }
+      .mobile-bottom-nav button.active .mobile-nav-people-icon::before { box-shadow: 10px 2px 0 -3px var(--main), 10px 2px 0 0 currentColor; }
+      .mobile-bottom-nav button:active { transform: translateY(1px) scale(.98); }
+      .user-menu { display: none; }
     }
 
     @media (max-width: 520px) {
@@ -3480,6 +3651,20 @@
         </article>
 
         <article class="setting-card">
+          <h2>Foto da conta</h2>
+          <p>Aparece no menu inferior como avatar da tua conta.</p>
+          <div class="profile-photo-setting">
+            <span id="profilePhotoPreview" class="profile-photo-preview" aria-hidden="true">U</span>
+            <div class="profile-photo-actions">
+              <label for="profilePhotoInput">Escolher foto</label>
+              <input id="profilePhotoInput" type="file" accept="image/*" onchange="changeProfilePhoto(this)" />
+              <button class="secondary" type="button" onclick="clearProfilePhoto()">Remover</button>
+            </div>
+          </div>
+          <div id="settingsProfilePhotoMessage" class="settings-message" aria-live="polite"></div>
+        </article>
+
+        <article class="setting-card">
           <h2>Aparência</h2>
           <p>O tema muda só a tua app. Não altera a cor do teu user.</p>
           <div class="theme-mode-row" role="group" aria-label="Modo da app">
@@ -3524,6 +3709,18 @@
           </div>
           <div id="settingsBackupMessage" class="settings-message" aria-live="polite"></div>
         </article>
+
+        <article class="setting-card">
+          <h2>Atalhos</h2>
+          <p>Ferramentas rápidas da tua conta, sem precisares do menu antigo no telemóvel.</p>
+          <div class="settings-actions">
+            <button type="button" onclick="openListComparePanel()">Comparar listas</button>
+            <button class="secondary" type="button" onclick="openBulkAddPanel()">Adicionar lista</button>
+            <button class="secondary" type="button" onclick="openHistoryPanel()">Histórico</button>
+            <button class="secondary" type="button" onclick="openNotificationsPanel()">Notificações</button>
+            <button class="danger" type="button" onclick="logoutLiveAccount()">Logout</button>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -3560,11 +3757,11 @@
   </main>
 
   <nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navegacao principal mobile">
-    <button type="button" data-page="album" onclick="goHome()"><span class="nav-icon">⌂</span><span>Inicio</span></button>
-    <button type="button" data-page="friends" onclick="openFriendsPage()"><span class="nav-icon">◉</span><span>Amigos</span></button>
-    <button type="button" data-page="trades" onclick="openTradesPanel()"><span class="nav-icon">⇄</span><span>Trocas</span></button>
-    <button type="button" data-page="duplicates" onclick="openDuplicatesView()"><span class="nav-icon">◆</span><span>Repet.</span></button>
-    <button type="button" data-page="settings" onclick="openSettingsPanel()"><span class="nav-icon">⚙</span><span>Conta</span></button>
+    <button type="button" data-page="album" onclick="goHome()" aria-label="Inicio" title="Inicio"><span class="mobile-nav-icon mobile-nav-home-icon" aria-hidden="true"></span></button>
+    <button type="button" data-page="friends" onclick="openFriendsPage()" aria-label="Amigos" title="Amigos"><span class="mobile-nav-icon mobile-nav-people-icon" aria-hidden="true"></span></button>
+    <button type="button" data-page="trades" onclick="openTradesPanel()" aria-label="Trocas" title="Trocas"><span class="mobile-nav-icon mobile-nav-trade-icon" aria-hidden="true"></span></button>
+    <button type="button" data-page="duplicates" onclick="openDuplicatesView()" aria-label="Repetidos" title="Repetidos"><span class="mobile-nav-icon mobile-nav-card-icon" aria-hidden="true"></span></button>
+    <button type="button" data-page="settings" onclick="openSettingsPanel()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span></button>
   </nav>
 
   <footer id="saveStatus" class="save-status">A iniciar...</footer>
@@ -3572,6 +3769,7 @@
   <script>
     const STORAGE_KEY = "caderneta_mundial_2026_estado_v1";
     const USER_COLOR_KEY = "caderneta_mundial_2026_user_color";
+    const PROFILE_PHOTO_KEY = "caderneta_mundial_2026_profile_photo";
     const COUNTRY_SORT_KEY = "caderneta_mundial_2026_country_sort";
     const DEFAULT_USER_COLOR = "#111827";
     const DEFAULT_THEME_COLOR = DEFAULT_USER_COLOR;
@@ -3769,6 +3967,10 @@
     const userMenuName = document.getElementById("userMenuName");
     const userMenuProfile = document.getElementById("userMenuProfile");
     const userMenuInitial = document.getElementById("userMenuInitial");
+    const profilePhotoInput = document.getElementById("profilePhotoInput");
+    const profilePhotoPreview = document.getElementById("profilePhotoPreview");
+    const mobileUserAvatar = document.getElementById("mobileUserAvatar");
+    const settingsProfilePhotoMessage = document.getElementById("settingsProfilePhotoMessage");
 
     const totalCount = document.getElementById("totalCount");
     const missingCount = document.getElementById("missingCount");
@@ -6068,7 +6270,7 @@
       const name = liveProfile || "Conta";
       if (userMenuName) userMenuName.textContent = name;
       if (userMenuProfile) userMenuProfile.textContent = liveProfile || "Sem sessao";
-      if (userMenuInitial) userMenuInitial.textContent = userInitial(name);
+      syncProfilePhotoUI();
     }
 
     function syncFriendSelects(value = friendProfile) {
@@ -6191,6 +6393,7 @@
       mobileBottomNav.querySelectorAll("button[data-page]").forEach(button => {
         button.classList.toggle("active", button.dataset.page === page);
       });
+      syncProfilePhotoUI();
     }
 
     function tradeCompatibilityForAlbum(profile, album, userColor = DEFAULT_USER_COLOR) {
@@ -6970,7 +7173,9 @@
     function openSettingsPanel() {
       switchAppPage("settings");
       syncThemeControls();
+      syncProfilePhotoUI();
       setSettingsMessage(settingsThemeMessage, "");
+      setSettingsMessage(settingsProfilePhotoMessage, "");
       setSettingsMessage(settingsPasswordMessage, "");
       setTimeout(() => themeColorInput?.focus(), 0);
     }
