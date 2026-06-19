@@ -15,6 +15,18 @@
   "icons": [
     {
       "src": "/app-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any maskable"
@@ -36,5 +48,11 @@
       "short_name": "Repetidos",
       "url": "/?app=repetidos"
     }
-  ]
+  ],
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  "prefer_related_applications": false
 }

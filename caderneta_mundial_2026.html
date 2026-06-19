@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Caderneta Mundial 2026</title>
   <meta name="theme-color" content="#111827" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="Caderneta 2026" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Caderneta 2026" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -2746,6 +2748,96 @@
       to { opacity: 0; transform: translateX(-10px) scale(.98); }
     }
 
+
+    .trade-overview { display: grid; gap: 10px; margin-bottom: 14px; }
+    .trade-overview-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+    .trade-overview-head strong { color: var(--main); font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
+    .trade-overview-head small { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .trade-overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 9px; }
+    .trade-overview-card { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); box-shadow: var(--shadow); }
+    .trade-overview-card.is-main { border-color: var(--main); box-shadow: inset 0 3px 0 var(--main), var(--shadow); }
+    .trade-overview-card strong { color: var(--main); font-size: 13px; font-weight: 900; text-transform: uppercase; line-height: 1.15; }
+    .trade-overview-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
+    .trade-overview-counts span { display: grid; gap: 2px; padding: 8px; border-radius: 11px; background: var(--panel); color: var(--muted); font-size: 10px; font-weight: 900; line-height: 1.15; text-transform: uppercase; }
+    .trade-overview-counts b { color: var(--main); font-size: 20px; line-height: 1; }
+    .mobile-bottom-nav { display: none; }
+    body.auth-locked .mobile-bottom-nav { display: none !important; }
+
+    @media (max-width: 760px) {
+      .mobile-bottom-nav { position: fixed; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 140; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 7px; border: 1px solid color-mix(in srgb, var(--line) 76%, transparent); border-radius: 22px; background: color-mix(in srgb, var(--card) 92%, transparent); box-shadow: 0 18px 50px rgba(15, 23, 42, .22); backdrop-filter: blur(14px); }
+      .mobile-bottom-nav button { min-width: 0; min-height: 48px; padding: 5px 3px; border: 0; border-radius: 16px; background: transparent; color: var(--muted); display: grid; justify-items: center; align-content: center; gap: 2px; font-size: 10px; font-weight: 900; line-height: 1; }
+      .mobile-bottom-nav button.active { background: var(--main); color: #fff; }
+      .mobile-bottom-nav .nav-icon { font-size: 17px; line-height: 1; }
+    }
+
+    @media (max-width: 520px) {
+      body { padding-bottom: 84px; }
+      main { padding: 10px 8px 96px; }
+      .topbar { padding: 8px 10px; }
+      .brand { font-size: 15px; }
+      .view-title { font-size: 15px; padding: 0 0 2px; }
+      .user-menu-button { min-height: 36px; max-width: 96px; padding: 6px 8px; font-size: 12px; }
+      .user-avatar { width: 24px; height: 24px; font-size: 11px; }
+      .collection-progress { margin-bottom: 8px; padding: 10px; border-radius: 13px; }
+      .collection-progress-copy span { font-size: 10px; }
+      .collection-progress-copy strong { font-size: 14px; }
+      .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+      .stat { min-height: 50px; padding: 7px 6px; border-radius: 10px; }
+      .stat span { min-height: 24px; font-size: 8.5px; line-height: 1.15; }
+      .stat strong { font-size: 15px; }
+      .toolbar { gap: 6px; margin-bottom: 8px; }
+      .search { min-height: 40px; padding: 9px 38px 9px 12px; font-size: 13px; }
+      .clear-search { width: 26px; height: 26px; font-size: 15px; }
+      .toolbar-actions { width: 100%; align-items: center; justify-content: space-between; gap: 6px; }
+      .collection-mode-row { font-size: 9px; gap: 5px; }
+      .collection-mode-select { min-height: 34px; max-width: 132px; padding: 0 9px; font-size: 11px; }
+      .export-list-btn { min-width: 84px; max-width: 104px; min-height: 34px; padding: 5px 7px; font-size: 10px; }
+      .export-list-btn small { font-size: 8px; }
+      .share-panel { padding: 10px; border-radius: 14px; }
+      .share-panel-head { gap: 8px; margin-bottom: 8px; }
+      .share-panel-title strong { font-size: 16px; }
+      .share-panel-title span { font-size: 11px; line-height: 1.25; }
+      .live-controls { gap: 7px; }
+      .live-input, .auth-input { min-height: 38px; font-size: 13px; }
+      .trade-overview-head { align-items: flex-start; flex-direction: column; gap: 2px; }
+      .trade-overview-grid { grid-template-columns: 1fr; gap: 7px; }
+      .trade-overview-card { padding: 9px; border-radius: 12px; gap: 8px; }
+      .trade-overview-card strong { font-size: 12px; }
+      .trade-overview-counts span { padding: 7px; font-size: 8.5px; }
+      .trade-overview-counts b { font-size: 18px; }
+      .quick-trade-hero { padding: 10px; border-radius: 13px; gap: 8px; }
+      .quick-trade-hero strong { font-size: 13px; }
+      .quick-trade-hero span { font-size: 11px; }
+      .quick-trade-hero button { min-height: 34px; padding: 7px 10px; font-size: 11px; }
+      .trade-card, .trade-builder { padding: 9px; border-radius: 12px; }
+      .trade-row { padding: 9px; border-radius: 12px; }
+      .trade-row-main strong { font-size: 12px; }
+      .trade-row-main small, .trade-row-side { font-size: 10px; }
+      .trade-modal-panel, .country-modal-panel { width: calc(100vw - 12px); max-height: calc(100vh - 18px); border-radius: 16px; }
+      .trade-modal-head h2, .country-modal-title h2 { font-size: 17px; }
+      .trade-pick-column { padding: 8px; border-radius: 12px; }
+      .trade-pick-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; max-height: 250px; }
+      .trade-pick-card { min-height: 54px; padding: 7px; border-radius: 10px; }
+      .trade-pick-card strong { font-size: 11px; }
+      .trade-pick-card span { font-size: 10px; }
+      .country-tabs-wrap { top: 56px; grid-template-columns: 30px minmax(0, 1fr) 30px; gap: 5px; padding: 7px 0 9px; }
+      .country-scroll-arrow { width: 30px; height: 30px; font-size: 17px; }
+      .country-tabs { gap: 5px; }
+      .country-card { min-height: 70px; padding: 6px; border-radius: 10px; gap: 4px; }
+      .country-card-name { font-size: 9px; }
+      .country-card-code { font-size: 7.5px; }
+      .country-card-count { font-size: 8.5px; }
+      .country-card-progress { height: 4px; }
+      .sticker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+      .sticker { min-height: 82px; padding: 8px; border-radius: 10px; }
+      .sticker .code, .code { font-size: 13px; }
+      .sticker .name, .name { font-size: 10px; line-height: 1.2; }
+      .duplicate-row { gap: 3px; margin-top: 4px; }
+      .duplicate-summary { font-size: 9px; }
+      .duplicate-control-btn { width: 24px; height: 24px; font-size: 13px; }
+      .save-status { padding: 0 10px 86px; font-size: 11px; text-align: center; }
+      .sticker-toast-stack { bottom: 84px; left: 10px; width: calc(100vw - 20px); }
+    }
     .hidden { display: none; }
 
     @media (max-width: 760px) {
@@ -3270,6 +3362,7 @@
           <span>Propostas entre users com base nos repetidos e nos cromos em falta.</span>
         </div>
       </div>
+      <div id="tradeOverview" class="trade-overview" aria-live="polite"></div>
       <div class="live-controls">
         <select id="tradeFriendSelect" class="live-input" onchange="selectTradeFriend(this.value)">
           <option value="">Escolhe um amigo</option>
@@ -3466,6 +3559,14 @@
     </section>
   </main>
 
+  <nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navegacao principal mobile">
+    <button type="button" data-page="album" onclick="goHome()"><span class="nav-icon">⌂</span><span>Inicio</span></button>
+    <button type="button" data-page="friends" onclick="openFriendsPage()"><span class="nav-icon">◉</span><span>Amigos</span></button>
+    <button type="button" data-page="trades" onclick="openTradesPanel()"><span class="nav-icon">⇄</span><span>Trocas</span></button>
+    <button type="button" data-page="duplicates" onclick="openDuplicatesView()"><span class="nav-icon">◆</span><span>Repet.</span></button>
+    <button type="button" data-page="settings" onclick="openSettingsPanel()"><span class="nav-icon">⚙</span><span>Conta</span></button>
+  </nav>
+
   <footer id="saveStatus" class="save-status">A iniciar...</footer>
 
   <script>
@@ -3543,6 +3644,8 @@
     let selectedTradeGiveIds = [];
     let selectedTradeReceiveIds = [];
     let tradePickPages = { give: 1, receive: 1 };
+    let tradeOverviewItems = [];
+    let tradeOverviewLoading = false;
     let listCompareMode = "duplicates";
     let modalTouchGesture = null;
     let liveRefreshTimer = null;
@@ -3599,6 +3702,8 @@
     const tradePanel = document.getElementById("tradePanel");
     const tradeFriendSelect = document.getElementById("tradeFriendSelect");
     const tradeSuggestions = document.getElementById("tradeSuggestions");
+    const tradeOverview = document.getElementById("tradeOverview");
+    const mobileBottomNav = document.getElementById("mobileBottomNav");
     const tradeList = document.getElementById("tradeList");
     const tradeModal = document.getElementById("tradeModal");
     const tradeModalBody = document.getElementById("tradeModalBody");
@@ -4187,6 +4292,7 @@
       notificationsPanel?.classList.toggle("hidden", activePage !== "notifications");
       historyPanel?.classList.toggle("hidden", activePage !== "history");
       settingsPanel?.classList.toggle("hidden", activePage !== "settings");
+      updateMobileBottomNav();
       updateViewTitle();
     }
 
@@ -6078,6 +6184,96 @@
       await loadFriendAlbum(profile, "trades");
     }
 
+
+    function updateMobileBottomNav() {
+      if (!mobileBottomNav) return;
+      const page = activePage === "album" && currentView === "duplicates" ? "duplicates" : activePage;
+      mobileBottomNav.querySelectorAll("button[data-page]").forEach(button => {
+        button.classList.toggle("active", button.dataset.page === page);
+      });
+    }
+
+    function tradeCompatibilityForAlbum(profile, album, userColor = DEFAULT_USER_COLOR) {
+      const friendById = new Map(album.map(sticker => [sticker.id, sticker]));
+      const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
+      const myDuplicates = stickers.filter(sticker => sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
+      const friendDuplicates = album.filter(sticker => sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
+      const iCanGive = myDuplicates.filter(sticker => {
+        const friendSticker = friendById.get(sticker.id);
+        return friendSticker && !friendSticker.tenho;
+      });
+      const friendCanGive = friendDuplicates.filter(sticker => {
+        const mine = mineById.get(sticker.id);
+        return mine && !mine.tenho;
+      });
+      return {
+        profile,
+        userColor: sanitizeUserColor(userColor),
+        friendDuplicateCopies: duplicateCopyCount(friendDuplicates),
+        friendDuplicateUnique: friendDuplicates.length,
+        iCanGiveUnique: iCanGive.length,
+        friendCanGiveUnique: friendCanGive.length,
+        balanced: Math.min(iCanGive.length, friendCanGive.length)
+      };
+    }
+
+    function renderTradeOverview() {
+      if (!tradeOverview) return;
+      if (!liveEnabled || !liveProfile) {
+        tradeOverview.innerHTML = "";
+        return;
+      }
+      const myDuplicates = stickers.filter(sticker => sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
+      const usefulFriends = tradeOverviewItems.filter(item => item.friendDuplicateCopies > 0);
+      const friendsNeedMine = tradeOverviewItems.reduce((sum, item) => sum + item.iCanGiveUnique, 0);
+      const friendCards = usefulFriends.map(item =>
+        '<article class="trade-overview-card" style="border-color:' + escapeHTML(item.userColor) + '">' +
+          '<strong>Repetidos do ' + escapeHTML(item.profile) + '</strong>' +
+          '<div class="trade-overview-counts">' +
+            '<span><b>' + item.friendCanGiveUnique + '</b>Ele tem para ti</span>' +
+            '<span><b>' + item.iCanGiveUnique + '</b>Tu tens para ele</span>' +
+          '</div>' +
+        '</article>'
+      ).join("");
+      tradeOverview.innerHTML =
+        '<div class="trade-overview-head">' +
+          '<strong>Resumo geral de trocas</strong>' +
+          '<small>' + (tradeOverviewLoading ? 'A atualizar...' : usefulFriends.length + ' amigos com repetidos') + '</small>' +
+        '</div>' +
+        '<div class="trade-overview-grid">' +
+          '<article class="trade-overview-card is-main">' +
+            '<strong>Os teus repetidos</strong>' +
+            '<div class="trade-overview-counts">' +
+              '<span><b>' + duplicateCopyCount(myDuplicates) + '</b>Total</span>' +
+              '<span><b>' + friendsNeedMine + '</b>Amigos precisam</span>' +
+            '</div>' +
+          '</article>' +
+          (friendCards || '<div class="comparison-empty">Nenhum amigo tem repetidos neste momento.</div>') +
+        '</div>';
+    }
+
+    async function refreshTradeOverview() {
+      if (!tradeOverview || !liveEnabled || !liveProfile) return;
+      tradeOverviewLoading = true;
+      renderTradeOverview();
+      try {
+        if (!liveProfilesList.length) await loadLiveProfiles();
+        const profiles = liveProfilesList.filter(item => item.profile && item.profile !== liveProfile).slice(0, 40);
+        const results = await Promise.all(profiles.map(async item => {
+          try {
+            const data = await fetchLiveState(item.profile);
+            const album = data.csv ? parseTextFile(data.csv) : [];
+            return tradeCompatibilityForAlbum(item.profile, album, item.userColor || profileColors[item.profile]);
+          } catch {
+            return null;
+          }
+        }));
+        tradeOverviewItems = results.filter(Boolean).sort((a, b) => b.friendCanGiveUnique - a.friendCanGiveUnique || b.balanced - a.balanced || a.profile.localeCompare(b.profile, "pt-PT"));
+      } finally {
+        tradeOverviewLoading = false;
+        renderTradeOverview();
+      }
+    }
     function stickerTradeLabel(sticker) {
       return `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)} - ${sticker.nome}`;
     }
@@ -6125,20 +6321,12 @@
 
     function renderTradeQuickStats(givesFriendNeeds = possibleTradeGivesFriendNeeds(), receives = possibleTradeReceives()) {
       if (!hasSelectedFriend()) return "";
-      const myDuplicates = possibleTradeGives();
-      const friendDuplicates = friendDuplicateStickers();
       const idealSize = Math.min(givesFriendNeeds.length, receives.length, 50);
       const idealText = idealSize ? "Da para propor ate " + idealSize + " por " + idealSize + " cromos." : "Ainda nao ha troca equilibrada disponivel.";
       return `
         <div class="quick-trade-hero">
           <div><strong>Melhor troca possivel com ${escapeHTML(friendProfile || "este amigo")}</strong><span>${escapeHTML(idealText)}</span></div>
           <button type="button" ${idealSize ? "" : "disabled"} onclick="openSuggestedTrade(50)">Propor ideal</button>
-        </div>
-        <div class="trade-count-grid" aria-label="Resumo rapido dos repetidos">
-          <article class="trade-count-card"><span>Os teus repetidos</span><strong>${duplicateCopyCount(myDuplicates)}</strong></article>
-          <article class="trade-count-card"><span>Repetidos do amigo</span><strong>${duplicateCopyCount(friendDuplicates)}</strong></article>
-          <article class="trade-count-card"><span>Teus que ele precisa</span><strong>${givesFriendNeeds.length}</strong></article>
-          <article class="trade-count-card"><span>Dele que te faltam</span><strong>${receives.length}</strong></article>
         </div>
       `;
     }
@@ -6672,8 +6860,10 @@
     }
 
     function renderTradePanel() {
+      renderTradeOverview();
       renderTradeSuggestions();
       renderTradeRequests();
+      updateMobileBottomNav();
     }
 
     async function loadTradeRequests() {
@@ -6760,7 +6950,7 @@
     function openTradesPanel() {
       switchAppPage("trades");
       syncFriendSelects();
-      loadLiveProfiles().catch(() => {});
+      loadLiveProfiles().then(() => refreshTradeOverview()).catch(() => renderTradeOverview());
       renderTradePanel();
       loadTradeRequests().catch(() => {});
     }
