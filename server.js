@@ -20,6 +20,8 @@ const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MAX_TRADE_STICKERS_PER_SIDE = 50;
 const MONGO_CONNECT_TIMEOUT_MS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 8000);
+const AUTH_RATE_WINDOW_MS = 10 * 60 * 1000;
+const AUTH_RATE_MAX_FAILURES = 8;
 const DEFAULT_USER_COLOR = "#111827";
 const USER_COLOR_PALETTE = [
   DEFAULT_USER_COLOR,
@@ -86,6 +88,7 @@ const emptyAlbum = [
 let mongoDbPromise = null;
 let mongoClient = null;
 let baseSyncPromise = null;
+const authFailures = new Map();
 
 class HttpError extends Error {
   constructor(statusCode, message) {
@@ -210,6 +213,49 @@ function validateUsername(username) {
 
 function validatePassword(password) {
   return typeof password === "string" && password.length >= 8 && password.length <= 72;
+}
+
+function requestIp(req) {
+  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  return forwarded || req.socket?.remoteAddress || "unknown";
+}
+
+function authRateKey(req, action, username = "") {
+  return `${action}:${requestIp(req)}:${userKey(username) || "-"}`;
+}
+
+function currentAuthFailures(key) {
+  const now = Date.now();
+  const attempts = (authFailures.get(key) || []).filter(time => now - time < AUTH_RATE_WINDOW_MS);
+  if (attempts.length) authFailures.set(key, attempts);
+  else authFailures.delete(key);
+  return attempts;
+}
+
+function authRequestAllowed(req, res, action, username = "") {
+  const key = authRateKey(req, action, username);
+  const attempts = currentAuthFailures(key);
+  if (attempts.length < AUTH_RATE_MAX_FAILURES) return true;
+
+  const retrySeconds = Math.max(1, Math.ceil((AUTH_RATE_WINDOW_MS - (Date.now() - attempts[0])) / 1000));
+  sendJson(
+    res,
+    429,
+    { error: "Demasiadas tentativas. Espera alguns minutos e tenta novamente." },
+    { "Retry-After": String(retrySeconds) }
+  );
+  return false;
+}
+
+function recordAuthFailure(req, action, username = "") {
+  const key = authRateKey(req, action, username);
+  const attempts = currentAuthFailures(key);
+  attempts.push(Date.now());
+  authFailures.set(key, attempts);
+}
+
+function clearAuthFailures(req, action, username = "") {
+  authFailures.delete(authRateKey(req, action, username));
 }
 
 function normalizeColor(value) {
@@ -1032,44 +1078,43 @@ async function findUserById(db, userId) {
   return publicUser(normalized);
 }
 
-async function validateAcceptedTrade(db, trade, fromUser, toUser) {
-  const [fromStickers, toStickers] = await Promise.all([
-    getUserStickerState(db, fromUser),
-    getUserStickerState(db, toUser)
-  ]);
-  const fromById = new Map(fromStickers.map(sticker => [sticker.id, sticker]));
-  const toById = new Map(toStickers.map(sticker => [sticker.id, sticker]));
+async function applyAcceptedTrade(db, trade, fromUser, toUser, session) {
+  const stickerIds = [...new Set([
+    ...(trade.give || []).map(sticker => sticker.id),
+    ...(trade.receive || []).map(sticker => sticker.id)
+  ])];
+  const progressDocs = await db.collection(COLLECTIONS.userStickers)
+    .find(
+      {
+        userId: { $in: [fromUser.id, toUser.id] },
+        stickerId: { $in: stickerIds }
+      },
+      { session }
+    )
+    .toArray();
+  const progressByKey = new Map(progressDocs.map(doc => [`${doc.userId}:${doc.stickerId}`, doc]));
+  const progressFor = (user, sticker) => progressByKey.get(`${user.id}:${sticker.id}`);
 
   for (const sticker of trade.give || []) {
-    const fromSticker = fromById.get(sticker.id);
-    const toSticker = toById.get(sticker.id);
-    if (!fromSticker || !toSticker) throw new HttpError(400, "A troca ja nao e valida.");
-    if (!fromSticker.tenho || normalizeDuplicates(fromSticker.repetidos) <= 0) {
-      throw new HttpError(409, `${fromUser.username} ja nao tem ${tradeStickerLabel(fromSticker)} repetido.`);
+    const fromSticker = progressFor(fromUser, sticker);
+    const toSticker = progressFor(toUser, sticker);
+    if (!fromSticker || !toSticker) throw new HttpError(409, "A troca ja nao e valida.");
+    if (!fromSticker.owned || normalizeDuplicates(fromSticker.duplicates) <= 0) {
+      throw new HttpError(409, `${fromUser.username} ja nao tem ${tradeStickerLabel(sticker)} repetido.`);
     }
   }
 
   for (const sticker of trade.receive || []) {
-    const fromSticker = fromById.get(sticker.id);
-    const toSticker = toById.get(sticker.id);
-    if (!fromSticker || !toSticker) throw new HttpError(400, "A troca ja nao e valida.");
-    if (fromSticker.tenho) {
-      throw new HttpError(409, `${fromUser.username} ja tem ${tradeStickerLabel(fromSticker)}.`);
+    const fromSticker = progressFor(fromUser, sticker);
+    const toSticker = progressFor(toUser, sticker);
+    if (!fromSticker || !toSticker) throw new HttpError(409, "A troca ja nao e valida.");
+    if (fromSticker.owned) {
+      throw new HttpError(409, `${fromUser.username} ja tem ${tradeStickerLabel(sticker)}.`);
     }
-    if (!toSticker.tenho || normalizeDuplicates(toSticker.repetidos) <= 0) {
-      throw new HttpError(409, `${toUser.username} ja nao tem ${tradeStickerLabel(toSticker)} repetido.`);
+    if (!toSticker.owned || normalizeDuplicates(toSticker.duplicates) <= 0) {
+      throw new HttpError(409, `${toUser.username} ja nao tem ${tradeStickerLabel(sticker)} repetido.`);
     }
   }
-
-  return { fromById, toById };
-}
-
-async function applyAcceptedTrade(db, trade) {
-  const fromUser = await findUserById(db, trade.fromUserId);
-  const toUser = await findUserById(db, trade.toUserId);
-  if (!fromUser || !toUser) throw new HttpError(404, "Um dos users desta troca ja nao existe.");
-
-  const tradeState = await validateAcceptedTrade(db, trade, fromUser, toUser);
 
   const now = new Date();
   const operations = [];
@@ -1105,30 +1150,39 @@ async function applyAcceptedTrade(db, trade) {
 
   (trade.give || []).forEach(sticker => {
     decrementDuplicate(fromUser, sticker);
-    addReceivedSticker(toUser, sticker, Boolean(tradeState.toById.get(sticker.id)?.tenho));
+    addReceivedSticker(toUser, sticker, Boolean(progressFor(toUser, sticker)?.owned));
   });
 
   (trade.receive || []).forEach(sticker => {
     decrementDuplicate(toUser, sticker);
-    addReceivedSticker(fromUser, sticker, Boolean(tradeState.fromById.get(sticker.id)?.tenho));
+    addReceivedSticker(fromUser, sticker, Boolean(progressFor(fromUser, sticker)?.owned));
   });
 
   if (operations.length) {
-    const result = await db.collection(COLLECTIONS.userStickers).bulkWrite(operations, { ordered: true });
+    const result = await db.collection(COLLECTIONS.userStickers).bulkWrite(
+      operations,
+      { ordered: true, session }
+    );
     if (result.modifiedCount !== operations.length) {
       throw new HttpError(409, "A troca ja nao pode ser aplicada. Atualiza as cadernetas e tenta outra proposta.");
     }
   }
+}
 
+async function refreshAcceptedTradeArtifacts(db, trade, fromUser, toUser, now) {
   const updatedAt = now.toISOString();
-  const [fromStickers, toStickers] = await Promise.all([
-    getUserStickerState(db, fromUser),
-    getUserStickerState(db, toUser)
-  ]);
-  await Promise.all([
-    saveSnapshot(db, fromUser, fromStickers, updatedAt),
-    saveSnapshot(db, toUser, toStickers, updatedAt)
-  ]);
+  try {
+    const [fromStickers, toStickers] = await Promise.all([
+      getUserStickerState(db, fromUser),
+      getUserStickerState(db, toUser)
+    ]);
+    await Promise.all([
+      saveSnapshot(db, fromUser, fromStickers, updatedAt),
+      saveSnapshot(db, toUser, toStickers, updatedAt)
+    ]);
+  } catch (error) {
+    console.warn("Nao foi possivel atualizar os snapshots da troca.", error?.message || error);
+  }
 
   try {
     await insertHistoryLogs(db, [
@@ -1238,26 +1292,67 @@ async function updateTradeProposalStatus(db, user, payload) {
   if (status === "cancelled" && !isSender) throw new HttpError(403, "So quem criou a proposta pode cancelar.");
   if ((status === "accepted" || status === "rejected") && !isReceiver) throw new HttpError(403, "So quem recebeu a proposta pode responder.");
 
-  const updatedAt = new Date();
   if (status === "accepted") {
-    await applyAcceptedTrade(db, trade);
+    const fromUser = await findUserById(db, trade.fromUserId);
+    const toUser = await findUserById(db, trade.toUserId);
+    if (!fromUser || !toUser) throw new HttpError(404, "Um dos users desta troca ja nao existe.");
+    if (!mongoClient) throw new HttpError(503, "A ligacao a MongoDB ainda nao esta pronta.");
+
+    const session = mongoClient.startSession();
+    let acceptedTrade = null;
+    const acceptedAt = new Date();
+
+    try {
+      await session.withTransaction(async () => {
+        const currentTrade = await db.collection(COLLECTIONS.trades).findOne(
+          { _id: tradeId, status: "pending" },
+          { session }
+        );
+        if (!currentTrade) throw new HttpError(409, "Esta troca ja foi respondida.");
+
+        await applyAcceptedTrade(db, currentTrade, fromUser, toUser, session);
+        acceptedTrade = await db.collection(COLLECTIONS.trades).findOneAndUpdate(
+          { _id: tradeId, status: "pending" },
+          {
+            $set: {
+              status: "accepted",
+              updatedAt: acceptedAt,
+              respondedBy: user.username,
+              acceptedAt
+            }
+          },
+          { session, returnDocument: "after" }
+        );
+        if (!acceptedTrade) throw new HttpError(409, "Esta troca ja foi respondida.");
+      }, {
+        readConcern: { level: "snapshot" },
+        writeConcern: { w: "majority" }
+      });
+    } finally {
+      await session.endSession();
+    }
+
+    await refreshAcceptedTradeArtifacts(db, acceptedTrade || trade, fromUser, toUser, acceptedAt);
+    return acceptedTrade;
   }
 
-  await db.collection(COLLECTIONS.trades).updateOne(
-    { _id: tradeId },
+  const updatedAt = new Date();
+  const updatedTrade = await db.collection(COLLECTIONS.trades).findOneAndUpdate(
+    { _id: tradeId, status: "pending" },
     {
       $set: {
         status,
         updatedAt,
         respondedBy: user.username,
-        ...(status === "accepted" ? { acceptedAt: updatedAt } : {}),
         ...(status === "rejected" ? { rejectedAt: updatedAt } : {}),
         ...(status === "cancelled" ? { cancelledAt: updatedAt } : {})
       }
-    }
+    },
+    { returnDocument: "after" }
   );
+  if (!updatedTrade) throw new HttpError(409, "Esta troca ja foi respondida.");
 
-  return db.collection(COLLECTIONS.trades).findOne({ _id: tradeId });
+  return updatedTrade;
 }
 
 async function handleAuthRoute(req, res, url) {
@@ -1375,6 +1470,7 @@ async function handleAuthRoute(req, res, url) {
     if (!username || !currentPassword || !newPassword) {
       return sendJson(res, 400, { error: "Preenche o user, password atual e nova password." });
     }
+    if (!authRequestAllowed(req, res, "change-password", username)) return;
 
     if (!validatePassword(newPassword)) {
       return sendJson(res, 400, { error: "A nova password deve ter entre 8 e 72 caracteres." });
@@ -1384,6 +1480,7 @@ async function handleAuthRoute(req, res, url) {
     user = await normalizeUserAccount(db, user);
 
     if (!user || user.role !== "verificado" || user.verified !== true || !passwordMatches(currentPassword, user.salt, user.passwordHash)) {
+      recordAuthFailure(req, "change-password", username);
       return sendJson(res, 401, { error: "User ou password atual errados." });
     }
 
@@ -1399,6 +1496,7 @@ async function handleAuthRoute(req, res, url) {
       }
     );
 
+    clearAuthFailures(req, "change-password", username);
     return sendJson(res, 200, { ok: true });
   }
 
@@ -1410,12 +1508,14 @@ async function handleAuthRoute(req, res, url) {
     const usernameLower = userKey(username);
     const password = String(payload.password || "");
     const inviteToken = String(payload.inviteToken || payload.registerPin || payload.pin || "").trim();
+    if (!authRequestAllowed(req, res, "register", username)) return;
 
     if (!REGISTER_PIN) {
       return sendJson(res, 503, { error: "Registo fechado. Define REGISTER_PIN no Render." });
     }
 
     if (inviteToken !== REGISTER_PIN) {
+      recordAuthFailure(req, "register", username);
       return sendJson(res, 403, { error: "PIN de registo errado." });
     }
 
@@ -1456,6 +1556,7 @@ async function handleAuthRoute(req, res, url) {
     }
 
     const token = await createSession(db, user);
+    clearAuthFailures(req, "register", username);
 
     return sendJson(res, 200, {
       ok: true,
@@ -1469,6 +1570,7 @@ async function handleAuthRoute(req, res, url) {
     const payload = await readJson(req);
     const username = cleanUsername(payload.username);
     const password = String(payload.password || "");
+    if (!authRequestAllowed(req, res, "login", username)) return;
     const db = await openMongoDbForRequest(res);
     if (!db) return;
 
@@ -1476,14 +1578,17 @@ async function handleAuthRoute(req, res, url) {
     user = await normalizeUserAccount(db, user);
 
     if (!user || !passwordMatches(password, user.salt, user.passwordHash)) {
+      recordAuthFailure(req, "login", username);
       return sendJson(res, 401, { error: "Utilizador ou password errados." });
     }
 
     if (user.role !== "verificado" || user.verified !== true) {
+      recordAuthFailure(req, "login", username);
       return sendJson(res, 403, { error: "Esta conta ainda nao esta verificada." });
     }
 
     const token = await createSession(db, user);
+    clearAuthFailures(req, "login", username);
     return sendJson(res, 200, {
       ok: true,
       user: publicUser(user)
@@ -1709,6 +1814,40 @@ const server = http.createServer(async (req, res) => {
         registrationConfigured: config.registrationConfigured,
         uptimeSeconds: Math.round(process.uptime())
       });
+    }
+
+    if (url.pathname === "/api/ready" || url.pathname === "/readyz") {
+      if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
+      const config = onlineConfigStatus();
+      if (!config.ok) {
+        return sendJson(res, 503, {
+          ok: false,
+          onlineReady: false,
+          missingConfig: config.missing,
+          databaseName: config.databaseName
+        });
+      }
+
+      try {
+        const db = await getMongoDb();
+        await db.command({ ping: 1 });
+        return sendJson(res, 200, {
+          ok: true,
+          onlineReady: true,
+          mongoConnected: true,
+          databaseName: config.databaseName,
+          uptimeSeconds: Math.round(process.uptime())
+        });
+      } catch (error) {
+        console.error("MongoDB readiness falhou:", error);
+        return sendJson(res, 503, {
+          ok: false,
+          onlineReady: false,
+          mongoConnected: false,
+          databaseName: config.databaseName,
+          error: "Nao foi possivel ligar a MongoDB."
+        });
+      }
     }
 
     const authHandled = await handleAuthRoute(req, res, url);
