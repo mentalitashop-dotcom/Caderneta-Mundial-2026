@@ -8,6 +8,10 @@ loadLocalEnv(path.join(ROOT, ".env"));
 const PORT = Number(process.env.PORT || 1312);
 const HTML_FILE = path.join(ROOT, "caderneta_mundial_2026.html");
 const BASE_FILE = path.join(ROOT, "cromos_base.txt");
+const MANIFEST_FILE = path.join(ROOT, "manifest.webmanifest");
+const SERVICE_WORKER_FILE = path.join(ROOT, "sw.js");
+const ICON_FILE = path.join(ROOT, "icon.svg");
+const APP_ICON_FILE = path.join(ROOT, "app-icon.png");
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
 const COOKIE_NAME = "caderneta_session";
@@ -1489,6 +1493,38 @@ async function handleAuthRoute(req, res, url) {
   return false;
 }
 
+
+function backupFileName(username) {
+  const safeName = cleanUsername(username) || "user";
+  return `caderneta-mundial-2026-backup-${safeName}-${new Date().toISOString().slice(0, 10)}.json`;
+}
+
+async function createUserBackup(db, user) {
+  const [stickers, history, trades] = await Promise.all([
+    getUserStickerState(db, user),
+    db.collection(COLLECTIONS.history).find({ userId: user.id }).sort({ createdAt: -1 }).limit(1000).toArray(),
+    db.collection(COLLECTIONS.trades).find({ $or: [{ fromUserId: user.id }, { toUserId: user.id }] }).sort({ updatedAt: -1, createdAt: -1 }).limit(500).toArray()
+  ]);
+
+  return {
+    app: "Caderneta Mundial 2026",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    user: publicUser(user),
+    counts: countStickerState(stickers),
+    stickers: stickers.map(sticker => ({
+      id: sticker.id,
+      pais: sticker.pais,
+      codigo: sticker.codigo,
+      nome: sticker.nome,
+      tenho: Boolean(sticker.tenho),
+      repetidos: Number(sticker.repetidos || 0)
+    })),
+    csv: stickersToCSV(stickers),
+    history: history.map(publicHistoryLog),
+    trades: trades.map(trade => publicTrade(trade, user))
+  };
+}
 async function handleLiveRoute(req, res, url) {
   if (url.pathname === "/api/live/status") {
     if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
@@ -1509,6 +1545,14 @@ async function handleLiveRoute(req, res, url) {
 
   const db = await openMongoDbForRequest(res);
   if (!db) return;
+
+  if (url.pathname === "/api/live/backup") {
+    if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
+    const backup = await createUserBackup(db, user);
+    return sendJson(res, 200, backup, {
+      "Content-Disposition": `attachment; filename="${backupFileName(user.username)}"`
+    });
+  }
 
   if (url.pathname === "/api/live/profiles") {
     if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
@@ -1660,6 +1704,26 @@ const server = http.createServer(async (req, res) => {
 
     const liveHandled = await handleLiveRoute(req, res, url);
     if (liveHandled !== false) return;
+
+    if (url.pathname === "/manifest.webmanifest") {
+      const body = fs.existsSync(MANIFEST_FILE) ? fs.readFileSync(MANIFEST_FILE, "utf8") : "{}";
+      return send(res, 200, body, "application/manifest+json; charset=utf-8", { "Cache-Control": "public, max-age=3600" });
+    }
+
+    if (url.pathname === "/sw.js") {
+      const body = fs.existsSync(SERVICE_WORKER_FILE) ? fs.readFileSync(SERVICE_WORKER_FILE, "utf8") : "";
+      return send(res, 200, body, "application/javascript; charset=utf-8", { "Cache-Control": "no-cache" });
+    }
+
+    if (url.pathname === "/app-icon.png") {
+      const body = fs.existsSync(APP_ICON_FILE) ? fs.readFileSync(APP_ICON_FILE) : Buffer.alloc(0);
+      return send(res, 200, body, "image/png", { "Cache-Control": "public, max-age=86400" });
+    }
+
+    if (url.pathname === "/icon.svg") {
+      const body = fs.existsSync(ICON_FILE) ? fs.readFileSync(ICON_FILE, "utf8") : "";
+      return send(res, 200, body, "image/svg+xml; charset=utf-8", { "Cache-Control": "public, max-age=86400" });
+    }
 
     if (url.pathname === "/" || url.pathname === "/caderneta_mundial_2026.html") {
       return send(res, 200, fs.readFileSync(HTML_FILE, "utf8"), "text/html; charset=utf-8");
