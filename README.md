@@ -17,7 +17,7 @@ Os ficheiros `cromos.txt` e `backup_cromos.txt` sao progresso/backup pessoal. Na
 ```text
 MONGODB_URI=mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0&authSource=admin
 MONGODB_DB=caderneta
-REGISTER_PIN=CULATRASMUNDIAL
+REGISTER_PIN=usa-um-pin-secreto-e-longo
 ONLINE_REQUIRED=true
 NODE_ENV=production
 NODE_VERSION=22
@@ -44,7 +44,7 @@ Se usares Render sem IP fixo, podes precisar de permitir `0.0.0.0/0` no Atlas. U
 ```text
 Build Command: npm install
 Start Command: npm start
-Health Check Path: /
+Health Check Path: /api/ready
 ```
 
 3. Define as variaveis de ambiente.
@@ -56,7 +56,9 @@ Health Check Path: /
 Para criar uma conta:
 
 ```text
-https://o-teu-site.onrender.com/?convite=CULATRASMUNDIAL
+https://o-teu-site.onrender.com/?convite=O_TEU_REGISTER_PIN
 ```
 
 Depois do registo, a app entra automaticamente. O progresso fica guardado no MongoDB por utilizador.
+
+Nunca publiques o valor real de `REGISTER_PIN`, passwords ou a connection string do MongoDB no GitHub.

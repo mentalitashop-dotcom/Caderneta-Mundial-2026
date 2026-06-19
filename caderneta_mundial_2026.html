@@ -3751,12 +3751,12 @@
       <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver países anteriores">‹</button>
       <div class="country-list-toolbar">
         <div class="country-list-title">
-          <span>PaÃ­ses</span>
-          <strong>SeleÃ§Ãµes da caderneta</strong>
+          <span>Países</span>
+          <strong>Seleções da caderneta</strong>
         </div>
         <label class="country-sort-control">
           <span class="country-sort-label">Ordenar</span>
-          <select id="countrySortSelect" class="country-sort-select" aria-label="Ordenar paÃ­ses">
+          <select id="countrySortSelect" class="country-sort-select" aria-label="Ordenar países">
             <option value="album">Ordem da caderneta</option>
             <option value="alpha">Ordem crescente A-Z</option>
             <option value="groups">Grupos oficiais</option>
@@ -3872,6 +3872,7 @@
     let liveRefreshTimer = null;
     let idleLogoutTimer = null;
     let authRequestLocked = false;
+    let sessionExpiryHandled = false;
     let inviteToken = "";
     let inviteValid = false;
     let inviteFromCurrentLink = false;
@@ -4990,7 +4991,7 @@
 
     async function loadUserSettings() {
       if (!liveEnabled || !liveProfile) return;
-      const response = await fetch("/api/auth/settings", { cache: "no-store" });
+      const response = await apiFetch("/api/auth/settings", { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Não foi possível ler as definições");
       applyUserSettings(data.settings || {});
@@ -5879,7 +5880,7 @@
     async function persistHistoryLog(item) {
       if (!liveEnabled || !liveProfile) return;
       try {
-        const response = await fetch("/api/live/history", {
+        const response = await apiFetch("/api/live/history", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(item)
@@ -5920,7 +5921,7 @@
         liveHistoryLogs = [];
         return [];
       }
-      const response = await fetch("/api/live/history", { cache: "no-store" });
+      const response = await apiFetch("/api/live/history", { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Nao foi possivel carregar historico");
       liveHistoryLogs = Array.isArray(data.history) ? data.history : [];
@@ -6274,6 +6275,89 @@
 
     function userInitial(value) {
       return (String(value || "U").trim().charAt(0) || "U").toUpperCase();
+    }
+
+    function profilePhotoStorageKey() {
+      return `${PROFILE_PHOTO_KEY}_${cleanLiveProfileName(liveProfile || "local").toLowerCase() || "local"}`;
+    }
+
+    function savedProfilePhoto() {
+      try {
+        return localStorage.getItem(profilePhotoStorageKey()) || "";
+      } catch {
+        return "";
+      }
+    }
+
+    function applyProfilePhoto(target, photo, fallback) {
+      if (!target) return;
+      target.style.backgroundImage = photo ? `url("${photo}")` : "";
+      target.style.backgroundPosition = "center";
+      target.style.backgroundRepeat = "no-repeat";
+      target.style.backgroundSize = "cover";
+      target.textContent = photo ? "" : fallback;
+    }
+
+    function syncProfilePhotoUI() {
+      const photo = savedProfilePhoto();
+      const fallback = userInitial(liveProfile || "Conta");
+      applyProfilePhoto(userMenuInitial, photo, fallback);
+      applyProfilePhoto(mobileUserAvatar, photo, fallback);
+      applyProfilePhoto(profilePhotoPreview, photo, fallback);
+    }
+
+    function resizeProfilePhoto(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+        reader.onload = () => {
+          const image = new Image();
+          image.onerror = () => reject(new Error("O ficheiro escolhido não é uma imagem válida."));
+          image.onload = () => {
+            const size = 256;
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+            const context = canvas.getContext("2d");
+            if (!context) return reject(new Error("Não foi possível preparar a imagem."));
+
+            const cropSize = Math.min(image.naturalWidth, image.naturalHeight);
+            const sourceX = Math.max(0, (image.naturalWidth - cropSize) / 2);
+            const sourceY = Math.max(0, (image.naturalHeight - cropSize) / 2);
+            context.drawImage(image, sourceX, sourceY, cropSize, cropSize, 0, 0, size, size);
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          };
+          image.src = String(reader.result || "");
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function changeProfilePhoto(input) {
+      const file = input?.files?.[0];
+      if (!file) return;
+
+      try {
+        if (!file.type.startsWith("image/")) throw new Error("Escolhe um ficheiro de imagem.");
+        if (file.size > 8 * 1024 * 1024) throw new Error("A imagem não pode ultrapassar 8 MB.");
+        const photo = await resizeProfilePhoto(file);
+        localStorage.setItem(profilePhotoStorageKey(), photo);
+        syncProfilePhotoUI();
+        setSettingsMessage(settingsProfilePhotoMessage, "Foto guardada neste dispositivo.");
+      } catch (error) {
+        setSettingsMessage(settingsProfilePhotoMessage, error.message || "Não foi possível guardar a foto.", true);
+      } finally {
+        input.value = "";
+      }
+    }
+
+    function clearProfilePhoto() {
+      try {
+        localStorage.removeItem(profilePhotoStorageKey());
+      } catch {}
+      if (profilePhotoInput) profilePhotoInput.value = "";
+      syncProfilePhotoUI();
+      setSettingsMessage(settingsProfilePhotoMessage, "Foto removida.");
     }
 
     function closeUserMenu() {
@@ -7114,7 +7198,7 @@
         updateTradeBadges();
         return;
       }
-      const response = await fetch("/api/live/trades", { cache: "no-store" });
+      const response = await apiFetch("/api/live/trades", { cache: "no-store" });
       if (!response.ok) {
         updateTradeBadges();
         return;
@@ -7139,7 +7223,7 @@
       }
 
       try {
-        const response = await fetch("/api/live/trades", {
+        const response = await apiFetch("/api/live/trades", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -7162,7 +7246,7 @@
     async function updateTradeStatus(tradeId, status) {
       const shouldCloseDetail = Boolean(tradeDetailId);
       try {
-        const response = await fetch("/api/live/trades/status", {
+        const response = await apiFetch("/api/live/trades/status", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ tradeId, status })
@@ -7292,7 +7376,7 @@
     async function exportFullBackup() {
       closeUserMenu();
       try {
-        const response = await fetch("/api/live/backup", { cache: "no-store" });
+        const response = await apiFetch("/api/live/backup", { cache: "no-store" });
         const data = await response.json().catch(() => null);
         if (!response.ok) throw new Error(data?.error || "Nao foi possivel criar o backup.");
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
@@ -7468,6 +7552,18 @@
       }
     }
 
+    async function apiFetch(path, options = {}) {
+      const response = await fetch(path, {
+        credentials: "same-origin",
+        ...options
+      });
+      if (response.status === 401 && liveProfile && !sessionExpiryHandled) {
+        sessionExpiryHandled = true;
+        endLiveSession("expired");
+      }
+      return response;
+    }
+
     function beginAuthRequest() {
       if (authRequestLocked) return false;
       authRequestLocked = true;
@@ -7557,7 +7653,7 @@
 
     async function fetchLiveState(profile = "") {
       const query = profile ? `?profile=${encodeURIComponent(profile)}` : "";
-      const response = await fetch(`/api/live/state${query}`, { cache: "no-store" });
+      const response = await apiFetch(`/api/live/state${query}`, { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Nao foi possivel ler o perfil live");
       return data;
@@ -7575,7 +7671,7 @@
       if (!liveEnabled || !liveProfile) return;
 
       const selected = friendProfile || liveFriendSelect?.value || tradeFriendSelect?.value || "";
-      const response = await fetch("/api/live/profiles", { cache: "no-store" });
+      const response = await apiFetch("/api/live/profiles", { cache: "no-store" });
       if (!response.ok) return;
 
       const data = await response.json();
@@ -7603,7 +7699,7 @@
       if (!liveEnabled || !liveProfile) return;
 
       setSaveStatus("A sincronizar live...");
-      const response = await fetch("/api/live/state", {
+      const response = await apiFetch("/api/live/state", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ csv: stickersToCSV() })
@@ -7661,6 +7757,7 @@
       if (!user?.username) throw new Error("Resposta de login inválida.");
 
       liveProfile = user.username;
+      sessionExpiryHandled = false;
       friendProfile = "";
       friendStickers = [];
       friendUpdatedAt = "";
@@ -7767,13 +7864,7 @@
       }
     }
 
-    async function logoutLiveAccount(reason = "manual") {
-      if (!liveEnabled) return;
-
-      try {
-        await authRequest("/api/auth/logout");
-      } catch {}
-
+    function endLiveSession(reason = "manual") {
       liveProfile = "";
       liveUpdatedAt = "";
       friendProfile = "";
@@ -7791,13 +7882,25 @@
       if (tradePanel) tradePanel.classList.add("hidden");
       liveFriendSelect.innerHTML = `<option value="">Escolhe um amigo</option>`;
       closeUserMenu();
-      liveStatusText.textContent = reason === "idle"
-        ? "Sessao expirada por inatividade. Entra novamente."
-        : "Sessao terminada. Entra para voltar ao modo online.";
+      const expired = reason === "idle" || reason === "expired";
+      liveStatusText.textContent = expired
+        ? "Sessão expirada. Entra novamente."
+        : "Sessão terminada. Entra para voltar ao modo online.";
       setAuthMode("login");
       updateLiveLoginUI();
-      setAuthMessage(reason === "idle" ? "Sessao expirada por inatividade. Faz login novamente." : "", "login");
-      setSaveStatus(reason === "idle" ? "Sessao expirada por inatividade" : "Sessao terminada");
+      setAuthMessage(expired ? "Sessão expirada. Faz login novamente." : "", "login");
+      setSaveStatus(expired ? "Sessão expirada" : "Sessão terminada");
+    }
+
+    async function logoutLiveAccount(reason = "manual") {
+      if (!liveEnabled) return;
+
+      try {
+        await authRequest("/api/auth/logout");
+      } catch {}
+
+      endLiveSession(reason);
+      sessionExpiryHandled = false;
     }
 
     async function refreshLiveNow() {
@@ -8534,7 +8637,7 @@
 
 
     async function loadBaseAlbum() {
-      const response = await fetch("/api/base-cromos", { cache: "no-store" });
+      const response = await apiFetch("/api/base-cromos", { cache: "no-store" });
       if (!response.ok) throw new Error("Sem caderneta base");
       const text = await response.text();
       loadStickers(parseTextFile(text));
