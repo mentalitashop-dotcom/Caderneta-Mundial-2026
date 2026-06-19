@@ -71,6 +71,7 @@ const COLLECTIONS = {
   userStickers: "user_stickers",
   trades: "trade_proposals",
   snapshots: "collection_snapshots",
+  history: "activity_logs",
   legacyCollections: "colecoes"
 };
 
@@ -472,6 +473,9 @@ async function ensureIndexes(db) {
   await db.collection(COLLECTIONS.trades).createIndex({ toUserId: 1, createdAt: -1 });
   await db.collection(COLLECTIONS.trades).createIndex({ status: 1, updatedAt: -1 });
   await db.collection(COLLECTIONS.snapshots).createIndex({ updatedAt: -1 });
+  await db.collection(COLLECTIONS.history).createIndex({ userId: 1, createdAt: -1 });
+  await db.collection(COLLECTIONS.history).createIndex({ userId: 1, clientId: 1 });
+  await db.collection(COLLECTIONS.history).createIndex({ tradeId: 1 });
 }
 
 async function normalizeExistingUsersForIndexes(db) {
@@ -918,6 +922,88 @@ function tradeStickerLabel(sticker) {
   return `${country} ${displayCode} - ${sticker.nome}`;
 }
 
+function cleanHistoryText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, 500);
+}
+
+function cleanHistoryAction(value) {
+  return String(value || "sticker_update").replace(/[^a-z0-9_-]/gi, "").slice(0, 60) || "sticker_update";
+}
+
+function cleanHistorySticker(sticker = {}) {
+  return {
+    id: String(sticker.id || "").slice(0, 160),
+    pais: String(sticker.pais || sticker.countryCode || "").slice(0, 80),
+    codigo: String(sticker.codigo || sticker.code || "").slice(0, 80),
+    nome: String(sticker.nome || sticker.name || "").slice(0, 160)
+  };
+}
+
+function cleanHistoryStickerList(value) {
+  const list = Array.isArray(value) ? value : [];
+  return list.slice(0, 120).map(cleanHistorySticker).filter(sticker => sticker.id || sticker.codigo || sticker.nome);
+}
+
+function publicHistoryLog(doc) {
+  return {
+    id: doc._id,
+    clientId: doc.clientId || "",
+    type: doc.type || "sticker",
+    action: doc.action || "sticker_update",
+    text: doc.text || "",
+    stickers: doc.stickers || [],
+    given: doc.given || [],
+    received: doc.received || [],
+    partner: doc.partner || "",
+    tradeId: doc.tradeId || "",
+    source: doc.source || "server",
+    createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : doc.createdAt
+  };
+}
+
+async function insertHistoryLogs(db, docs) {
+  const list = docs.filter(Boolean).map(doc => ({
+    _id: doc._id || crypto.randomUUID(),
+    userId: doc.userId,
+    username: doc.username,
+    clientId: cleanHistoryText(doc.clientId),
+    type: cleanHistoryAction(doc.type || "sticker"),
+    action: cleanHistoryAction(doc.action),
+    text: cleanHistoryText(doc.text),
+    stickers: cleanHistoryStickerList(doc.stickers),
+    given: cleanHistoryStickerList(doc.given),
+    received: cleanHistoryStickerList(doc.received),
+    partner: cleanHistoryText(doc.partner),
+    tradeId: cleanHistoryText(doc.tradeId),
+    source: doc.source || "server",
+    createdAt: doc.createdAt || new Date()
+  })).filter(doc => doc.userId && doc.text);
+
+  if (!list.length) return [];
+  await db.collection(COLLECTIONS.history).insertMany(list, { ordered: false });
+  return list;
+}
+
+async function createHistoryLog(db, user, payload) {
+  const now = new Date();
+  const [doc] = await insertHistoryLogs(db, [{
+    userId: user.id,
+    username: user.username,
+    clientId: payload.clientId,
+    type: payload.type || "sticker",
+    action: payload.action || "sticker_update",
+    text: payload.text,
+    stickers: payload.stickers,
+    given: payload.given,
+    received: payload.received,
+    partner: payload.partner,
+    tradeId: payload.tradeId,
+    source: "client",
+    createdAt: now
+  }]);
+  return doc;
+}
+
 async function findUserById(db, userId) {
   const user = await db.collection(COLLECTIONS.users).findOne(
     { _id: userId },
@@ -1025,6 +1111,37 @@ async function applyAcceptedTrade(db, trade) {
     saveSnapshot(db, fromUser, fromStickers, updatedAt),
     saveSnapshot(db, toUser, toStickers, updatedAt)
   ]);
+
+  try {
+    await insertHistoryLogs(db, [
+      {
+        userId: fromUser.id,
+        username: fromUser.username,
+        type: "trade",
+        action: "trade_accepted",
+        text: "Troca aceite com " + toUser.username,
+        given: trade.give || [],
+        received: trade.receive || [],
+        partner: toUser.username,
+        tradeId: trade._id,
+        createdAt: now
+      },
+      {
+        userId: toUser.id,
+        username: toUser.username,
+        type: "trade",
+        action: "trade_accepted",
+        text: "Troca aceite com " + fromUser.username,
+        given: trade.receive || [],
+        received: trade.give || [],
+        partner: fromUser.username,
+        tradeId: trade._id,
+        createdAt: now
+      }
+    ]);
+  } catch (error) {
+    console.warn("Nao foi possivel gravar historico da troca.", error?.message || error);
+  }
 }
 
 async function createTradeProposal(db, user, payload) {
@@ -1441,6 +1558,25 @@ async function handleLiveRoute(req, res, url) {
     const payload = await readJson(req);
     const trade = await updateTradeProposalStatus(db, user, payload);
     return sendJson(res, 200, { ok: true, trade: publicTrade(trade, user) });
+  }
+
+  if (url.pathname === "/api/live/history") {
+    if (req.method === "GET") {
+      const docs = await db.collection(COLLECTIONS.history)
+        .find({ userId: user.id })
+        .sort({ createdAt: -1 })
+        .limit(250)
+        .toArray();
+      return sendJson(res, 200, { history: docs.map(publicHistoryLog) });
+    }
+
+    if (req.method === "POST") {
+      const payload = await readJson(req);
+      const log = await createHistoryLog(db, user, payload);
+      return sendJson(res, 201, { ok: true, log: publicHistoryLog(log) });
+    }
+
+    return methodNotAllowed(res, ["GET", "POST"]);
   }
 
   if (url.pathname === "/api/live/state") {

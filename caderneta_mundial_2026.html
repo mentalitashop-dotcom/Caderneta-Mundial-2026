@@ -798,6 +798,94 @@
       line-height: 1.35;
     }
 
+    .history-log {
+      display: grid;
+      gap: 14px;
+    }
+
+    .history-day {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+
+    .history-day h3 {
+      margin: 0;
+      color: var(--main);
+      font-size: 13px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .history-line {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--card);
+    }
+
+    .history-line time {
+      color: var(--main);
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .history-line-body {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .history-line-body strong {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .history-line-body small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .trade-count-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .trade-count-card {
+      display: grid;
+      gap: 4px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+
+    .trade-count-card span {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .trade-count-card strong {
+      color: var(--main);
+      font-size: 22px;
+      line-height: 1;
+    }
+
     .undo-bar {
       position: fixed;
       left: 16px;
@@ -3335,6 +3423,7 @@
     let friendStickers = [];
     let friendUpdatedAt = "";
     let tradeRequests = [];
+    let liveHistoryLogs = [];
     let liveProfilesList = [];
     let undoState = null;
     let undoTimer = null;
@@ -5193,7 +5282,7 @@
       });
 
       saveState();
-      recordHistory(`Lista adicionada: ${analysis.newOwnedCount} novos, ${analysis.duplicateCopies} repetidos`);
+      recordHistory(`Lista adicionada: ${analysis.newOwnedCount} novos, ${analysis.duplicateCopies} repetidos`, { type: "sticker", action: "bulk_add", stickers: analysis.parsed.entries.map(entry => entry.sticker) });
       render();
       if (bulkAddResult) {
         const unknownList = analysis.parsed.unknown.slice(0, 10);
@@ -5294,17 +5383,76 @@
 
     function writeHistoryLog(items) {
       try {
-        localStorage.setItem(historyStorageKey(), JSON.stringify(items.slice(0, 80)));
+        localStorage.setItem(historyStorageKey(), JSON.stringify(items.slice(0, 120)));
       } catch {}
     }
 
-    function recordHistory(text) {
+    function historyClientId() {
+      return "hist_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function historyStickerPayload(sticker) {
+      return {
+        id: String(sticker?.id || ""),
+        pais: String(sticker?.pais || ""),
+        codigo: String(sticker?.codigo || ""),
+        nome: String(sticker?.nome || "")
+      };
+    }
+
+    function historyStickerListPayload(list) {
+      return (Array.isArray(list) ? list : []).map(historyStickerPayload).filter(sticker => sticker.id || sticker.codigo || sticker.nome);
+    }
+
+    async function persistHistoryLog(item) {
+      if (!liveEnabled || !liveProfile) return;
+      try {
+        const response = await fetch("/api/live/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.log) {
+          liveHistoryLogs = [data.log, ...liveHistoryLogs.filter(log => log.clientId !== data.log.clientId && log.id !== data.log.id)].slice(0, 250);
+          if (activePage === "history") renderHistoryPanel();
+        }
+      } catch {}
+    }
+
+    function recordHistory(text, options = {}) {
       if (!text) return;
+      const item = {
+        clientId: historyClientId(),
+        text,
+        at: new Date().toISOString(),
+        type: options.type || "sticker",
+        action: options.action || "sticker_update",
+        stickers: historyStickerListPayload(options.stickers),
+        given: historyStickerListPayload(options.given),
+        received: historyStickerListPayload(options.received),
+        partner: options.partner || "",
+        tradeId: options.tradeId || "",
+        source: "local"
+      };
       const items = readHistoryLog();
-      items.unshift({ text, at: new Date().toISOString() });
+      items.unshift(item);
       writeHistoryLog(items);
+      persistHistoryLog(item);
       if (activePage === "history") renderHistoryPanel();
       if (activePage === "notifications") renderNotificationsPanel();
+    }
+
+    async function loadHistoryLogs() {
+      if (!liveEnabled || !liveProfile) {
+        liveHistoryLogs = [];
+        return [];
+      }
+      const response = await fetch("/api/live/history", { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Nao foi possivel carregar historico");
+      liveHistoryLogs = Array.isArray(data.history) ? data.history : [];
+      return liveHistoryLogs;
     }
 
     function historyTimeLabel(value) {
@@ -5313,27 +5461,32 @@
       return date.toLocaleString("pt-PT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
     }
 
+    function historyDayLabel(value) {
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) return "Sem data";
+      return date.toLocaleDateString("pt-PT", { day: "2-digit", month: "long", year: "numeric" });
+    }
+
+    function historyHourLabel(value) {
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) return "--:--";
+      return date.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
+    }
+
     function historyBaselineItems() {
       const album = stickers || [];
-      if (!album.length) return [];
+      if (!album.length || readHistoryLog().length || liveHistoryLogs.length) return [];
 
       const owned = album.filter(sticker => sticker.tenho);
       const repeated = album.filter(sticker => normalizeDuplicates(sticker.repetidos) > 0);
       const duplicateCopies = repeated.reduce((sum, sticker) => sum + normalizeDuplicates(sticker.repetidos), 0);
       if (!owned.length && !duplicateCopies) return [];
 
-      const repeatedLines = exportGroupedLines(repeated, sticker => {
-        const copies = normalizeDuplicates(sticker.repetidos);
-        return copies > 1 ? `${stickerExportNumber(sticker)} (${copies})` : stickerExportNumber(sticker);
-      });
-
       return [{
-        text: `Estado antigo/importado: ${owned.length} obtidos, ${duplicateCopies} repetidos`,
+        text: "Historico detalhado comeca a partir desta versao. Antes disso so existia o estado atual da caderneta.",
         at: liveUpdatedAt || "",
-        timeLabel: liveUpdatedAt ? `Ultima atualizacao: ${historyTimeLabel(liveUpdatedAt)}` : "Antes do histórico",
-        detail: repeatedLines.length
-          ? `Repetidos ja existentes:<br>${repeatedLines.slice(0, 18).map(escapeHTML).join("<br>")}${repeatedLines.length > 18 ? "<br>..." : ""}`
-          : "Nao havia repetidos registados nesse estado."
+        timeLabel: liveUpdatedAt ? "Ultima atualizacao antiga: " + historyTimeLabel(liveUpdatedAt) : "Sem data antiga detalhada",
+        detail: owned.length + " cromos obtidos e " + duplicateCopies + " repetidos ja existiam antes dos logs."
       }];
     }
 
@@ -5343,74 +5496,120 @@
 
     function tradeHistoryText(trade) {
       const partner = tradePartnerName(trade);
-      if (trade.status === "accepted") return `Troca aceite com ${partner}: ${tradeReceivedPreview(trade)}`;
-      if (trade.status === "rejected") return `Troca recusada com ${partner}: ${tradeReceivedPreview(trade)}`;
-      if (trade.status === "cancelled") return `Troca cancelada com ${partner}: ${tradeReceivedPreview(trade)}`;
-      return trade.direction === "incoming" ? `${partner} propos uma troca` : `Proposta enviada a ${partner}`;
+      if (trade.status === "accepted") return "Troca aceite com " + partner + ": " + tradeReceivedPreview(trade);
+      if (trade.status === "rejected") return "Troca recusada com " + partner + ": " + tradeReceivedPreview(trade);
+      if (trade.status === "cancelled") return "Troca cancelada com " + partner + ": " + tradeReceivedPreview(trade);
+      return trade.direction === "incoming" ? partner + " propos uma troca" : "Proposta enviada a " + partner;
     }
 
     function tradeHistoryItems() {
-      return (tradeRequests || []).map(trade => ({
-        text: tradeHistoryText(trade),
-        at: tradeHistoryAt(trade),
-        detail: `Tu das:<br>${tradeStickerList(trade.give || [])}<br><br>Tu recebes:<br>${tradeStickerList(trade.receive || [])}`
-      }));
+      const loggedTradeIds = new Set(liveHistoryLogs.map(log => log.tradeId).filter(Boolean));
+      return (tradeRequests || [])
+        .filter(trade => trade.status !== "pending" && !loggedTradeIds.has(trade.id))
+        .map(trade => ({
+          text: tradeHistoryText(trade),
+          at: tradeHistoryAt(trade),
+          source: "trade-fallback",
+          detail: "Tu das:<br>" + tradeStickerList(trade.give || []) + "<br><br>Tu recebes:<br>" + tradeStickerList(trade.receive || [])
+        }));
     }
 
-    function historyItemTime(item) {
-      return item.timeLabel || historyTimeLabel(item.at);
+    function normalizeHistoryItem(item, source = "") {
+      const at = item.at || item.createdAt || "";
+      return {
+        id: item.id || "",
+        clientId: item.clientId || "",
+        text: item.text || "",
+        at,
+        timeLabel: item.timeLabel || "",
+        detail: item.detail || "",
+        stickers: item.stickers || [],
+        given: item.given || [],
+        received: item.received || [],
+        source: item.source || source,
+        tradeId: item.tradeId || ""
+      };
     }
 
-    function renderHistoryItem(item) {
-      return `
-        <article class="insight-card">
-          <div class="insight-card-head">
-            <strong>${escapeHTML(item.text)}</strong>
-            <small>${escapeHTML(historyItemTime(item))}</small>
-          </div>
-          ${item.detail ? `<small>${item.detail}</small>` : ""}
-        </article>
-      `;
+    function historyStickerDetail(item) {
+      if (item.detail) return item.detail;
+      if (item.received?.length || item.given?.length) {
+        return "Recebeste:<br>" + tradeStickerList(item.received || []) + "<br><br>Deste:<br>" + tradeStickerList(item.given || []);
+      }
+      if (item.stickers?.length) return "Cromos:<br>" + tradeStickerList(item.stickers);
+      return "";
     }
 
-    function renderHistoryPanel(message = "") {
-      if (!historyResult) return;
-      const items = [
-        ...readHistoryLog(),
-        ...tradeHistoryItems(),
-        ...historyBaselineItems()
-      ].sort((a, b) => {
+    function mergedHistoryItems() {
+      const byKey = new Map();
+      const add = item => {
+        const normalized = normalizeHistoryItem(item);
+        if (!normalized.text) return;
+        const key = normalized.clientId || normalized.id || (normalized.text + "|" + normalized.at);
+        if (!byKey.has(key)) byKey.set(key, normalized);
+      };
+      liveHistoryLogs.forEach(add);
+      readHistoryLog().forEach(add);
+      tradeHistoryItems().forEach(add);
+      historyBaselineItems().forEach(add);
+      return [...byKey.values()].sort((a, b) => {
         const aFixedLabel = a.timeLabel && !a.at;
         const bFixedLabel = b.timeLabel && !b.at;
         if (aFixedLabel && !bFixedLabel) return 1;
         if (!aFixedLabel && bFixedLabel) return -1;
         return new Date(b.at || 0) - new Date(a.at || 0);
       });
+    }
+
+    function historyItemTime(item) {
+      return item.timeLabel || historyHourLabel(item.at);
+    }
+
+    function renderHistoryItem(item) {
+      const detail = historyStickerDetail(item);
+      return "<article class=\"history-line\">" +
+        "<time>" + escapeHTML(historyItemTime(item)) + "</time>" +
+        "<div class=\"history-line-body\"><strong>" + escapeHTML(item.text) + "</strong>" +
+        (detail ? "<small>" + detail + "</small>" : "") +
+        "</div></article>";
+    }
+
+    function renderHistoryPanel(message = "") {
+      if (!historyResult) return;
+      const items = mergedHistoryItems();
 
       if (!items.length) {
-        historyResult.innerHTML = `<div class="comparison-empty">${escapeHTML(message || "Ainda nao ha alteracoes no historico.")}</div>`;
+        historyResult.innerHTML = "<div class=\"comparison-empty\">" + escapeHTML(message || "Ainda nao ha logs de cromos.") + "</div>";
         return;
       }
 
-      historyResult.innerHTML = `
-        ${message ? `<div class="comparison-empty">${escapeHTML(message)}</div>` : ""}
-        <div class="insight-grid">
-          ${items.slice(0, 40).map(renderHistoryItem).join("")}
-        </div>
-      `;
+      const grouped = new Map();
+      items.slice(0, 120).forEach(item => {
+        const day = item.timeLabel && !item.at ? "Notas" : historyDayLabel(item.at);
+        if (!grouped.has(day)) grouped.set(day, []);
+        grouped.get(day).push(item);
+      });
+
+      historyResult.innerHTML =
+        (message ? "<div class=\"comparison-empty\">" + escapeHTML(message) + "</div>" : "") +
+        "<div class=\"history-log\">" +
+        [...grouped.entries()].map(([day, dayItems]) =>
+          "<section class=\"history-day\"><h3>" + escapeHTML(day) + "</h3>" + dayItems.map(renderHistoryItem).join("") + "</section>"
+        ).join("") +
+        "</div>";
     }
 
     function clearHistoryLog() {
       writeHistoryLog([]);
       renderHistoryPanel();
-      setSaveStatus("Historico limpo");
+      setSaveStatus("Historico local limpo");
     }
 
     function openHistoryPanel() {
       switchAppPage("history");
-      renderHistoryPanel("A carregar historico antigo...");
+      renderHistoryPanel("A carregar logs antigos...");
       Promise.all([
-        refreshOwnAlbumState().catch(() => {}),
+        loadHistoryLogs().catch(() => {}),
         loadTradeRequests().catch(() => {})
       ]).finally(() => renderHistoryPanel());
     }
@@ -5757,6 +5956,29 @@
       });
     }
 
+    function duplicateCopyCount(list) {
+      return (list || []).reduce((sum, sticker) => sum + normalizeDuplicates(sticker.repetidos), 0);
+    }
+
+    function friendDuplicateStickers() {
+      if (!hasSelectedFriend()) return [];
+      return friendStickers.filter(sticker => sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
+    }
+
+    function renderTradeQuickStats(givesFriendNeeds = possibleTradeGivesFriendNeeds(), receives = possibleTradeReceives()) {
+      if (!hasSelectedFriend()) return "";
+      const myDuplicates = possibleTradeGives();
+      const friendDuplicates = friendDuplicateStickers();
+      return `
+        <div class="trade-count-grid" aria-label="Resumo rapido dos repetidos">
+          <article class="trade-count-card"><span>Os teus repetidos</span><strong>${duplicateCopyCount(myDuplicates)}</strong></article>
+          <article class="trade-count-card"><span>Repetidos do amigo</span><strong>${duplicateCopyCount(friendDuplicates)}</strong></article>
+          <article class="trade-count-card"><span>Teus que ele precisa</span><strong>${givesFriendNeeds.length}</strong></article>
+          <article class="trade-count-card"><span>Dele que te faltam</span><strong>${receives.length}</strong></article>
+        </div>
+      `;
+    }
+
     function tradeOption(sticker) {
       return `<option value="${escapeHTML(sticker.id)}">${escapeHTML(stickerTradeLabel(sticker))}</option>`;
     }
@@ -6058,9 +6280,11 @@
       const givesFriendNeeds = possibleTradeGivesFriendNeeds();
       const receives = possibleTradeReceives();
       const suggestion = autoTradeSuggestion(5);
+      const quickStats = renderTradeQuickStats(givesFriendNeeds, receives);
 
       if (!givesFriendNeeds.length || !receives.length) {
         tradeSuggestions.innerHTML = `
+          ${quickStats}
           <div class="trade-select-grid">
             <div class="trade-card">
               <div class="trade-card-title">Tu podes dar</div>
@@ -6078,6 +6302,7 @@
       }
 
       tradeSuggestions.innerHTML = `
+        ${quickStats}
         <div class="trade-builder">
           <div class="trade-card-title">Nova proposta para ${escapeHTML(friendProfile)}</div>
           <div class="trade-select-grid">
@@ -7077,7 +7302,7 @@
       if (!checked) sticker.repetidos = 0;
       showStickerToast(sticker, checked ? "owned" : "removed");
       saveState();
-      recordHistory(checked ? `Colado: ${stickerShortLabel(sticker)}` : `Removido: ${stickerShortLabel(sticker)}`);
+      recordHistory(checked ? `Colado: ${stickerShortLabel(sticker)}` : `Removido: ${stickerShortLabel(sticker)}`, { type: "sticker", action: checked ? "owned_added" : "owned_removed", stickers: [sticker] });
       render();
     }
 
@@ -7098,7 +7323,7 @@
       if (nextDuplicates > currentDuplicates) showStickerToast(sticker, "duplicate-added");
       if (nextDuplicates < currentDuplicates) showStickerToast(sticker, "duplicate-removed");
       saveState();
-      recordHistory(`Repetidos em ${stickerShortLabel(sticker)}: ${currentDuplicates} -> ${nextDuplicates}`);
+      recordHistory(`Repetidos em ${stickerShortLabel(sticker)}: ${currentDuplicates} -> ${nextDuplicates}`, { type: "sticker", action: nextDuplicates > currentDuplicates ? "duplicate_added" : "duplicate_removed", stickers: [sticker] });
       render();
     }
 
@@ -7121,7 +7346,7 @@
       sticker.repetidos = Math.max(0, currentDuplicates + delta);
       showStickerToast(sticker, delta > 0 ? "duplicate-added" : "duplicate-removed");
       saveState();
-      recordHistory(delta > 0 ? `Repetido adicionado: ${stickerShortLabel(sticker)}` : `Repetido retirado: ${stickerShortLabel(sticker)}`);
+      recordHistory(delta > 0 ? `Repetido adicionado: ${stickerShortLabel(sticker)}` : `Repetido retirado: ${stickerShortLabel(sticker)}`, { type: "sticker", action: delta > 0 ? "duplicate_added" : "duplicate_removed", stickers: [sticker] });
       render();
     }
 
