@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
   <meta charset="UTF-8" />
@@ -2774,10 +2774,162 @@
     .trade-overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 9px; }
     .trade-overview-card { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); box-shadow: var(--shadow); }
     .trade-overview-card.is-main { border-color: var(--main); box-shadow: inset 0 3px 0 var(--main), var(--shadow); }
+
+    .trade-overview-card-button {
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      color: inherit;
+    }
+
+    .trade-overview-card-button:hover,
+    .trade-overview-card-button:focus-visible {
+      transform: translateY(-1px);
+      border-color: var(--main);
+      outline: none;
+    }
     .trade-overview-card strong { color: var(--main); font-size: 13px; font-weight: 900; text-transform: uppercase; line-height: 1.15; }
     .trade-overview-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
     .trade-overview-counts span { display: grid; gap: 2px; padding: 8px; border-radius: 11px; background: var(--panel); color: var(--muted); font-size: 10px; font-weight: 900; line-height: 1.15; text-transform: uppercase; }
     .trade-overview-counts b { color: var(--main); font-size: 20px; line-height: 1; }
+
+    .home-dashboard {
+      display: grid;
+      gap: 12px;
+      margin: -2px 0 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .home-dashboard.hidden { display: none; }
+
+    .home-dashboard-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .home-dashboard-head span,
+    .dashboard-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .home-dashboard-head strong {
+      display: block;
+      margin-top: 2px;
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .compact-action {
+      min-height: 34px;
+      padding: 7px 12px;
+      font-size: 12px;
+    }
+
+    .home-dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .dashboard-card {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      color: var(--text);
+    }
+
+    .dashboard-card strong {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--main);
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .dashboard-card small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .dashboard-progress {
+      height: 6px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--line) 70%, transparent);
+    }
+
+    .dashboard-progress i {
+      display: block;
+      width: var(--progress-width, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: var(--main);
+    }
+
+    .search-result-block {
+      display: grid;
+      gap: 10px;
+    }
+
+    .search-result-block + .search-result-block { margin-top: 12px; }
+
+    .search-country-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+      gap: 8px;
+    }
+
+    .search-results-note {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin: -4px 0 0;
+    }
+
+    .duplicate-results .duplicate-panel {
+      margin-top: 7px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+    }
+
+    .duplicate-results .duplicate-actions {
+      display: block;
+      padding: 0;
+      background: transparent;
+      border: 0;
+    }
+
+    .duplicate-results .duplicate-action-group:nth-child(2) {
+      display: none;
+    }
+
+    .settings-grid .password-card {
+      grid-column: 1 / -1;
+    }
     .mobile-bottom-nav { display: none; }
     body.auth-locked .mobile-bottom-nav { display: none !important; }
 
@@ -3490,6 +3642,46 @@
       .duplicate-control-btn { width: 22px !important; height: 22px !important; font-size: 10px !important; }
     }
 
+  
+
+    /* duplicate-results-polish */
+    .duplicate-results .duplicate-chip {
+      background: color-mix(in srgb, var(--duplicate-card-bg, var(--card)) 72%, var(--card));
+    }
+
+    .duplicate-results .duplicate-chip b {
+      font-size: 13px;
+    }
+    /* mobile-5star-polish */
+    @media (max-width: 640px) {
+      .topbar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+      .topbar nav { grid-column: 1 / -1; justify-content: flex-start; order: 3; }
+      .view-title { padding: 2px 0 0; font-size: 14px; }
+      .home-dashboard { padding: 10px; gap: 9px; border-radius: 14px; }
+      .home-dashboard-head strong { font-size: 15px; }
+      .home-dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+      .dashboard-card { padding: 9px; border-radius: 11px; gap: 6px; }
+      .dashboard-card strong { font-size: 13px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+      .dashboard-card span { font-size: 8.5px; }
+      .dashboard-card small { font-size: 10px; }
+      .stats { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 5px !important; }
+      .stat { min-height: 46px !important; padding: 6px 4px !important; }
+      .stat span { min-height: 18px !important; font-size: 7.4px !important; }
+      .stat strong { font-size: 14px !important; }
+      .toolbar { padding: 8px !important; border-radius: 13px !important; }
+      .search { min-height: 38px !important; font-size: 12px !important; }
+      .country-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+      .country-card { min-height: 58px !important; }
+      .country-card-name { font-size: 7.8px !important; }
+      .country-card-code, .country-card-count { font-size: 7px !important; }
+      .country-card-progress { height: 3px !important; }
+      .search-country-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .duplicate-results .sticker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      .settings-grid { grid-template-columns: 1fr !important; }
+      .mobile-bottom-nav { padding: 5px !important; gap: 3px !important; }
+      .mobile-bottom-nav button { min-height: 46px !important; border-radius: 15px !important; }
+      .mobile-nav-icon, .mobile-account-avatar { width: 27px !important; height: 27px !important; }
+    }
   </style>
 </head>
 <body class="auth-locked auth-mode-login">
@@ -3612,10 +3804,20 @@
       <div class="stat" data-view="owned"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
       <div class="stat" data-view="duplicates"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
     </section>
+    <section id="homeDashboard" class="home-dashboard" aria-label="Resumo inicial da caderneta">
+      <div class="home-dashboard-head">
+        <div>
+          <span>Visão rápida</span>
+          <strong>A tua caderneta</strong>
+        </div>
+        <button class="secondary compact-action" type="button" onclick="openTradesPanel()">Ver trocas</button>
+      </div>
+      <div id="homeDashboardGrid" class="home-dashboard-grid"></div>
+    </section>
 
     <section id="albumToolbar" class="toolbar">
       <div class="search-shell">
-        <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
+        <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por país, código ou nome do cromo..." />
         <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
       </div>
       <div class="toolbar-actions">
@@ -4025,6 +4227,8 @@
     const albumHomeTitleMain = document.getElementById("albumHomeTitleMain");
     const albumHomeTitleSub = document.getElementById("albumHomeTitleSub");
     const albumToolbar = document.getElementById("albumToolbar");
+    const homeDashboard = document.getElementById("homeDashboard");
+    const homeDashboardGrid = document.getElementById("homeDashboardGrid");
     const countryTabsWrap = document.getElementById("countryTabsWrap");
     const countryTabs = document.getElementById("countryTabs");
     const countrySortSelect = document.getElementById("countrySortSelect");
@@ -4648,6 +4852,7 @@
         ? "Consulta os cromos deste amigo sem alterar a tua caderneta."
         : "Escolhe uma seleção para abrir a caderneta.";
       albumToolbar?.classList.toggle("hidden", !showAlbum);
+      homeDashboard?.classList.toggle("hidden", !shouldShowHomeDashboard());
       friendModeBanner?.classList.toggle("hidden", !isFriendView());
       if (friendBannerName) friendBannerName.textContent = friendProfile ? `Caderneta de ${friendProfile}` : "Caderneta do amigo";
       document.body.classList.toggle("friend-view", isFriendView());
@@ -4680,6 +4885,7 @@
       activePage = page;
       closeUserMenu();
       updatePageVisibility();
+      renderHomeDashboard();
       renderCountryModal();
       pulseViewTitle();
       if (options.scrollTop !== false) window.scrollTo({ top: 0, behavior: "smooth" });
@@ -4734,6 +4940,78 @@
       const owned = list.filter(sticker => sticker.tenho).length;
       const percent = total ? Math.round((owned / total) * 100) : 0;
       return { total, owned, percent, missing: total - owned };
+    }
+    function shouldShowHomeDashboard() {
+      return activePage === "album" && !isFriendView() && currentView === "all" && selectedCountry === "all" && !search?.value?.trim();
+    }
+
+    function dashboardCountryCard(country, label) {
+      const stats = countryProgressFor(country);
+      return `
+        <button class="dashboard-card" type="button" onclick="openCountryModal('${escapeJS(country)}')">
+          <span>${escapeHTML(label)}</span>
+          <strong>${escapeHTML(countryFullName(country) || exportGroupLabel(country))}</strong>
+          <small>${stats.owned}/${stats.total} obtidos - ${stats.percent}%</small>
+          <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${stats.percent}%"></i></div>
+        </button>
+      `;
+    }
+
+    function renderHomeDashboard() {
+      if (!homeDashboard || !homeDashboardGrid) return;
+      if (!shouldShowHomeDashboard()) {
+        homeDashboard?.classList.add("hidden");
+        return;
+      }
+      const countries = albumCountries();
+      const progress = countries
+        .map(country => ({ country, ...countryProgressFor(country) }))
+        .filter(item => item.total > 0);
+      const almost = progress
+        .filter(item => item.missing > 0)
+        .sort((a, b) => a.missing - b.missing || b.percent - a.percent)[0];
+      const complete = progress.filter(item => item.missing === 0).length;
+      const recent = readHistoryLog().find(item => item.type === "sticker" || item.action?.startsWith?.("sticker") || item.stickers?.length);
+      const bestTrade = tradeOverviewItems.slice().sort((a, b) => b.balanced - a.balanced || b.friendCanGiveUnique - a.friendCanGiveUnique)[0];
+      const duplicateTotal = stickers.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
+      const cards = [];
+      if (almost) cards.push(dashboardCountryCard(almost.country, "Mais perto"));
+      cards.push(`
+        <button class="dashboard-card" type="button" onclick="openDuplicatesView()">
+          <span>Repetidos livres</span>
+          <strong>${duplicateTotal}</strong>
+          <small>Disponíveis para trocas e listas</small>
+          <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${Math.min(100, duplicateTotal)}%"></i></div>
+        </button>
+      `);
+      cards.push(`
+        <button class="dashboard-card" type="button" onclick="setCollectionMode('complete')">
+          <span>Seleções completas</span>
+          <strong>${complete}</strong>
+          <small>Filtra a lista para veres as completas</small>
+          <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${progress.length ? Math.round((complete / progress.length) * 100) : 0}%"></i></div>
+        </button>
+      `);
+      cards.push(`
+        <button class="dashboard-card" type="button" onclick="${bestTrade ? `openTradesForFriend('${escapeJS(bestTrade.profile)}')` : 'openTradesPanel()'}">
+          <span>Melhor troca</span>
+          <strong>${bestTrade ? escapeHTML(bestTrade.profile) : "Sem dados"}</strong>
+          <small>${bestTrade ? `${bestTrade.balanced} por ${bestTrade.balanced} possível` : "Abre trocas para atualizar"}</small>
+          <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${bestTrade ? Math.min(100, bestTrade.balanced * 10) : 0}%"></i></div>
+        </button>
+      `);
+      if (recent) {
+        cards.push(`
+          <button class="dashboard-card" type="button" onclick="openHistoryPanel()">
+            <span>Última atividade</span>
+            <strong>${escapeHTML(recent.text || "Histórico")}</strong>
+            <small>${escapeHTML(historyTimeLabel(recent.at))}</small>
+            <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:100%"></i></div>
+          </button>
+        `);
+      }
+      homeDashboardGrid.innerHTML = cards.join("");
+      homeDashboard.classList.remove("hidden");
     }
 
     function countryMatchesCollectionMode(country) {
@@ -6765,17 +7043,18 @@
       const usefulFriends = tradeOverviewItems.filter(item => item.friendDuplicateCopies > 0);
       const friendsNeedMine = tradeOverviewItems.reduce((sum, item) => sum + item.iCanGiveUnique, 0);
       const friendCards = usefulFriends.map(item =>
-        '<article class="trade-overview-card" style="border-color:' + escapeHTML(item.userColor) + '">' +
+        '<button class="trade-overview-card trade-overview-card-button" type="button" onclick="openTradesForFriend(\'' + escapeJS(item.profile) + '\')" style="border-color:' + escapeHTML(item.userColor) + '">' +
           '<strong>Repetidos do ' + escapeHTML(item.profile) + '</strong>' +
           '<div class="trade-overview-counts">' +
             '<span><b>' + item.friendCanGiveUnique + '</b>Ele tem para ti</span>' +
             '<span><b>' + item.iCanGiveUnique + '</b>Tu tens para ele</span>' +
           '</div>' +
-        '</article>'
+          '<small>Clica para montar troca</small>' +
+        '</button>'
       ).join("");
       tradeOverview.innerHTML =
         '<div class="trade-overview-head">' +
-          '<strong>Resumo geral de trocas</strong>' +
+          '<strong>Quem tem cromos que te interessam</strong>' +
           '<small>' + (tradeOverviewLoading ? 'A atualizar...' : usefulFriends.length + ' amigos com repetidos') + '</small>' +
         '</div>' +
         '<div class="trade-overview-grid">' +
@@ -7160,7 +7439,7 @@
       if (!hasSelectedFriend()) {
         tradeSuggestions.innerHTML = `
           <div class="comparison-empty">
-            Escolhe um amigo para veres as trocas possiveis.
+            Escolhe um amigo ou clica num cartão acima para montar uma troca.
           </div>
         `;
         closeTradeModal();
@@ -8596,7 +8875,7 @@
           <div class="duplicate-metrics">
             <span class="duplicate-chip"><b>${total}</b>Total</span>
             <span class="duplicate-chip"><b>${available}</b>Livres</span>
-            <span class="duplicate-chip"><b>${reserved}</b>Guard.</span>
+            <span class="duplicate-chip"><b>${reserved}</b>Guardados</span>
           </div>
           ${controls}
         </div>
@@ -8618,7 +8897,7 @@
           <div class="sticker-state" aria-hidden="true"></div>
           <div class="sticker-info">
             <div class="code">
-              ${escapeHTML(currentView === "duplicates" ? `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}` : sticker.codigo)}
+              ${escapeHTML((currentView === "duplicates" || options.duplicatePalette) ? `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}` : sticker.codigo)}
             </div>
             <div class="name">${escapeHTML(sticker.nome)}</div>
             ${sticker.tenho ? renderDuplicatePanel(sticker, stickerId, readonly) : ""}
@@ -8643,10 +8922,21 @@
       `;
     }
 
+    function renderSearchResults(countryMatches, stickerMatches, term, album) {
+      const countryBlock = countryMatches.length ? `
+        <section class="search-result-block" aria-label="Seleções encontradas">
+          <div class="search-results-title">Seleções encontradas</div>
+          <div class="search-country-strip">${countryMatches.map(country => renderCountryCard(country, album)).join("")}</div>
+        </section>
+      ` : "";
+      const stickerBlock = stickerMatches.length ? renderSearchStickerResults(stickerMatches) : "";
+      if (countryBlock && stickerBlock) return `${countryBlock}<section class="search-result-block"><div class="search-results-note">Cromos encontrados pelo nome ou código exato</div>${stickerBlock}</section>`;
+      return countryBlock || stickerBlock || renderEmptyState(`Não há resultados para ${term}.`);
+    }
     function renderDuplicateStickerResults(list) {
       return `
         <section class="search-results duplicate-results" aria-label="Cromos repetidos">
-          <div class="search-results-title">Cromos repetidos</div>
+          <div class="search-results-title">Cromos repetidos livres e guardados</div>
           <div class="sticker-grid">${list.map(sticker => renderStickerCard(sticker, { duplicatePalette: true })).join("")}</div>
         </section>
       `;
@@ -8660,6 +8950,7 @@
       renderCountryTabs();
       updateViewTitle();
       updatePageVisibility();
+      renderHomeDashboard();
       renderCountryModal();
 
       const term = search.value.trim();
@@ -8676,14 +8967,19 @@
             : renderEmptyState(emptyViewMessage());
           return;
         }
-        const visibleCountryCards = countryTabs.querySelectorAll(".country-card").length;
-        const searchMatches = term
+        const visibleCountryCards = countryTabs?.querySelectorAll(".country-card").length || 0;
+        const countryMatches = term ? albumCountries().filter(country => {
+          const countryStickers = album.filter(sticker => sticker.pais === country);
+          return countrySearchRank(country, countryStickers, term) < 2;
+        }) : [];
+        const termIsCountry = countryMatches.some(country => searchTermMatchesCountry(country, term));
+        const searchMatches = term && !termIsCountry
           ? searchResultStickers(album, term).filter(stickerMatchesCurrentView)
           : [];
         updateResultSummary(filteredStickers({ country: "all", album }));
-        content.innerHTML = searchMatches.length
-          ? renderSearchStickerResults(searchMatches)
-          : (visibleCountryCards ? "" : renderEmptyState("Nao ha selecoes para mostrar nesta pesquisa."));
+        content.innerHTML = term
+          ? renderSearchResults(countryMatches, searchMatches, term, album)
+          : (visibleCountryCards ? "" : renderEmptyState("Não há seleções para mostrar nesta pesquisa."));
         return;
       }
 
@@ -8853,6 +9149,12 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
