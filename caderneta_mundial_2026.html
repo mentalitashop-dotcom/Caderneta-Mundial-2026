@@ -2561,6 +2561,88 @@
       color: var(--duplicate-card-muted);
     }
 
+
+    .duplicate-country-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .duplicate-country-card {
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 2px solid var(--country-border, var(--line));
+      border-radius: 14px;
+      background: var(--country-soft, var(--card));
+      color: var(--country-text, var(--text));
+      text-align: left;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+
+    .duplicate-country-card:hover,
+    .duplicate-country-card:focus-visible {
+      transform: translateY(-2px);
+      border-color: var(--country-primary, var(--main));
+      outline: none;
+    }
+
+    .duplicate-country-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .duplicate-country-head strong {
+      min-width: 0;
+      color: var(--country-text, var(--text));
+      font-size: 16px;
+      font-weight: 1000;
+      line-height: 1.05;
+      text-transform: uppercase;
+    }
+
+    .duplicate-country-head span {
+      color: var(--country-muted, var(--muted));
+      font-size: 11px;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    .duplicate-country-counts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .duplicate-country-counts span {
+      display: grid;
+      gap: 2px;
+      padding: 7px 6px;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--country-primary, var(--main)) 16%, var(--card));
+      color: var(--country-text, var(--text));
+      font-size: 8px;
+      font-weight: 900;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .duplicate-country-counts b {
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .duplicate-country-preview {
+      min-height: 20px;
+      color: var(--country-muted, var(--muted));
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
     .duplicate-results {
       border-top-width: 3px;
     }
@@ -3652,7 +3734,18 @@
     .duplicate-results .duplicate-chip b {
       font-size: 13px;
     }
-    /* mobile-5star-polish */
+
+    /* duplicate-country-mobile-polish */
+    @media (max-width: 640px) {
+      .duplicate-country-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+      .duplicate-country-card { padding: 9px; border-radius: 11px; gap: 7px; }
+      .duplicate-country-head strong { font-size: 12px; }
+      .duplicate-country-head span { font-size: 8px; }
+      .duplicate-country-counts { gap: 4px; }
+      .duplicate-country-counts span { padding: 5px 4px; font-size: 6.8px; }
+      .duplicate-country-counts b { font-size: 13px; }
+      .duplicate-country-preview { font-size: 9px; min-height: 16px; }
+    }    /* mobile-5star-polish */
     @media (max-width: 640px) {
       .topbar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
       .topbar nav { grid-column: 1 / -1; justify-content: flex-start; order: 3; }
@@ -3746,7 +3839,7 @@
         </div>
       </div>
       <div class="auth-view auth-denied">
-        <h1 class="auth-title denied">ESTA APP NÃO FOI CRIADA PARA SI</h1>
+        <h1 class="auth-title denied">ESTA APP N&Atilde;O FOI CRIADA PARA SI</h1>
       </div>
     </div>
   </section>
@@ -3790,7 +3883,7 @@
 
     <section id="collectionProgress" class="collection-progress">
       <div class="collection-progress-copy">
-        <span>Progresso da coleção</span>
+        <span>Progresso da coleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</span>
         <strong id="collectionProgressText">0/0 obtidos - 0%</strong>
       </div>
       <div class="collection-progress-track" aria-hidden="true">
@@ -3807,7 +3900,7 @@
     <section id="homeDashboard" class="home-dashboard" aria-label="Resumo inicial da caderneta">
       <div class="home-dashboard-head">
         <div>
-          <span>Visão rápida</span>
+          <span>VisÃƒÆ’Ã‚Â£o rÃƒÆ’Ã‚Â¡pida</span>
           <strong>A tua caderneta</strong>
         </div>
         <button class="secondary compact-action" type="button" onclick="openTradesPanel()">Ver trocas</button>
@@ -3817,7 +3910,7 @@
 
     <section id="albumToolbar" class="toolbar">
       <div class="search-shell">
-        <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por país, código ou nome do cromo..." />
+        <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por pa&iacute;s, c&oacute;digo ou nome do cromo..." />
         <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
       </div>
       <div class="toolbar-actions">
@@ -3836,8 +3929,8 @@
 
     <section id="albumHomeTitle" class="album-home-title hidden">
       <div>
-        <strong id="albumHomeTitleMain">Seleções</strong>
-        <span id="albumHomeTitleSub">Escolhe uma seleção para abrir a caderneta.</span>
+        <strong id="albumHomeTitleMain">SeleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</strong>
+        <span id="albumHomeTitleSub">Escolhe uma seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o para abrir a caderneta.</span>
       </div>
     </section>
 
@@ -3845,9 +3938,9 @@
       <div class="friend-mode-copy">
         <span class="friend-mode-pill">AMIGO</span>
         <strong id="friendBannerName">Caderneta do amigo</strong>
-        <small>Só leitura. Os teus cromos não são alterados aqui.</small>
+        <small>SÃƒÆ’Ã‚Â³ leitura. Os teus cromos nÃƒÆ’Ã‚Â£o sÃƒÆ’Ã‚Â£o alterados aqui.</small>
       </div>
-      <button class="secondary" type="button" onclick="showMyAlbum()">Voltar à minha caderneta</button>
+      <button class="secondary" type="button" onclick="showMyAlbum()">Voltar ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  minha caderneta</button>
     </section>
 
     <div id="resultSummary" class="result-summary" aria-live="polite"></div>
@@ -3982,10 +4075,10 @@
       </article>
     </section>
 
-    <section id="settingsPanel" class="share-panel settings-panel hidden" aria-label="Definições">
+    <section id="settingsPanel" class="share-panel settings-panel hidden" aria-label="DefiniÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes">
       <div class="share-panel-head">
         <div class="share-panel-title">
-          <strong>Definições</strong>
+          <strong>DefiniÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</strong>
           <span>Personaliza a app e muda a tua password.</span>
         </div>
       </div>
@@ -4020,8 +4113,8 @@
         </article>
 
         <article class="setting-card">
-          <h2>Aparência</h2>
-          <p>O tema muda só a tua app. Não altera a cor do teu user.</p>
+          <h2>AparÃƒÆ’Ã‚Âªncia</h2>
+          <p>O tema muda sÃƒÆ’Ã‚Â³ a tua app. NÃƒÆ’Ã‚Â£o altera a cor do teu user.</p>
           <div class="theme-mode-row" role="group" aria-label="Modo da app">
             <button id="lightModeButton" class="secondary" type="button" onclick="setAppThemeMode('light')">Light</button>
             <button id="darkModeButton" class="secondary" type="button" onclick="setAppThemeMode('dark')">Dark</button>
@@ -4067,28 +4160,28 @@
 
         <article class="setting-card">
           <h2>Atalhos</h2>
-          <p>Ferramentas rápidas da tua conta, sem precisares do menu antigo no telemóvel.</p>
+          <p>Ferramentas rÃƒÆ’Ã‚Â¡pidas da tua conta, sem precisares do menu antigo no telemÃƒÆ’Ã‚Â³vel.</p>
           <div class="settings-actions">
             <button type="button" onclick="openListComparePanel()">Comparar listas</button>
             <button class="secondary" type="button" onclick="openBulkAddPanel()">Adicionar lista</button>
-            <button class="secondary" type="button" onclick="openHistoryPanel()">Histórico</button>
-            <button class="secondary" type="button" onclick="openNotificationsPanel()">Notificações</button>
+            <button class="secondary" type="button" onclick="openHistoryPanel()">HistÃƒÆ’Ã‚Â³rico</button>
+            <button class="secondary" type="button" onclick="openNotificationsPanel()">NotificaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</button>
             <button class="danger" type="button" onclick="logoutLiveAccount()">Logout</button>
           </div>
         </article>
       </div>
     </section>
 
-    <section id="countryTabsWrap" class="country-tabs-wrap" aria-label="Países da caderneta">
-      <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver países anteriores"><</button>
+    <section id="countryTabsWrap" class="country-tabs-wrap" aria-label="Pa\u00edses da caderneta">
+      <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver pa\u00edses anteriores"><</button>
       <div class="country-list-toolbar">
         <div class="country-list-title">
-          <span>Países</span>
-          <strong>Seleções da caderneta</strong>
+          <span>Pa\u00edses</span>
+          <strong>SeleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes da caderneta</strong>
         </div>
         <label class="country-sort-control">
           <span class="country-sort-label">Ordenar</span>
-          <select id="countrySortSelect" class="country-sort-select" aria-label="Ordenar países">
+          <select id="countrySortSelect" class="country-sort-select" aria-label="Ordenar pa\u00edses">
             <option value="album">Ordem da caderneta</option>
             <option value="alpha">Ordem crescente A-Z</option>
             <option value="groups">Grupos oficiais</option>
@@ -4098,7 +4191,7 @@
       <div class="country-tabs-viewport">
         <div id="countryTabs" class="country-tabs"></div>
       </div>
-      <button id="countryScrollRight" class="country-scroll-arrow" type="button" aria-label="Ver próximos países">></button>
+      <button id="countryScrollRight" class="country-scroll-arrow" type="button" aria-label="Ver prÃƒÆ’Ã‚Â³ximos pa\u00edses">></button>
     </section>
 
     <section id="content"></section>
@@ -4149,7 +4242,7 @@
         { id: "windows", name: "Windows dark", accent: "#0078d4", countryMode: "theme", bg: "#0f0f10", card: "#1b1b1d", panel: "#242426", text: "#f5f5f5", muted: "#c7c7c7", line: "#3a3a3c", header: "rgba(31,31,33,.94)" },
         { id: "graphite", name: "Grafite verde", accent: "#2dd4bf", countryMode: "theme", bg: "#0b1010", card: "#151c1c", panel: "#1c2828", text: "#f0fdfa", muted: "#b7c9c7", line: "#2b3d3d", header: "rgba(21,28,28,.94)" },
         { id: "violet", name: "Noite violeta", accent: "#8b5cf6", countryMode: "theme", bg: "#100f16", card: "#1b1824", panel: "#252033", text: "#faf5ff", muted: "#cdc4d9", line: "#382f4c", header: "rgba(27,24,36,.94)" },
-        { id: "wine", name: "Carvão vinho", accent: "#fb7185", countryMode: "theme", bg: "#120f12", card: "#1d181c", panel: "#2a2027", text: "#fff1f2", muted: "#d4bec5", line: "#44303a", header: "rgba(29,24,28,.94)" }
+        { id: "wine", name: "CarvÃƒÆ’Ã‚Â£o vinho", accent: "#fb7185", countryMode: "theme", bg: "#120f12", card: "#1d181c", panel: "#2a2027", text: "#fff1f2", muted: "#d4bec5", line: "#44303a", header: "rgba(29,24,28,.94)" }
       ]
     };
     const LIVE_REFRESH_MS = 15000;
@@ -4487,55 +4580,55 @@
       PAN: "#ffffff"
     };
     const COUNTRY_NAMES = {
-      FWC: "TROFÉUS INICIAIS",
-      MEX: "MÉXICO",
-      RSA: "ÁFRICA DO SUL",
+      FWC: "TROF\u00c9US INICIAIS",
+      MEX: "M\u00c9XICO",
+      RSA: "\u00c1FRICA DO SUL",
       KOR: "COREIA DO SUL",
-      CZE: "TCHÉQUIA",
-      CAN: "CANADÁ",
-      BIH: "BÓSNIA E HERZEGOVINA",
+      CZE: "TCH\u00c9QUIA",
+      CAN: "CANAD\u00c1",
+      BIH: "B\u00d3SNIA E HERZEGOVINA",
       QAT: "CATAR",
-      SUI: "SUIÇA",
+      SUI: "SUI\u00c7A",
       BRA: "BRASIL",
       MAR: "MARROCOS",
       HAI: "HAITI",
-      SCO: "ESCÓCIA",
+      SCO: "ESC\u00d3CIA",
       USA: "ESTADOS UNIDOS",
       PAR: "PARAGUAI",
-      AUS: "AUSTRÁLIA",
+      AUS: "AUSTR\u00c1LIA",
       TUR: "TURQUIA",
       GER: "ALEMANHA",
-      CUW: "CURAÇAO",
+      CUW: "CURA\u00c7AO",
       CIV: "COSTA DO MARFIM",
       ECU: "EQUADOR",
-      NED: "PAÍSES BAIXOS",
-      JPN: "JAPÃO",
-      SWE: "SUÉCIA",
-      TUN: "TUNÍSIA",
-      BEL: "BÉLGICA",
+      NED: "PA\u00cdSES BAIXOS",
+      JPN: "JAP\u00c3O",
+      SWE: "SU\u00c9CIA",
+      TUN: "TUN\u00cdSIA",
+      BEL: "B\u00c9LGICA",
       EGV: "EGITO",
-      IRN: "IRÃO",
-      NZL: "NOVA ZELÂNDIA",
+      IRN: "IR\u00c3O",
+      NZL: "NOVA ZEL\u00c2NDIA",
       ESP: "ESPANHA",
       CPV: "CABO VERDE",
-      KSA: "ARÁBIA SAUDITA",
+      KSA: "AR\u00c1BIA SAUDITA",
       URU: "URUGUAI",
-      FRA: "FRANÇA",
+      FRA: "FRAN\u00c7A",
       SEN: "SENEGAL",
       IRQ: "IRAQUE",
       NOR: "NORUEGA",
       ARG: "ARGENTINA",
-      ALG: "ARGÉLIA",
-      AUT: "ÁUSTRIA",
-      JOR: "JORDÂNIA",
+      ALG: "ARG\u00c9LIA",
+      AUT: "\u00c1USTRIA",
+      JOR: "JORD\u00c2NIA",
       POR: "PORTUGAL",
       COD: "REP. DEM. DO CONGO",
-      UZB: "UZBEQUISTÃO",
-      COL: "COLÔMBIA",
+      UZB: "UZBEQUIST\u00c3O",
+      COL: "COL\u00d4MBIA",
       ENG: "INGLATERRA",
-      CRO: "CROÁCIA",
+      CRO: "CRO\u00c1CIA",
       GHA: "GANA",
-      PAN: "PANAMÁ"
+      PAN: "PANAM\u00c1"
     };
     const OFFICIAL_WORLD_CUP_GROUPS = {
       "Grupo A": ["MEX", "RSA", "KOR", "CZE"],
@@ -4586,8 +4679,8 @@
 
     function cleanSticker(item) {
       const sticker = {
-        pais: String(item.pais || item["país"] || item.country || "Sem país").trim(),
-        codigo: String(item.codigo || item["código"] || item.code || item.id || "").trim(),
+        pais: String(item.pais || item["pa\u00eds"] || item.country || "Sem pa\u00eds").trim(),
+        codigo: String(item.codigo || item["cÃƒÆ’Ã‚Â³digo"] || item.code || item.id || "").trim(),
         nome: String(item.nome || item.name || item.jogador || item.player || "").trim(),
         tenho: normalizeOwned(item.tenho ?? item.owned ?? item.obtido ?? item.have),
         repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount),
@@ -4640,9 +4733,9 @@
 
       const lines = trimmed.split(/\r?\n/).filter(Boolean);
       const firstLine = parseCSVLine(lines[0]);
-      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos"].includes(h.trim().toLowerCase()));
+      const hasHeader = firstLine.some(h => ["pa\u00eds", "pa\u00eds", "country", "codigo", "cÃƒÆ’Ã‚Â³digo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos"].includes(h.trim().toLowerCase()));
 
-      let headers = ["pais", "codigo", "nome", "tenho"];
+      let headers = ["pa\u00eds", "codigo", "nome", "tenho"];
       let start = 0;
 
       if (hasHeader) {
@@ -4687,7 +4780,7 @@
     }
 
     function stickersToCSV() {
-      const header = "pais,codigo,nome,tenho,repetidos,reservados";
+      const header = "pa\u00eds";
       const rows = stickers.map(s => [
         s.pais,
         s.codigo,
@@ -4766,7 +4859,7 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch (error) {
-        console.warn("Nao foi possivel gravar o estado local.", error);
+        console.warn("Nao foi poss\u00edvel gravar o estado local.", error);
       }
 
       clearTimeout(saveTimer);
@@ -4826,7 +4919,7 @@
       }
 
       if (activePage === "settings") {
-        currentViewTitle.textContent = "Definições";
+        currentViewTitle.textContent = "DefiniÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes";
         return;
       }
 
@@ -4847,10 +4940,10 @@
       albumStats?.classList.toggle("hidden", !showAlbum);
       collectionProgress?.classList.toggle("hidden", !showAlbum);
       albumHomeTitle?.classList.add("hidden");
-      if (albumHomeTitleMain) albumHomeTitleMain.textContent = isFriendView() ? `Caderneta de ${friendProfile}` : "Seleções";
+      if (albumHomeTitleMain) albumHomeTitleMain.textContent = isFriendView() ? `Caderneta de ${friendProfile}` : "SeleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes";
       if (albumHomeTitleSub) albumHomeTitleSub.textContent = isFriendView()
         ? "Consulta os cromos deste amigo sem alterar a tua caderneta."
-        : "Escolhe uma seleção para abrir a caderneta.";
+        : "Escolhe uma seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o para abrir a caderneta.";
       albumToolbar?.classList.toggle("hidden", !showAlbum);
       homeDashboard?.classList.toggle("hidden", !shouldShowHomeDashboard());
       friendModeBanner?.classList.toggle("hidden", !isFriendView());
@@ -4980,13 +5073,13 @@
         <button class="dashboard-card" type="button" onclick="openDuplicatesView()">
           <span>Repetidos livres</span>
           <strong>${duplicateTotal}</strong>
-          <small>Disponíveis para trocas e listas</small>
+          <small>Dispon\u00edveis para trocas e listas</small>
           <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${Math.min(100, duplicateTotal)}%"></i></div>
         </button>
       `);
       cards.push(`
         <button class="dashboard-card" type="button" onclick="setCollectionMode('complete')">
-          <span>Seleções completas</span>
+          <span>SeleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes completas</span>
           <strong>${complete}</strong>
           <small>Filtra a lista para veres as completas</small>
           <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${progress.length ? Math.round((complete / progress.length) * 100) : 0}%"></i></div>
@@ -4996,15 +5089,15 @@
         <button class="dashboard-card" type="button" onclick="${bestTrade ? `openTradesForFriend('${escapeJS(bestTrade.profile)}')` : 'openTradesPanel()'}">
           <span>Melhor troca</span>
           <strong>${bestTrade ? escapeHTML(bestTrade.profile) : "Sem dados"}</strong>
-          <small>${bestTrade ? `${bestTrade.balanced} por ${bestTrade.balanced} possível` : "Abre trocas para atualizar"}</small>
+          <small>${bestTrade ? `${bestTrade.balanced} por ${bestTrade.balanced} poss\u00edvel` : "Abre trocas para atualizar"}</small>
           <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${bestTrade ? Math.min(100, bestTrade.balanced * 10) : 0}%"></i></div>
         </button>
       `);
       if (recent) {
         cards.push(`
           <button class="dashboard-card" type="button" onclick="openHistoryPanel()">
-            <span>Última atividade</span>
-            <strong>${escapeHTML(recent.text || "Histórico")}</strong>
+            <span>ÃƒÆ’Ã†â€™Ãƒâ€¦\u00daltima atividade</span>
+            <strong>${escapeHTML(recent.text || "HistÃƒÆ’Ã‚Â³rico")}</strong>
             <small>${escapeHTML(historyTimeLabel(recent.at))}</small>
             <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:100%"></i></div>
           </button>
@@ -5310,7 +5403,7 @@
       if (!APP_THEMES[appThemeMode].some(theme => theme.id === id)) return;
       appThemePresetId = id;
       applyAppTheme();
-      setSettingsMessage(settingsAppearanceMessage, "Aparência aplicada.");
+      setSettingsMessage(settingsAppearanceMessage, "AparÃƒÆ’Ã‚Âªncia aplicada.");
     }
 
     function renderAppThemePalette() {
@@ -5334,7 +5427,7 @@
       const used = new Set(usedUserColors.map(sanitizeUserColor));
       userColorPalette.innerHTML = availableUserColors.map(color => {
         const disabled = color !== currentUserColor && color !== DEFAULT_USER_COLOR && used.has(color);
-        const title = disabled ? "Cor já usada por outro user" : color;
+        const title = disabled ? "Cor jÃƒÆ’Ã‚Â¡ usada por outro user" : color;
         return `
           <button
             class="color-swatch ${color === currentUserColor ? "is-active" : ""}"
@@ -5366,7 +5459,7 @@
       const chosen = sanitizeUserColor(color);
       const used = new Set(usedUserColors.map(sanitizeUserColor));
       if (chosen !== currentUserColor && chosen !== DEFAULT_USER_COLOR && used.has(chosen)) {
-        setSettingsMessage(settingsThemeMessage, "Essa cor já está a ser usada por outro user.", true);
+        setSettingsMessage(settingsThemeMessage, "Essa cor jÃƒÆ’Ã‚Â¡ estÃƒÆ’Ã‚Â¡ a ser usada por outro user.", true);
         return;
       }
       currentUserColor = chosen;
@@ -5375,7 +5468,7 @@
       } catch {}
       document.documentElement.style.setProperty("--user-color", currentUserColor);
       renderUserColorPalette();
-      setSettingsMessage(settingsThemeMessage, "Cor escolhida. Guarda para ficar associada à tua conta.");
+      setSettingsMessage(settingsThemeMessage, "Cor escolhida. Guarda para ficar associada ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  tua conta.");
     }
 
     function previewThemeColor() {
@@ -5418,7 +5511,7 @@
       if (!liveEnabled || !liveProfile) return;
       const response = await apiFetch("/api/auth/settings", { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Não foi possível ler as definições");
+      if (!response.ok) throw new Error(data.error || "NÃƒÆ’Ã‚Â£o foi poss\u00edvel ler as definiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes");
       applyUserSettings(data.settings || {});
     }
 
@@ -5433,7 +5526,7 @@
         return "Preenche todos os campos.";
       }
       if (newPassword.length < 8) return "A nova password deve ter pelo menos 8 caracteres.";
-      if (newPassword !== confirmPassword) return "A confirmação não coincide.";
+      if (newPassword !== confirmPassword) return "A confirmaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o nÃƒÆ’Ã‚Â£o coincide.";
       if (currentPassword === newPassword) return "A nova password tem de ser diferente da atual.";
       return "";
     }
@@ -5478,7 +5571,7 @@
     }
 
     function countryFullName(country) {
-      if (country === "FWC - EQUIPAS HISTÓRICAS") return "EQUIPAS HISTÓRICAS";
+      if (country === "FWC - EQUIPAS HIST\u00d3RICAS") return "EQUIPAS HISTÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œRICAS";
       const code = String(country).split(" ")[0];
       return COUNTRY_NAMES[code] || "";
     }
@@ -5728,37 +5821,37 @@
     }
 
     function countryCompleteMessage(country) {
-      if (country === "FWC") return "Já completou os Troféus";
-      if (country === "FWC - EQUIPAS HISTÓRICAS") return "Já completou as Equipas Históricas";
-      return "Já completou esta seleção";
+      if (country === "FWC") return "JÃƒÆ’Ã‚Â¡ completou os TrofÃƒÆ’Ã‚Â©us";
+      if (country === "FWC - EQUIPAS HIST\u00d3RICAS") return "JÃƒÆ’Ã‚Â¡ completou as Equipas HistÃƒÆ’Ã‚Â³ricas";
+      return "JÃƒÆ’Ã‚Â¡ completou esta seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o";
     }
 
     function countryDuplicateEmptyMessage(country) {
-      if (country === "FWC") return "Não tem nenhum repetido dos Troféus";
-      if (country === "FWC - EQUIPAS HISTÓRICAS") return "Não tem nenhum repetido das Equipas Históricas";
-      return "Não tem nenhum repetido desta seleção";
+      if (country === "FWC") return "NÃƒÆ’Ã‚Â£o tem nenhum repetido dos TrofÃƒÆ’Ã‚Â©us";
+      if (country === "FWC - EQUIPAS HIST\u00d3RICAS") return "NÃƒÆ’Ã‚Â£o tem nenhum repetido das Equipas HistÃƒÆ’Ã‚Â³ricas";
+      return "NÃƒÆ’Ã‚Â£o tem nenhum repetido desta seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o";
     }
 
     function countryOwnedEmptyMessage(country) {
-      if (country === "FWC") return "Não tem nenhum cromo dos Troféus";
-      if (country === "FWC - EQUIPAS HISTÓRICAS") return "Não tem nenhum cromo das Equipas Históricas";
-      return "Não tem nenhum cromo desta seleção";
+      if (country === "FWC") return "NÃƒÆ’Ã‚Â£o tem nenhum cromo dos TrofÃƒÆ’Ã‚Â©us";
+      if (country === "FWC - EQUIPAS HIST\u00d3RICAS") return "NÃƒÆ’Ã‚Â£o tem nenhum cromo das Equipas HistÃƒÆ’Ã‚Â³ricas";
+      return "NÃƒÆ’Ã‚Â£o tem nenhum cromo desta seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o";
     }
 
     function emptyViewMessage(view = currentView, country = selectedCountry) {
-      if (normalizeSearch(search.value)) return "Não há cromos para mostrar nesta pesquisa.";
+      if (normalizeSearch(search.value)) return "NÃƒÆ’Ã‚Â£o hÃƒÆ’Ã‚Â¡ cromos para mostrar nesta pesquisa.";
 
       if (country === "all") {
-        if (view === "missing") return isFriendView() ? `${friendProfile} ja completou a caderneta.` : "Já completaste a caderneta.";
-        if (view === "owned") return isFriendView() ? `${friendProfile} ainda nao tem nenhum cromo obtido.` : "Ainda não tens nenhum cromo obtido.";
-        if (view === "duplicates") return isFriendView() ? `${friendProfile} nao tem nenhum cromo repetido.` : "Não tens nenhum cromo repetido.";
-        return "Não há cromos para mostrar nesta vista.";
+        if (view === "missing") return isFriendView() ? `${friendProfile} ja completou a caderneta.` : "JÃƒÆ’Ã‚Â¡ completaste a caderneta.";
+        if (view === "owned") return isFriendView() ? `${friendProfile} ainda nao tem nenhum cromo obtido.` : "Ainda nÃƒÆ’Ã‚Â£o tens nenhum cromo obtido.";
+        if (view === "duplicates") return isFriendView() ? `${friendProfile} nao tem nenhum cromo repetido.` : "NÃƒÆ’Ã‚Â£o tens nenhum cromo repetido.";
+        return "NÃƒÆ’Ã‚Â£o hÃƒÆ’Ã‚Â¡ cromos para mostrar nesta vista.";
       }
 
       if (view === "missing") return countryCompleteMessage(country);
       if (view === "owned") return countryOwnedEmptyMessage(country);
       if (view === "duplicates") return countryDuplicateEmptyMessage(country);
-      return "Não há cromos para mostrar nesta seleção.";
+      return "NÃƒÆ’Ã‚Â£o hÃƒÆ’Ã‚Â¡ cromos para mostrar nesta seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.";
     }
 
     async function copyTextToClipboard(text) {
@@ -5839,7 +5932,7 @@
         return;
       }
       downloadExportText(exportText);
-      setSaveStatus("Não foi possível copiar. Fiz download da lista.");
+      setSaveStatus("NÃƒÆ’Ã‚Â£o foi poss\u00edvel copiar. Fiz download da lista.");
     }
 
 
@@ -5877,55 +5970,55 @@
         if (normalized && code && !aliases.has(normalized)) aliases.set(normalized, code);
       };
       const manualAliases = {
-        FWC: ["FWC", "TROFEUS", "TROFEUS INICIAIS", "TROFÉUS", "TROFÉUS INICIAIS", "EQUIPAS HISTORICAS", "EQUIPAS HISTÓRICAS"],
-        MEX: ["MEXICO", "MÉXICO"],
-        RSA: ["AFRICA DO SUL", "ÁFRICA DO SUL", "SOUTH AFRICA"],
+        FWC: ["FWC", "TROFEUS", "TROFEUS INICIAIS", "TROFÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°US", "TROFÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°US INICIAIS", "EQUIPAS HISTORICAS", "EQUIPAS HISTÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œRICAS"],
+        MEX: ["MEXICO", "MÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°XICO"],
+        RSA: ["AFRICA DO SUL", "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂFRICA DO SUL", "SOUTH AFRICA"],
         KOR: ["COREIA DO SUL", "KOREIA", "KOREA", "SOUTH KOREA"],
-        CZE: ["TCHEQUIA", "TCHÉQUIA", "CHEQUIA", "CHÉQUIA", "CZECHIA"],
-        CAN: ["CANADA", "CANADÁ"],
-        BIH: ["BOSNIA", "BÓSNIA", "BOSNIA E HERZEGOVINA", "BÓSNIA E HERZEGOVINA"],
+        CZE: ["TCHEQUIA", "TCHÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°QUIA", "CHEQUIA", "CHÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°QUIA", "CZECHIA"],
+        CAN: ["CANADA", "CANADÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â"],
+        BIH: ["BOSNIA", "BÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œSNIA", "BOSNIA E HERZEGOVINA", "BÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œSNIA E HERZEGOVINA"],
         QAT: ["CATAR", "QATAR"],
-        SUI: ["SUICA", "SUÍÇA", "SWITZERLAND"],
+        SUI: ["SUICA", "SUÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡A", "SWITZERLAND"],
         BRA: ["BRASIL", "BRAZIL"],
         MAR: ["MARROCOS", "MOROCCO"],
         HAI: ["HAITI", "HAITI"],
-        SCO: ["ESCOCIA", "ESCÓCIA", "SCOTLAND"],
+        SCO: ["ESCOCIA", "ESCÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œCIA", "SCOTLAND"],
         USA: ["ESTADOS UNIDOS", "UNITED STATES", "EUA"],
         PAR: ["PARAGUAI", "PARAGUAY"],
-        AUS: ["AUSTRALIA", "AUSTRÁLIA"],
+        AUS: ["AUSTRALIA", "AUSTRÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂLIA"],
         TUR: ["TURQUIA", "TURKEY"],
         GER: ["ALEMANHA", "GERMANY", "DEUTSCHLAND"],
-        CUW: ["CURACAO", "CURAÇAO", "CURAÇAO", "CURACAO"],
-        CIV: ["COSTA DO MARFIM", "COTE DIVOIRE", "CÔTE DIVOIRE", "IVORY COAST"],
+        CUW: ["CURACAO", "CURAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡AO", "CURAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡AO", "CURACAO"],
+        CIV: ["COSTA DO MARFIM", "COTE DIVOIRE", "CÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂTE DIVOIRE", "IVORY COAST"],
         ECU: ["EQUADOR", "ECUADOR"],
-        NED: ["PAISES BAIXOS", "PAÍSES BAIXOS", "HOLANDA", "NETHERLANDS"],
-        JPN: ["JAPAO", "JAPÃO", "JAPAN"],
-        SWE: ["SUECIA", "SUÉCIA", "SWEDEN"],
-        TUN: ["TUNISIA", "TUNÍSIA"],
-        BEL: ["BELGICA", "BÉLGICA", "BELGIUM"],
+        NED: ["PAISES BAIXOS", "PAÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂSES BAIXOS", "HOLANDA", "NETHERLANDS"],
+        JPN: ["JAPAO", "JAPÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O", "JAPAN"],
+        SWE: ["SUECIA", "SUÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°CIA", "SWEDEN"],
+        TUN: ["TUNISIA", "TUNÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂSIA"],
+        BEL: ["BELGICA", "BÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°LGICA", "BELGIUM"],
         EGV: ["EGITO", "EGYPT"],
-        IRN: ["IRAO", "IRÃO", "IRAN"],
-        NZL: ["NOVA ZELANDIA", "NOVA ZELÂNDIA", "NEW ZEALAND"],
+        IRN: ["IRAO", "IRÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O", "IRAN"],
+        NZL: ["NOVA ZELANDIA", "NOVA ZELÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡NDIA", "NEW ZEALAND"],
         ESP: ["ESPANHA", "SPAIN"],
         CPV: ["CABO VERDE", "CAPE VERDE"],
-        KSA: ["ARABIA SAUDITA", "ARÁBIA SAUDITA", "SAUDI ARABIA"],
+        KSA: ["ARABIA SAUDITA", "ARÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂBIA SAUDITA", "SAUDI ARABIA"],
         URU: ["URUGUAI", "URUGUAY"],
-        FRA: ["FRANCA", "FRANÇA", "FRANCE"],
-        SEN: ["SENEGAL", "SÉNÉGAL"],
+        FRA: ["FRANCA", "FRANÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡A", "FRANCE"],
+        SEN: ["SENEGAL", "SÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°NÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°GAL"],
         IRQ: ["IRAQUE", "IRAQ"],
         NOR: ["NORUEGA", "NORWAY"],
         ARG: ["ARGENTINA"],
-        ALG: ["ARGELIA", "ARGÉLIA", "ALGERIA"],
-        AUT: ["AUSTRIA", "ÁUSTRIA"],
-        JOR: ["JORDANIA", "JORDÂNIA", "JORDAN"],
+        ALG: ["ARGELIA", "ARGÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°LIA", "ALGERIA"],
+        AUT: ["AUSTRIA", "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂUSTRIA"],
+        JOR: ["JORDANIA", "JORDÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡NIA", "JORDAN"],
         POR: ["PORTUGAL"],
         COD: ["CONGO", "REP DEM DO CONGO", "REP DEMOCRATICA DO CONGO", "REP. DEM. DO CONGO", "DR CONGO"],
-        UZB: ["UZBEQUISTAO", "UZBEQUISTÃO", "UZBEKISTAN"],
-        COL: ["COLOMBIA", "COLÔMBIA", "COLÓMBIA"],
+        UZB: ["UZBEQUISTAO", "UZBEQUISTÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O", "UZBEKISTAN"],
+        COL: ["COLOMBIA", "COLÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂMBIA", "COLÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œMBIA"],
         ENG: ["INGLATERRA", "ENGLAND"],
-        CRO: ["CROACIA", "CROÁCIA", "CROATIA"],
+        CRO: ["CROACIA", "CROÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂCIA", "CROATIA"],
         GHA: ["GANA", "GHANA"],
-        PAN: ["PANAMA", "PANAMÁ"]
+        PAN: ["PANAMA", "PANAMÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â"]
       };
 
       Object.entries(manualAliases).forEach(([code, names]) => {
@@ -5998,7 +6091,7 @@
 
     function listNumberItems(value) {
       const items = [];
-      const matcher = /(00|\d{1,3})(?:\s*(?:-|\u2013|\u2014|a|ate|até)\s*(\d{1,3}))?(?:\s*\(\s*x?\s*(\d+)\s*\))?/gi;
+      const matcher = /(00|\d{1,3})(?:\s*(?:-|\u2013|\u2014|a|ate|atÃƒÆ’Ã‚Â©)\s*(\d{1,3}))?(?:\s*\(\s*x?\s*(\d+)\s*\))?/gi;
       let match;
       while ((match = matcher.exec(String(value || ""))) !== null) {
         const start = match[1].toUpperCase() === "00" ? 0 : Number(match[1]);
@@ -6421,7 +6514,7 @@
       }
       const response = await apiFetch("/api/live/history", { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Nao foi possivel carregar historico");
+      if (!response.ok) throw new Error(data.error || "Nao foi poss\u00edvel carregar historico");
       liveHistoryLogs = Array.isArray(data.history) ? data.history : [];
       return liveHistoryLogs;
     }
@@ -6762,7 +6855,7 @@
     function openSuggestedTrade(maxItems = 5) {
       const suggestion = autoTradeSuggestion(maxItems);
       if (!suggestion.size) {
-        setSaveStatus("Ainda nao ha troca automatica possivel");
+        setSaveStatus("Ainda nao ha troca automatica poss\u00edvel");
         return;
       }
       resetTradeSelection();
@@ -6815,17 +6908,17 @@
     function resizeProfilePhoto(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+        reader.onerror = () => reject(new Error("NÃƒÆ’Ã‚Â£o foi poss\u00edvel ler a imagem."));
         reader.onload = () => {
           const image = new Image();
-          image.onerror = () => reject(new Error("O ficheiro escolhido não é uma imagem válida."));
+          image.onerror = () => reject(new Error("O ficheiro escolhido nÃƒÆ’Ã‚Â£o ÃƒÆ’Ã‚Â© uma imagem vÃƒÆ’Ã‚Â¡lida."));
           image.onload = () => {
             const size = 256;
             const canvas = document.createElement("canvas");
             canvas.width = size;
             canvas.height = size;
             const context = canvas.getContext("2d");
-            if (!context) return reject(new Error("Não foi possível preparar a imagem."));
+            if (!context) return reject(new Error("NÃƒÆ’Ã‚Â£o foi poss\u00edvel preparar a imagem."));
 
             const cropSize = Math.min(image.naturalWidth, image.naturalHeight);
             const sourceX = Math.max(0, (image.naturalWidth - cropSize) / 2);
@@ -6845,13 +6938,13 @@
 
       try {
         if (!file.type.startsWith("image/")) throw new Error("Escolhe um ficheiro de imagem.");
-        if (file.size > 8 * 1024 * 1024) throw new Error("A imagem não pode ultrapassar 8 MB.");
+        if (file.size > 8 * 1024 * 1024) throw new Error("A imagem nÃƒÆ’Ã‚Â£o pode ultrapassar 8 MB.");
         const photo = await resizeProfilePhoto(file);
         localStorage.setItem(profilePhotoStorageKey(), photo);
         syncProfilePhotoUI();
         setSettingsMessage(settingsProfilePhotoMessage, "Foto guardada neste dispositivo.");
       } catch (error) {
-        setSettingsMessage(settingsProfilePhotoMessage, error.message || "Não foi possível guardar a foto.", true);
+        setSettingsMessage(settingsProfilePhotoMessage, error.message || "NÃƒÆ’Ã‚Â£o foi poss\u00edvel guardar a foto.", true);
       } finally {
         input.value = "";
       }
@@ -6979,13 +7072,13 @@
         friendStickers = data.exists && data.csv ? parseTextFile(data.csv) : [];
         if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
         liveComparison.innerHTML = friendStickers.length
-          ? `<div class="comparison-empty">Estás a ver a caderneta de ${escapeHTML(friend)}. Esta vista é só de leitura.</div>`
+          ? `<div class="comparison-empty">EstÃƒÆ’Ã‚Â¡s a ver a caderneta de ${escapeHTML(friend)}. Esta vista ÃƒÆ’Ã‚Â© sÃƒÆ’Ã‚Â³ de leitura.</div>`
           : `<div class="comparison-empty">${escapeHTML(friend)} ainda nao tem caderneta online.</div>`;
         setSaveStatus(`A ver caderneta de ${friend}`);
         render();
         renderTradePanel();
       } catch (error) {
-        liveComparison.innerHTML = `<div class="comparison-empty">Nao foi possivel abrir a caderneta deste user.</div>`;
+        liveComparison.innerHTML = `<div class="comparison-empty">Nao foi poss\u00edvel abrir a caderneta deste user.</div>`;
         setSaveStatus("Erro ao abrir amigo");
         console.error(error);
       }
@@ -7142,7 +7235,7 @@
       const idealText = idealSize ? "Da para propor ate " + idealSize + " por " + idealSize + " cromos." : "Ainda nao ha troca equilibrada disponivel.";
       return `
         <div class="quick-trade-hero">
-          <div><strong>Melhor troca possivel com ${escapeHTML(friendProfile || "este amigo")}</strong><span>${escapeHTML(idealText)}</span></div>
+          <div><strong>Melhor troca poss\u00edvel com ${escapeHTML(friendProfile || "este amigo")}</strong><span>${escapeHTML(idealText)}</span></div>
           <button type="button" ${idealSize ? "" : "disabled"} onclick="openSuggestedTrade(50)">Propor ideal</button>
         </div>
       `;
@@ -7200,7 +7293,7 @@
       return `
         <div class="trade-pick-pagination">
           <button class="secondary" type="button" onclick="setTradePickPage('${side}', ${page - 1})" ${page <= 1 ? "disabled" : ""}><</button>
-          <span>Página ${page}/${totalPages}</span>
+          <span>PÃƒÆ’Ã‚Â¡gina ${page}/${totalPages}</span>
           <button class="secondary" type="button" onclick="setTradePickPage('${side}', ${page + 1})" ${page >= totalPages ? "disabled" : ""}>></button>
         </div>
       `;
@@ -7398,7 +7491,7 @@
         <div class="trade-modal-head">
           <div>
             <h2 >Proposta para ${escapeHTML(friendProfile)}</h2>
-            <p>Seleciona só cromos que o ${escapeHTML(friendProfile)} precisa e cromos dele que te faltam.</p>
+            <p>Seleciona sÃƒÆ’Ã‚Â³ cromos que o ${escapeHTML(friendProfile)} precisa e cromos dele que te faltam.</p>
             <div class="trade-modal-balance">${escapeHTML(balanceText)}</div>
           </div>
           <button class="trade-modal-close secondary" type="button" onclick="closeTradeModal()" aria-label="Fechar">x</button>
@@ -7407,7 +7500,7 @@
           <div class="trade-pick-grid">
             <div class="trade-pick-column">
               <div class="trade-pick-column-title">
-                <span>Tu dás</span>
+                <span>Tu dÃƒÆ’Ã‚Â¡s</span>
                 <span>${selectedTradeGiveIds.length}/${gives.length}</span>
               </div>
               ${renderTradeGroupedSummary(selectedGives)}
@@ -7425,10 +7518,10 @@
             </div>
           </div>
           <div class="trade-modal-actions">
-            <span class="trade-modal-balance">A proposta só pode ser enviada quando for 1 por 1, 2 por 2, 3 por 3...</span>
+            <span class="trade-modal-balance">A proposta sÃƒÆ’Ã‚Â³ pode ser enviada quando for 1 por 1, 2 por 2, 3 por 3...</span>
             <button type="button" onclick="proposeTrade()" ${balanced ? "" : "disabled"}>Enviar proposta</button>
           </div>
-        ` : `<div class="comparison-empty">Não há cromos suficientes para montar uma troca equilibrada.</div>`}
+        ` : `<div class="comparison-empty">NÃƒÆ’Ã‚Â£o hÃƒÆ’Ã‚Â¡ cromos suficientes para montar uma troca equilibrada.</div>`}
       `;
       restoreTradePickScrollState(scrollState);
     }
@@ -7439,7 +7532,7 @@
       if (!hasSelectedFriend()) {
         tradeSuggestions.innerHTML = `
           <div class="comparison-empty">
-            Escolhe um amigo ou clica num cartão acima para montar uma troca.
+            Escolhe um amigo ou clica num cartÃƒÆ’Ã‚Â£o acima para montar uma troca.
           </div>
         `;
         closeTradeModal();
@@ -7533,7 +7626,7 @@
 
       return [...groups.entries()]
         .map(([country, codes]) => `${escapeHTML(country)} ${[...new Set(codes)].map(escapeHTML).join(", ")}`)
-        .join(" Â· ");
+        .join(" ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ");
     }
 
     function tradeStickerDetailList(list) {
@@ -7644,7 +7737,7 @@
       return `
         <div class="trade-pagination">
           <button class="secondary" type="button" onclick="setTradeHistoryPage(${tradeHistoryPage - 1})" ${tradeHistoryPage <= 1 ? "disabled" : ""}>Anterior</button>
-          <span>Página ${tradeHistoryPage} de ${totalPages}</span>
+          <span>PÃƒÆ’Ã‚Â¡gina ${tradeHistoryPage} de ${totalPages}</span>
           <button class="secondary" type="button" onclick="setTradeHistoryPage(${tradeHistoryPage + 1})" ${tradeHistoryPage >= totalPages ? "disabled" : ""}>Seguinte</button>
         </div>
       `;
@@ -7740,7 +7833,7 @@
           })
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || "Nao foi possivel propor troca");
+        if (!response.ok) throw new Error(data.error || "Nao foi poss\u00edvel propor troca");
         setSaveStatus(`Troca proposta a ${friendProfile}`);
         closeTradeModal();
         await loadTradeRequests();
@@ -7759,7 +7852,7 @@
           body: JSON.stringify({ tradeId, status })
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || "Nao foi possivel atualizar troca");
+        if (!response.ok) throw new Error(data.error || "Nao foi poss\u00edvel atualizar troca");
         setSaveStatus(status === "accepted" ? "Troca aceite e cadernetas atualizadas" : "Troca atualizada");
         await loadTradeRequests();
         await refreshOwnAlbumState();
@@ -7885,7 +7978,7 @@
       try {
         const response = await apiFetch("/api/live/backup", { cache: "no-store" });
         const data = await response.json().catch(() => null);
-        if (!response.ok) throw new Error(data?.error || "Nao foi possivel criar o backup.");
+        if (!response.ok) throw new Error(data?.error || "Nao foi poss\u00edvel criar o backup.");
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
         const link = document.createElement("a");
         const date = new Date().toISOString().slice(0, 10);
@@ -7900,7 +7993,7 @@
         setSaveStatus("Backup exportado");
         setSettingsMessage(settingsBackupMessage, "Backup exportado com sucesso.");
       } catch (error) {
-        const msg = error?.message || "Nao foi possivel exportar o backup.";
+        const msg = error?.message || "Nao foi poss\u00edvel exportar o backup.";
         setSaveStatus(msg);
         setSettingsMessage(settingsBackupMessage, msg, true);
       }
@@ -8051,7 +8144,7 @@
           throw new Error("O servidor demorou demasiado a responder. Tenta novamente.");
         }
         if (error instanceof TypeError) {
-          throw new Error("Não foi possível contactar o servidor. Tenta novamente.");
+          throw new Error("NÃƒÆ’Ã‚Â£o foi poss\u00edvel contactar o servidor. Tenta novamente.");
         }
         throw error;
       } finally {
@@ -8162,7 +8255,7 @@
       const query = profile ? `?profile=${encodeURIComponent(profile)}` : "";
       const response = await apiFetch(`/api/live/state${query}`, { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Nao foi possivel ler o perfil live");
+      if (!response.ok) throw new Error(data.error || "Nao foi poss\u00edvel ler o perfil live");
       return data;
     }
 
@@ -8213,7 +8306,7 @@
       });
       const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) throw new Error(data.error || "Nao foi possivel sincronizar live");
+      if (!response.ok) throw new Error(data.error || "Nao foi poss\u00edvel sincronizar live");
       liveUpdatedAt = data.updatedAt || liveUpdatedAt;
       liveStatusText.textContent = "Online sincronizado.";
       setSaveStatus("Online sincronizado");
@@ -8261,7 +8354,7 @@
     }
 
     async function finishLiveLogin(user) {
-      if (!user?.username) throw new Error("Resposta de login inválida.");
+      if (!user?.username) throw new Error("Resposta de login invÃƒÆ’Ã‚Â¡lida.");
 
       liveProfile = user.username;
       sessionExpiryHandled = false;
@@ -8275,7 +8368,7 @@
       setAuthMode("app");
       updateLiveLoginUI();
       liveStatusText.textContent = "A carregar caderneta online...";
-      setSaveStatus("Login concluído. A carregar caderneta...");
+      setSaveStatus("Login concluÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­do. A carregar caderneta...");
       startLiveRefresh();
       resetIdleLogoutTimer();
 
@@ -8291,9 +8384,9 @@
         liveStatusText.textContent = "Online ativo.";
         setSaveStatus("Online ligado com sucesso");
       } catch (error) {
-        console.error("Login concluído, mas a caderneta não carregou.", error);
-        liveStatusText.textContent = "Sessão iniciada. Não foi possível carregar a caderneta.";
-        setSaveStatus("Login concluído, mas houve um erro ao carregar os cromos");
+        console.error("Login concluÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­do, mas a caderneta nÃƒÆ’Ã‚Â£o carregou.", error);
+        liveStatusText.textContent = "SessÃƒÆ’Ã‚Â£o iniciada. NÃƒÆ’Ã‚Â£o foi poss\u00edvel carregar a caderneta.";
+        setSaveStatus("Login concluÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­do, mas houve um erro ao carregar os cromos");
       }
 
       await Promise.allSettled([
@@ -8391,12 +8484,12 @@
       closeUserMenu();
       const expired = reason === "idle" || reason === "expired";
       liveStatusText.textContent = expired
-        ? "Sessão expirada. Entra novamente."
-        : "Sessão terminada. Entra para voltar ao modo online.";
+        ? "SessÃƒÆ’Ã‚Â£o expirada. Entra novamente."
+        : "SessÃƒÆ’Ã‚Â£o terminada. Entra para voltar ao modo online.";
       setAuthMode("login");
       updateLiveLoginUI();
-      setAuthMessage(expired ? "Sessão expirada. Faz login novamente." : "", "login");
-      setSaveStatus(expired ? "Sessão expirada" : "Sessão terminada");
+      setAuthMessage(expired ? "SessÃƒÆ’Ã‚Â£o expirada. Faz login novamente." : "", "login");
+      setSaveStatus(expired ? "SessÃƒÆ’Ã‚Â£o expirada" : "SessÃƒÆ’Ã‚Â£o terminada");
     }
 
     async function logoutLiveAccount(reason = "manual") {
@@ -8516,15 +8609,15 @@
         }
         updateLiveLoginUI();
       } catch (error) {
-        console.error("Não foi possível verificar a sessão online.", error);
+        console.error("NÃƒÆ’Ã‚Â£o foi poss\u00edvel verificar a sessÃƒÆ’Ã‚Â£o online.", error);
         liveEnabled = true;
         liveProfile = "";
         inviteValid = false;
         setAuthMode("login");
-        setAuthMessage("Não foi possível verificar a sessão. Podes tentar fazer login novamente.", "login");
-        liveStatusText.textContent = "Não foi possível verificar a sessão online.";
+        setAuthMessage("NÃƒÆ’Ã‚Â£o foi poss\u00edvel verificar a sessÃƒÆ’Ã‚Â£o. Podes tentar fazer login novamente.", "login");
+        liveStatusText.textContent = "NÃƒÆ’Ã‚Â£o foi poss\u00edvel verificar a sessÃƒÆ’Ã‚Â£o online.";
         updateLiveLoginUI();
-        setSaveStatus("Não foi possível verificar a sessão");
+        setSaveStatus("NÃƒÆ’Ã‚Â£o foi poss\u00edvel verificar a sessÃƒÆ’Ã‚Â£o");
       }
     }
     function updateSearchControls() {
@@ -8550,7 +8643,7 @@
     }
 
     function currentCountryLabel() {
-      if (selectedCountry === "all") return "todas as seleções";
+      if (selectedCountry === "all") return "todas as seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes";
       const name = countryFullName(selectedCountry);
       return name ? `${name} (${exportGroupLabel(selectedCountry)})` : selectedCountry;
     }
@@ -8562,7 +8655,7 @@
     function emptyActionButtons() {
       const actions = [];
       if (search?.value?.trim()) actions.push(`<button class="empty-action-btn" type="button" onclick="clearSearch()">Limpar pesquisa</button>`);
-      if (selectedCountry !== "all") actions.push(`<button class="empty-action-btn" type="button" onclick="setCountry('all')">Ver todas as seleções</button>`);
+      if (selectedCountry !== "all") actions.push(`<button class="empty-action-btn" type="button" onclick="setCountry('all')">Ver todas as seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes</button>`);
       if (currentView !== "all") actions.push(`<button class="empty-action-btn" type="button" onclick="setView('all')">Ver todos</button>`);
       return actions.length ? `<div class="empty-actions">${actions.join("")}</div>` : "";
     }
@@ -8828,8 +8921,8 @@
                 <h2 id="countryModalTitle" class="country-modal-title">${escapeHTML(name)}</h2>
               </div>
               <div class="country-modal-title-actions">
-                <button class="country-modal-nav" type="button" onclick="moveCountryModal(-1)" aria-label="Seleção anterior" ${previousCountry ? "" : "disabled"}>< ${escapeHTML(previousCountry ? exportGroupLabel(previousCountry) : "")}</button>
-                <button class="country-modal-nav" type="button" onclick="moveCountryModal(1)" aria-label="Seleção seguinte" ${nextCountry ? "" : "disabled"}>${escapeHTML(nextCountry ? exportGroupLabel(nextCountry) : "")} ></button>
+                <button class="country-modal-nav" type="button" onclick="moveCountryModal(-1)" aria-label="SeleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o anterior" ${previousCountry ? "" : "disabled"}>< ${escapeHTML(previousCountry ? exportGroupLabel(previousCountry) : "")}</button>
+                <button class="country-modal-nav" type="button" onclick="moveCountryModal(1)" aria-label="SeleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o seguinte" ${nextCountry ? "" : "disabled"}>${escapeHTML(nextCountry ? exportGroupLabel(nextCountry) : "")} ></button>
                 <button class="country-modal-close" type="button" onclick="closeCountryModal()" aria-label="Fechar">x</button>
               </div>
             </div>
@@ -8924,20 +9017,64 @@
 
     function renderSearchResults(countryMatches, stickerMatches, term, album) {
       const countryBlock = countryMatches.length ? `
-        <section class="search-result-block" aria-label="Seleções encontradas">
-          <div class="search-results-title">Seleções encontradas</div>
+        <section class="search-result-block" aria-label="Sele\u00e7\u00f5es encontradas">
+          <div class="search-results-title">Sele\u00e7\u00f5es encontradas</div>
           <div class="search-country-strip">${countryMatches.map(country => renderCountryCard(country, album)).join("")}</div>
         </section>
       ` : "";
       const stickerBlock = stickerMatches.length ? renderSearchStickerResults(stickerMatches) : "";
-      if (countryBlock && stickerBlock) return `${countryBlock}<section class="search-result-block"><div class="search-results-note">Cromos encontrados pelo nome ou código exato</div>${stickerBlock}</section>`;
-      return countryBlock || stickerBlock || renderEmptyState(`Não há resultados para ${term}.`);
+      if (countryBlock && stickerBlock) return `${countryBlock}<section class="search-result-block"><div class="search-results-note">Cromos encontrados pelo nome ou c\u00f3digo exato</div>${stickerBlock}</section>`;
+      return countryBlock || stickerBlock || renderEmptyState(`N\u00e3o h\u00e1 resultados para ${term}.`);
+    }
+
+    function duplicateCountryStats(country, list) {
+      const countryList = list.filter(sticker => sticker.pais === country);
+      const total = countryList.reduce((sum, sticker) => sum + normalizeDuplicates(sticker.repetidos), 0);
+      const available = countryList.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
+      const reserved = countryList.reduce((sum, sticker) => sum + reservedDuplicates(sticker), 0);
+      const preview = countryList
+        .slice()
+        .sort((a, b) => stickerNumber(a) - stickerNumber(b))
+        .slice(0, 8)
+        .map(sticker => stickerExportNumber(sticker));
+      return { total, available, reserved, unique: countryList.length, preview };
+    }
+
+    function openCountryDuplicatesModal(country) {
+      selectedCountry = country;
+      modalView = "duplicates";
+      countryModalOpen = true;
+      document.body.classList.add("modal-open");
+      render();
+    }
+
+    function renderDuplicateCountryCard(country, list) {
+      const stats = duplicateCountryStats(country, list);
+      const name = countryFullName(country) || country;
+      const code = exportGroupLabel(country);
+      const preview = stats.preview.length ? stats.preview.join(", ") + (stats.unique > stats.preview.length ? "..." : "") : "Sem cromos";
+      return `
+        <button class="duplicate-country-card" type="button" style="${countryCardStyle(country)}" onclick="openCountryDuplicatesModal('${escapeJS(country)}')">
+          <span class="duplicate-country-head">
+            <strong>${escapeHTML(name)}</strong>
+            <span>${escapeHTML(code)}</span>
+          </span>
+          <span class="duplicate-country-counts">
+            <span><b>${stats.total}</b>Total</span>
+            <span><b>${stats.available}</b>Livres</span>
+            <span><b>${stats.reserved}</b>Guard.</span>
+          </span>
+          <span class="duplicate-country-preview">${escapeHTML(preview)}</span>
+        </button>
+      `;
     }
     function renderDuplicateStickerResults(list) {
+      const countries = albumCountries().filter(country => list.some(sticker => sticker.pais === country));
       return `
         <section class="search-results duplicate-results" aria-label="Cromos repetidos">
-          <div class="search-results-title">Cromos repetidos livres e guardados</div>
-          <div class="sticker-grid">${list.map(sticker => renderStickerCard(sticker, { duplicatePalette: true })).join("")}</div>
+          <div class="search-results-title">Cromos repetidos por sele\u00e7\u00e3o</div>
+          <div class="search-results-note">Abre uma sele\u00e7\u00e3o para gerir os repetidos desse pa\u00eds.</div>
+          <div class="duplicate-country-grid">${countries.map(country => renderDuplicateCountryCard(country, list)).join("")}</div>
         </section>
       `;
     }
@@ -8979,13 +9116,13 @@
         updateResultSummary(filteredStickers({ country: "all", album }));
         content.innerHTML = term
           ? renderSearchResults(countryMatches, searchMatches, term, album)
-          : (visibleCountryCards ? "" : renderEmptyState("Não há seleções para mostrar nesta pesquisa."));
+          : (visibleCountryCards ? "" : renderEmptyState("N\u00e3o h\u00e1 sele\u00e7\u00f5es para mostrar nesta pesquisa."));
         return;
       }
 
       if (!album.length) {
         resultSummary.textContent = "";
-        content.innerHTML = renderEmptyState(isFriendView() ? `${friendProfile} ainda nao tem caderneta online.` : "Ainda não tens caderneta carregada.");
+        content.innerHTML = renderEmptyState(isFriendView() ? `${friendProfile} ainda nao tem caderneta online.` : "Ainda nÃƒÆ’Ã‚Â£o tens caderneta carregada.");
         return;
       }
 
@@ -9149,6 +9286,7 @@
   </script>
 </body>
 </html>
+
 
 
 
