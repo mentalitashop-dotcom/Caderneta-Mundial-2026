@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Caderneta Mundial 2026</title>
   <meta name="theme-color" content="#111827" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -2899,6 +2899,29 @@
       object-fit: cover;
     }
 
+    .mobile-nav-badge {
+      position: absolute;
+      min-width: 17px;
+      height: 17px;
+      right: 7px;
+      top: 6px;
+      padding: 0 5px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #ef4444;
+      color: #fff;
+      box-shadow: 0 0 0 2px var(--card);
+      font-size: 9px;
+      font-weight: 1000;
+      line-height: 1;
+    }
+
+    .mobile-nav-badge.hidden {
+      display: none;
+    }
+
     .profile-photo-setting {
       display: flex;
       align-items: center;
@@ -2954,6 +2977,8 @@
 
     @media (max-width: 760px) {
       .mobile-bottom-nav { position: fixed; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 140; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 7px; border: 1px solid color-mix(in srgb, var(--line) 76%, transparent); border-radius: 22px; background: color-mix(in srgb, var(--card) 94%, transparent); box-shadow: 0 18px 50px rgba(15, 23, 42, .22); backdrop-filter: blur(14px); }
+      html, body { max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: pan-y; }
+      input, select, textarea { font-size: 16px !important; }
       .mobile-bottom-nav button { pointer-events: auto; cursor: pointer; min-width: 0; min-height: 50px; padding: 4px; border: 0; border-radius: 17px; background: transparent; color: var(--muted); display: grid; place-items: center; line-height: 1; }
       .mobile-bottom-nav button.active { background: var(--main); color: #fff; }
       .mobile-bottom-nav button.active .mobile-nav-card-icon::after { background: #fff; color: var(--main); }
@@ -3033,6 +3058,32 @@
       .sticker-toast-stack { bottom: 84px; left: 10px; width: calc(100vw - 20px); }
     }
     .hidden { display: none; }
+
+    @media (max-width: 560px) {
+      body { width: 100%; min-width: 320px; overscroll-behavior-x: none; }
+      main { width: 100%; max-width: 100%; padding-left: 8px !important; padding-right: 8px !important; padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important; }
+      .topbar { position: sticky; top: 0; z-index: 120; border-radius: 0 0 14px 14px; }
+      .brand-button { font-size: 16px !important; }
+      .stats { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 6px !important; }
+      .stat { min-height: 54px !important; padding: 7px 5px !important; border-radius: 11px !important; }
+      .stat span { font-size: 8px !important; line-height: 1.1 !important; }
+      .stat strong { font-size: 15px !important; }
+      .toolbar { gap: 7px !important; }
+      .toolbar-actions { flex-wrap: nowrap !important; justify-content: space-between !important; }
+      .export-list-btn { flex: 0 0 auto; min-width: 88px !important; max-width: 102px !important; min-height: 36px !important; padding: 5px 7px !important; font-size: 10px !important; }
+      .collection-mode-select { max-width: 128px !important; font-size: 12px !important; }
+      .country-modal-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+      .country-modal-tabs button { min-width: 0; padding: 8px 4px; font-size: 10px; }
+      .country-modal-title-actions { gap: 4px; }
+      .country-modal-nav { max-width: 72px; padding: 7px 5px; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sticker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 7px !important; }
+      .sticker { min-height: 92px !important; padding: 8px !important; }
+      .duplicate-row { align-items: center; gap: 4px !important; }
+      .reserved-row { margin-top: 2px; opacity: .96; }
+      .duplicate-summary { font-size: 8.8px !important; line-height: 1.15; }
+      .duplicate-control-btn { width: 23px !important; height: 23px !important; font-size: 11px !important; }
+      .mobile-bottom-nav { left: 8px !important; right: 8px !important; bottom: max(8px, env(safe-area-inset-bottom)) !important; border-radius: 20px !important; }
+    }
 
     @media (max-width: 760px) {
       main {
@@ -3782,9 +3833,9 @@
   <nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navegacao principal mobile">
     <button type="button" data-page="album" onclick="goHome()" aria-label="Inicio" title="Inicio"><span class="mobile-nav-icon mobile-nav-home-icon" aria-hidden="true"></span></button>
     <button type="button" data-page="friends" onclick="openFriendsPage()" aria-label="Amigos" title="Amigos"><span class="mobile-nav-icon mobile-nav-people-icon" aria-hidden="true"></span></button>
-    <button type="button" data-page="trades" onclick="openTradesPanel()" aria-label="Trocas" title="Trocas"><span class="mobile-nav-icon mobile-nav-trade-icon" aria-hidden="true"></span></button>
+    <button type="button" data-page="trades" onclick="openTradesPanel()" aria-label="Trocas" title="Trocas"><span class="mobile-nav-icon mobile-nav-trade-icon" aria-hidden="true"></span><span id="mobileTradeBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
     <button type="button" data-page="duplicates" onclick="openDuplicatesView()" aria-label="Repetidos" title="Repetidos"><span class="mobile-nav-icon mobile-nav-card-icon" aria-hidden="true"></span></button>
-    <button type="button" data-page="settings" onclick="openSettingsPanel()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span></button>
+    <button type="button" data-page="settings" onclick="openSettingsPanel()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span><span id="mobileNotificationBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
   </nav>
 
   <footer id="saveStatus" class="save-status">A iniciar...</footer>
@@ -3926,6 +3977,8 @@
     const tradeSuggestions = document.getElementById("tradeSuggestions");
     const tradeOverview = document.getElementById("tradeOverview");
     const mobileBottomNav = document.getElementById("mobileBottomNav");
+    const mobileTradeBadge = document.getElementById("mobileTradeBadge");
+    const mobileNotificationBadge = document.getElementById("mobileNotificationBadge");
     const tradeList = document.getElementById("tradeList");
     const tradeModal = document.getElementById("tradeModal");
     const tradeModalBody = document.getElementById("tradeModalBody");
@@ -4234,6 +4287,18 @@
       const parsed = Number.parseInt(String(value ?? "0").trim(), 10);
       return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
     }
+    function normalizeReserved(value) {
+      return normalizeDuplicates(value);
+    }
+
+    function reservedDuplicates(sticker) {
+      return Math.min(normalizeReserved(sticker?.reservados), normalizeDuplicates(sticker?.repetidos));
+    }
+
+    function availableDuplicates(sticker) {
+      return Math.max(0, normalizeDuplicates(sticker?.repetidos) - reservedDuplicates(sticker));
+    }
+
 
     function makeId(sticker) {
       return `${sticker.pais}__${sticker.codigo}`.toLowerCase().replace(/\s+/g, "_");
@@ -4245,7 +4310,8 @@
         codigo: String(item.codigo || item.código || item.code || item.id || "").trim(),
         nome: String(item.nome || item.name || item.jogador || item.player || "").trim(),
         tenho: normalizeOwned(item.tenho ?? item.owned ?? item.obtido ?? item.have),
-        repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount)
+        repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount),
+        reservados: normalizeReserved(item.reservados ?? item.suspensos ?? item.guardados ?? item.reserved ?? item.held ?? item.inativos)
       };
 
       if (!sticker.codigo) sticker.codigo = `${sticker.pais}-${Math.random().toString(36).slice(2, 7)}`;
@@ -4294,7 +4360,7 @@
 
       const lines = trimmed.split(/\r?\n/).filter(Boolean);
       const firstLine = parseCSVLine(lines[0]);
-      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates"].includes(h.trim().toLowerCase()));
+      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos"].includes(h.trim().toLowerCase()));
 
       let headers = ["pais", "codigo", "nome", "tenho"];
       let start = 0;
@@ -4331,6 +4397,7 @@
           if (typeof savedSticker === "object") {
             sticker.tenho = Boolean(savedSticker.tenho);
             sticker.repetidos = normalizeDuplicates(savedSticker.repetidos);
+            sticker.reservados = Math.min(normalizeReserved(savedSticker.reservados), sticker.repetidos);
           } else {
             sticker.tenho = savedSticker;
           }
@@ -4340,13 +4407,14 @@
     }
 
     function stickersToCSV() {
-      const header = "pais,codigo,nome,tenho,repetidos";
+      const header = "pais,codigo,nome,tenho,repetidos,reservados";
       const rows = stickers.map(s => [
         s.pais,
         s.codigo,
         s.nome,
         s.tenho ? "sim" : "nao",
-        s.repetidos || 0
+        s.repetidos || 0,
+        reservedDuplicates(s)
       ].map(v => `"${String(v).replaceAll('"', '""')}"`).join(","));
 
       return [header, ...rows].join("\n");
@@ -4411,7 +4479,8 @@
       stickers.forEach(sticker => {
         state[sticker.id] = {
           tenho: sticker.tenho,
-          repetidos: sticker.repetidos || 0
+          repetidos: sticker.repetidos || 0,
+          reservados: reservedDuplicates(sticker)
         };
       });
       try {
@@ -4538,6 +4607,7 @@
       updatePageVisibility();
       renderCountryModal();
       pulseViewTitle();
+      if (options.scrollTop !== false) window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function setActivePage(page) {
@@ -4717,7 +4787,7 @@
           viewFilter === "all" ||
           (viewFilter === "missing" && !sticker.tenho) ||
           (viewFilter === "owned" && sticker.tenho) ||
-          (viewFilter === "duplicates" && sticker.tenho && (sticker.repetidos || 0) > 0);
+          (viewFilter === "duplicates" && sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
 
         const matchesCountry =
           countryFilter === "all" ||
@@ -5338,6 +5408,39 @@
       return "Não há cromos para mostrar nesta seleção.";
     }
 
+    async function copyTextToClipboard(text) {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.left = "-9999px";
+      area.style.top = "0";
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+      area.setSelectionRange(0, area.value.length);
+      let copied = false;
+      try { copied = document.execCommand("copy"); } catch { copied = false; }
+      area.remove();
+      return copied;
+    }
+
+    function downloadExportText(text) {
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = isFriendView() ? `Mundial ${friendProfile} Cromos em Falta.txt` : "Mundial Cromos em Falta.txt";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+    }
+
     function exportGroupedLines(list, formatter) {
       return albumCountries()
         .map(country => {
@@ -5350,7 +5453,7 @@
         .filter(Boolean);
     }
 
-    function exportMissingAndDuplicates() {
+    async function exportMissingAndDuplicates() {
       const album = currentAlbumStickers();
       if (!album.length) {
         setSaveStatus("Sem cromos para exportar");
@@ -5358,11 +5461,11 @@
       }
 
       const missing = album.filter(sticker => !sticker.tenho);
-      const duplicates = album.filter(sticker => sticker.tenho && (sticker.repetidos || 0) > 0);
-      const duplicateTotal = duplicates.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
+      const duplicates = album.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0);
+      const duplicateTotal = duplicates.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
       const missingLines = exportGroupedLines(missing, sticker => stickerExportNumber(sticker));
       const duplicateLines = exportGroupedLines(duplicates, sticker => {
-        const count = sticker.repetidos || 0;
+        const count = availableDuplicates(sticker);
         return count > 1 ? `${stickerExportNumber(sticker)} (${count})` : stickerExportNumber(sticker);
       });
       const lines = [];
@@ -5376,16 +5479,14 @@
       }
       if (!lines.length) lines.push("Sem cromos em falta ou repetidos");
 
-      const blob = new Blob([`${lines.join("\r\n")}\r\n`], { type: "text/plain;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = isFriendView() ? `Mundial ${friendProfile} Cromos em Falta.txt` : "Mundial Cromos em Falta.txt";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 500);
-      setSaveStatus(isFriendView() ? `Lista de ${friendProfile} exportada` : "Lista exportada com sucesso");
+      const exportText = `${lines.join("\r\n")}\r\n`;
+      const copied = await copyTextToClipboard(exportText);
+      if (copied) {
+        setSaveStatus(isFriendView() ? `Lista de ${friendProfile} copiada` : "Lista copiada para colar");
+        return;
+      }
+      downloadExportText(exportText);
+      setSaveStatus("Nao foi possivel copiar. Fiz download do ficheiro.");
     }
 
 
@@ -5835,7 +5936,7 @@
     }
 
     function albumSnapshot() {
-      return stickers.map(sticker => ({ id: sticker.id, tenho: Boolean(sticker.tenho), repetidos: normalizeDuplicates(sticker.repetidos) }));
+      return stickers.map(sticker => ({ id: sticker.id, tenho: Boolean(sticker.tenho), repetidos: normalizeDuplicates(sticker.repetidos), reservados: reservedDuplicates(sticker) }));
     }
 
     function restoreAlbumSnapshot(snapshot) {
@@ -5845,6 +5946,7 @@
         if (!saved) return;
         sticker.tenho = Boolean(saved.tenho);
         sticker.repetidos = normalizeDuplicates(saved.repetidos);
+        sticker.reservados = Math.min(normalizeReserved(saved.reservados), sticker.repetidos);
       });
       saveState();
       render();
@@ -5995,7 +6097,7 @@
 
       const owned = album.filter(sticker => sticker.tenho);
       const repeated = album.filter(sticker => normalizeDuplicates(sticker.repetidos) > 0);
-      const duplicateCopies = repeated.reduce((sum, sticker) => sum + normalizeDuplicates(sticker.repetidos), 0);
+      const duplicateCopies = repeated.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
       if (!owned.length && !duplicateCopies) return [];
 
       return [{
@@ -6166,6 +6268,14 @@
         notificationMenuBadge.textContent = incoming;
         notificationMenuBadge.classList.toggle("hidden", incoming <= 0);
       }
+      if (mobileTradeBadge) {
+        mobileTradeBadge.textContent = pending > 9 ? "9+" : pending;
+        mobileTradeBadge.classList.toggle("hidden", pending <= 0);
+      }
+      if (mobileNotificationBadge) {
+        mobileNotificationBadge.textContent = incoming > 9 ? "9+" : incoming;
+        mobileNotificationBadge.classList.toggle("hidden", incoming <= 0);
+      }
     }
 
     function renderNotificationsPanel() {
@@ -6204,7 +6314,7 @@
       const total = album.length;
       const owned = album.filter(sticker => sticker.tenho).length;
       const missing = total - owned;
-      const duplicates = album.reduce((sum, sticker) => sum + normalizeDuplicates(sticker.repetidos), 0);
+      const duplicates = album.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
       const percent = total ? Math.round((owned / total) * 100) : 0;
       return { total, owned, missing, duplicates, percent };
     }
@@ -6214,11 +6324,11 @@
       const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
       const canGive = stickers.filter(sticker => {
         const friendSticker = friendById.get(sticker.id);
-        return sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0 && friendSticker && !friendSticker.tenho;
+        return sticker.tenho && availableDuplicates(sticker) > 0 && friendSticker && !friendSticker.tenho;
       });
       const canReceive = album.filter(sticker => {
         const mine = mineById.get(sticker.id);
-        return sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0 && mine && !mine.tenho;
+        return sticker.tenho && availableDuplicates(sticker) > 0 && mine && !mine.tenho;
       });
       const stats = stickerStatsFor(album);
       return {
@@ -6549,8 +6659,8 @@
     function tradeCompatibilityForAlbum(profile, album, userColor = DEFAULT_USER_COLOR) {
       const friendById = new Map(album.map(sticker => [sticker.id, sticker]));
       const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
-      const myDuplicates = stickers.filter(sticker => sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
-      const friendDuplicates = album.filter(sticker => sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
+      const myDuplicates = stickers.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0);
+      const friendDuplicates = album.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0);
       const iCanGive = myDuplicates.filter(sticker => {
         const friendSticker = friendById.get(sticker.id);
         return friendSticker && !friendSticker.tenho;
@@ -6576,7 +6686,7 @@
         tradeOverview.innerHTML = "";
         return;
       }
-      const myDuplicates = stickers.filter(sticker => sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
+      const myDuplicates = stickers.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0);
       const usefulFriends = tradeOverviewItems.filter(item => item.friendDuplicateCopies > 0);
       const friendsNeedMine = tradeOverviewItems.reduce((sum, item) => sum + item.iCanGiveUnique, 0);
       const friendCards = usefulFriends.map(item =>
@@ -6633,7 +6743,7 @@
 
     function possibleTradeGives() {
       if (!hasSelectedFriend()) return [];
-      return stickers.filter(sticker => sticker.tenho && (sticker.repetidos || 0) > 0);
+      return stickers.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0);
     }
 
     function possibleTradeGivesFriendNeeds() {
@@ -6641,7 +6751,7 @@
       const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
       return stickers.filter(sticker => {
         const friendSticker = friendById.get(sticker.id);
-        return sticker.tenho && (sticker.repetidos || 0) > 0 && friendSticker && !friendSticker.tenho;
+        return sticker.tenho && availableDuplicates(sticker) > 0 && friendSticker && !friendSticker.tenho;
       });
     }
 
@@ -6650,7 +6760,7 @@
       const friendById = new Map(friendStickers.map(sticker => [sticker.id, sticker]));
       return stickers.filter(sticker => {
         const friendSticker = friendById.get(sticker.id);
-        return sticker.tenho && (sticker.repetidos || 0) > 0 && friendSticker && friendSticker.tenho;
+        return sticker.tenho && availableDuplicates(sticker) > 0 && friendSticker && friendSticker.tenho;
       });
     }
 
@@ -6659,17 +6769,17 @@
       const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
       return friendStickers.filter(sticker => {
         const mine = mineById.get(sticker.id);
-        return sticker.tenho && (sticker.repetidos || 0) > 0 && mine && !mine.tenho;
+        return sticker.tenho && availableDuplicates(sticker) > 0 && mine && !mine.tenho;
       });
     }
 
     function duplicateCopyCount(list) {
-      return (list || []).reduce((sum, sticker) => sum + normalizeDuplicates(sticker.repetidos), 0);
+      return (list || []).reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
     }
 
     function friendDuplicateStickers() {
       if (!hasSelectedFriend()) return [];
-      return friendStickers.filter(sticker => sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
+      return friendStickers.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0);
     }
 
     function renderTradeQuickStats(givesFriendNeeds = possibleTradeGivesFriendNeeds(), receives = possibleTradeReceives()) {
@@ -8079,8 +8189,9 @@
     function updateExportSummary() {
       const album = currentAlbumStickers();
       const missing = album.filter(sticker => !sticker.tenho).length;
-      const duplicates = album.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
-      exportSummary.textContent = `${missing} faltam - ${duplicates} rep.`;
+      const duplicates = album.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
+      const reserved = album.reduce((sum, sticker) => sum + reservedDuplicates(sticker), 0);
+      exportSummary.textContent = reserved ? `${missing} faltam - ${duplicates} rep. (${reserved} guard.)` : `${missing} faltam - ${duplicates} rep.`;
       exportListButton.disabled = !album.length;
     }
 
@@ -8110,7 +8221,7 @@
       const total = album.length;
       const owned = album.filter(s => s.tenho).length;
       const missing = total - owned;
-      const duplicates = album.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
+      const duplicates = album.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
 
       totalCount.textContent = total;
       ownedCount.textContent = owned;
@@ -8156,7 +8267,10 @@
 
       pushUndoState(checked ? `Colaste ${stickerShortLabel(sticker)}` : `Removeste ${stickerShortLabel(sticker)}`);
       sticker.tenho = checked;
-      if (!checked) sticker.repetidos = 0;
+      if (!checked) {
+        sticker.repetidos = 0;
+        sticker.reservados = 0;
+      }
       showStickerToast(sticker, checked ? "owned" : "removed");
       saveState();
       recordHistory(checked ? `Colado: ${stickerShortLabel(sticker)}` : `Removido: ${stickerShortLabel(sticker)}`, { type: "sticker", action: checked ? "owned_added" : "owned_removed", stickers: [sticker] });
@@ -8177,6 +8291,7 @@
       if (nextDuplicates === currentDuplicates) return;
       pushUndoState(`Repetidos alterados em ${stickerShortLabel(sticker)}`);
       sticker.repetidos = nextDuplicates;
+      sticker.reservados = Math.min(reservedDuplicates(sticker), nextDuplicates);
       if (nextDuplicates > currentDuplicates) showStickerToast(sticker, "duplicate-added");
       if (nextDuplicates < currentDuplicates) showStickerToast(sticker, "duplicate-removed");
       saveState();
@@ -8201,9 +8316,30 @@
 
       pushUndoState(delta > 0 ? `Adicionaste repetido ${stickerShortLabel(sticker)}` : `Retiraste repetido ${stickerShortLabel(sticker)}`);
       sticker.repetidos = Math.max(0, currentDuplicates + delta);
+      sticker.reservados = Math.min(reservedDuplicates(sticker), sticker.repetidos);
       showStickerToast(sticker, delta > 0 ? "duplicate-added" : "duplicate-removed");
       saveState();
       recordHistory(delta > 0 ? `Repetido adicionado: ${stickerShortLabel(sticker)}` : `Repetido retirado: ${stickerShortLabel(sticker)}`, { type: "sticker", action: delta > 0 ? "duplicate_added" : "duplicate_removed", stickers: [sticker] });
+      render();
+    }
+
+    function adjustReservedDuplicates(stickerId, delta) {
+      if (isFriendView()) {
+        setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
+        return;
+      }
+      if (!requireLiveLogin()) return;
+      const sticker = stickers.find(s => s.id === stickerId);
+      if (!sticker || !sticker.tenho) return;
+      const duplicates = normalizeDuplicates(sticker.repetidos);
+      const currentReserved = reservedDuplicates(sticker);
+      const nextReserved = Math.max(0, Math.min(duplicates, currentReserved + delta));
+      if (nextReserved === currentReserved) return;
+      pushUndoState(nextReserved > currentReserved ? `Guardaste ${stickerShortLabel(sticker)} para troca` : `Reativaste ${stickerShortLabel(sticker)}`);
+      sticker.reservados = nextReserved;
+      saveState();
+      setSaveStatus(nextReserved > currentReserved ? "Cromo guardado para troca" : "Cromo reativado nos repetidos");
+      recordHistory(`Guardados em ${stickerShortLabel(sticker)}: ${currentReserved} -> ${nextReserved}`, { type: "sticker", action: nextReserved > currentReserved ? "duplicate_reserved" : "duplicate_unreserved", stickers: [sticker] });
       render();
     }
 
@@ -8222,7 +8358,7 @@
       const total = list.length;
       const owned = list.filter(sticker => sticker.tenho).length;
       const missing = total - owned;
-      const duplicates = list.reduce((sum, sticker) => sum + (sticker.repetidos || 0), 0);
+      const duplicates = list.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
       const percent = total ? Math.round((owned / total) * 100) : 0;
       return { total, owned, missing, duplicates, percent };
     }
@@ -8323,7 +8459,7 @@
         all: album.filter(sticker => sticker.pais === country).length,
         missing: album.filter(sticker => sticker.pais === country && !sticker.tenho).length,
         owned: album.filter(sticker => sticker.pais === country && sticker.tenho).length,
-        duplicates: album.filter(sticker => sticker.pais === country && sticker.tenho && (sticker.repetidos || 0) > 0).length
+        duplicates: album.filter(sticker => sticker.pais === country && sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0).length
       };
       const tabButton = view => `<button type="button" class="${modalView === view ? "active" : ""}" onclick="setModalView('${view}')">${viewTitleText(view)} (${viewCounts[view]})</button>`;
 
@@ -8358,6 +8494,21 @@
       `;
     }
 
+    function renderReservedDuplicateRow(sticker, stickerId, readonly) {
+      if (!normalizeDuplicates(sticker.repetidos)) return "";
+      return `
+        <div class="duplicate-row reserved-row" onclick="event.stopPropagation()">
+          <div class="duplicate-summary">Disponíveis: <span class="duplicate-summary-count">${availableDuplicates(sticker)}</span> · Guardados: <span class="duplicate-summary-count">${reservedDuplicates(sticker)}</span></div>
+          ${readonly ? "" : `<div class="duplicate-controls" style="${duplicateInputStyle(sticker.pais)}">
+            <div class="duplicate-buttons">
+              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustReservedDuplicates('${stickerId}', -1)" title="Reativar repetido" ${reservedDuplicates(sticker) ? "" : "disabled"}>↺</button>
+              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustReservedDuplicates('${stickerId}', 1)" title="Guardar para troca" ${availableDuplicates(sticker) ? "" : "disabled"}>⏸</button>
+            </div>
+          </div>`}
+        </div>
+      `;
+    }
+
     function renderStickerCard(sticker, options = {}) {
       const stickerId = escapeJS(sticker.id);
       const readonly = isFriendView();
@@ -8386,6 +8537,7 @@
                   </div>
                 </div>`}
               </div>
+              ${renderReservedDuplicateRow(sticker, stickerId, readonly)}
             ` : ""}
           </div>
         </div>
@@ -8396,7 +8548,7 @@
       return currentView === "all" ||
         (currentView === "missing" && !sticker.tenho) ||
         (currentView === "owned" && sticker.tenho) ||
-        (currentView === "duplicates" && sticker.tenho && (sticker.repetidos || 0) > 0);
+        (currentView === "duplicates" && sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
     }
 
     function renderSearchStickerResults(list) {

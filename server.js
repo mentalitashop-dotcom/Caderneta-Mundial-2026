@@ -363,6 +363,18 @@ function normalizeDuplicates(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
+function normalizeReserved(value) {
+  return normalizeDuplicates(value);
+}
+
+function reservedDuplicates(sticker) {
+  return Math.min(normalizeReserved(sticker?.reservados ?? sticker?.reserved), normalizeDuplicates(sticker?.repetidos ?? sticker?.duplicates));
+}
+
+function availableDuplicates(sticker) {
+  return Math.max(0, normalizeDuplicates(sticker?.repetidos ?? sticker?.duplicates) - reservedDuplicates(sticker));
+}
+
 function parseCSVLine(line) {
   const result = [];
   let current = "";
@@ -400,6 +412,7 @@ function cleanSticker(item, albumOrder = 0) {
     nome: String(item.nome || item.name || item.jogador || item.player || "").trim(),
     tenho: normalizeOwned(item.tenho ?? item.owned ?? item.obtido ?? item.have),
     repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount),
+    reservados: normalizeReserved(item.reservados ?? item.suspensos ?? item.guardados ?? item.reserved ?? item.held ?? item.inativos),
     albumOrder
   };
 
@@ -422,7 +435,7 @@ function parseTextFile(text) {
 
   const lines = trimmed.split(/\r?\n/).filter(Boolean);
   const firstLine = parseCSVLine(lines[0]);
-  const knownHeaders = ["pais", "country", "codigo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates"];
+  const knownHeaders = ["pais", "country", "codigo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos"];
   const hasHeader = firstLine.some(header => knownHeaders.includes(header.trim().toLowerCase()));
 
   let headers = ["pais", "codigo", "nome", "tenho", "repetidos"];
@@ -446,13 +459,14 @@ function csvEscape(value) {
 }
 
 function stickersToCSV(stickers) {
-  const header = "pais,codigo,nome,tenho,repetidos";
+  const header = "pais,codigo,nome,tenho,repetidos,reservados";
   const rows = stickers.map(sticker => [
     sticker.pais,
     sticker.codigo,
     sticker.nome,
     sticker.tenho ? "sim" : "nao",
-    sticker.repetidos || 0
+    sticker.repetidos || 0,
+    reservedDuplicates(sticker)
   ].map(csvEscape).join(","));
 
   return [header, ...rows].join("\n");
@@ -463,9 +477,10 @@ function countStickerState(stickers) {
     counts.total += 1;
     if (sticker.tenho) counts.owned += 1;
     if (!sticker.tenho) counts.missing += 1;
-    counts.duplicates += sticker.repetidos || 0;
+    counts.duplicates += availableDuplicates(sticker);
+    counts.reserved += reservedDuplicates(sticker);
     return counts;
-  }, { total: 0, owned: 0, missing: 0, duplicates: 0 });
+  }, { total: 0, owned: 0, missing: 0, duplicates: 0, reserved: 0 });
 }
 
 function baseDocToSticker(doc) {
@@ -481,6 +496,7 @@ function baseDocToSticker(doc) {
 function userProgressDoc(user, sticker, now, source = "base") {
   const owned = Boolean(sticker.tenho);
   const duplicates = normalizeDuplicates(sticker.repetidos);
+  const reserved = Math.min(normalizeReserved(sticker.reservados), duplicates);
   return {
     _id: `${user.id}:${sticker.id}`,
     userId: user.id,
@@ -493,6 +509,7 @@ function userProgressDoc(user, sticker, now, source = "base") {
     owned,
     missing: !owned,
     duplicates,
+    reserved,
     status: owned ? "obtido" : "em_falta",
     source,
     createdAt: now,
@@ -532,6 +549,7 @@ async function ensureIndexes(db) {
   await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, owned: 1 });
   await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, missing: 1 });
   await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, duplicates: 1 });
+  await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, reserved: 1 });
   await db.collection(COLLECTIONS.userStickers).createIndex({ userId: 1, countryCode: 1, albumOrder: 1 });
   await db.collection(COLLECTIONS.trades).createIndex({ fromUserId: 1, createdAt: -1 });
   await db.collection(COLLECTIONS.trades).createIndex({ toUserId: 1, createdAt: -1 });
@@ -860,6 +878,7 @@ async function getUserStickerState(db, user) {
       ...sticker,
       tenho: Boolean(progress?.owned),
       repetidos: normalizeDuplicates(progress?.duplicates),
+      reservados: Math.min(normalizeReserved(progress?.reserved), normalizeDuplicates(progress?.duplicates)),
       albumOrder: sticker.albumOrder
     };
   });
@@ -898,10 +917,12 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
         ...baseSticker,
         tenho: Boolean(incomingSticker.tenho),
         repetidos: normalizeDuplicates(incomingSticker.repetidos),
+        reservados: normalizeReserved(incomingSticker.reservados),
         albumOrder: baseSticker.albumOrder ?? index
       };
       const owned = Boolean(sticker.tenho);
       const duplicates = normalizeDuplicates(sticker.repetidos);
+      const reserved = Math.min(normalizeReserved(sticker.reservados), duplicates);
 
       return {
         updateOne: {
@@ -916,6 +937,7 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
               owned,
               missing: !owned,
               duplicates,
+              reserved,
               status: owned ? "obtido" : "em_falta",
               source: "online_app",
               updatedAt: now
@@ -1099,7 +1121,7 @@ async function applyAcceptedTrade(db, trade, fromUser, toUser, session) {
     const fromSticker = progressFor(fromUser, sticker);
     const toSticker = progressFor(toUser, sticker);
     if (!fromSticker || !toSticker) throw new HttpError(409, "A troca ja nao e valida.");
-    if (!fromSticker.owned || normalizeDuplicates(fromSticker.duplicates) <= 0) {
+    if (!fromSticker.owned || availableDuplicates(fromSticker) <= 0) {
       throw new HttpError(409, `${fromUser.username} ja nao tem ${tradeStickerLabel(sticker)} repetido.`);
     }
   }
@@ -1111,7 +1133,7 @@ async function applyAcceptedTrade(db, trade, fromUser, toUser, session) {
     if (fromSticker.owned) {
       throw new HttpError(409, `${fromUser.username} ja tem ${tradeStickerLabel(sticker)}.`);
     }
-    if (!toSticker.owned || normalizeDuplicates(toSticker.duplicates) <= 0) {
+    if (!toSticker.owned || availableDuplicates(toSticker) <= 0) {
       throw new HttpError(409, `${toUser.username} ja nao tem ${tradeStickerLabel(sticker)} repetido.`);
     }
   }
@@ -1120,7 +1142,7 @@ async function applyAcceptedTrade(db, trade, fromUser, toUser, session) {
   const operations = [];
   const decrementDuplicate = (user, sticker) => operations.push({
     updateOne: {
-      filter: { userId: user.id, stickerId: sticker.id, owned: true, duplicates: { $gt: 0 } },
+      filter: { userId: user.id, stickerId: sticker.id, owned: true, duplicates: { $gt: 0 }, $expr: { $gt: ["$duplicates", { $ifNull: ["$reserved", 0] }] } },
       update: {
         $inc: { duplicates: -1 },
         $set: { updatedAt: now, tradeUpdatedAt: now }
@@ -1239,7 +1261,7 @@ async function createTradeProposal(db, user, payload) {
     const mine = mineById.get(id);
     const friend = friendById.get(id);
     if (!mine || !friend) throw new HttpError(400, "Um dos cromos para dar nao existe.");
-    if (!mine.tenho || normalizeDuplicates(mine.repetidos) <= 0) {
+    if (!mine.tenho || availableDuplicates(mine) <= 0) {
       throw new HttpError(400, `${tradeStickerLabel(mine)} nao esta nos teus repetidos.`);
     }
     return publicTradeSticker(mine);
@@ -1252,7 +1274,7 @@ async function createTradeProposal(db, user, payload) {
     if (mine.tenho) {
       throw new HttpError(400, `Tu ja tens ${tradeStickerLabel(mine)}.`);
     }
-    if (!friend.tenho || normalizeDuplicates(friend.repetidos) <= 0) {
+    if (!friend.tenho || availableDuplicates(friend) <= 0) {
       throw new HttpError(400, `${targetUser.username} nao tem ${tradeStickerLabel(friend)} repetido.`);
     }
     return publicTradeSticker(friend);
@@ -1635,7 +1657,9 @@ async function createUserBackup(db, user) {
       codigo: sticker.codigo,
       nome: sticker.nome,
       tenho: Boolean(sticker.tenho),
-      repetidos: Number(sticker.repetidos || 0)
+      repetidos: Number(sticker.repetidos || 0),
+      reservados: reservedDuplicates(sticker),
+      disponiveis: availableDuplicates(sticker)
     })),
     csv: stickersToCSV(stickers),
     history: history.map(publicHistoryLog),
