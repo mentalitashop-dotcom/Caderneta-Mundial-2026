@@ -1,4 +1,4 @@
-const fs = require("fs");
+﻿const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const crypto = require("crypto");
@@ -12,6 +12,8 @@ const MANIFEST_FILE = path.join(ROOT, "manifest.webmanifest");
 const SERVICE_WORKER_FILE = path.join(ROOT, "sw.js");
 const ICON_FILE = path.join(ROOT, "icon.svg");
 const APP_ICON_FILE = path.join(ROOT, "app-icon.png");
+const APP_ICON_192_FILE = path.join(ROOT, "app-icon-192.png");
+const APP_ICON_512_FILE = path.join(ROOT, "app-icon-512.png");
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
 const COOKIE_NAME = "caderneta_session";
@@ -1890,8 +1892,9 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, body, "application/javascript; charset=utf-8", { "Cache-Control": "no-cache" });
     }
 
-    if (url.pathname === "/app-icon.png") {
-      const body = fs.existsSync(APP_ICON_FILE) ? fs.readFileSync(APP_ICON_FILE) : Buffer.alloc(0);
+    if (["/app-icon.png", "/app-icon-192.png", "/app-icon-512.png"].includes(url.pathname)) {
+      const iconFile = url.pathname === "/app-icon-192.png" ? APP_ICON_192_FILE : url.pathname === "/app-icon-512.png" ? APP_ICON_512_FILE : APP_ICON_FILE;
+      const body = fs.existsSync(iconFile) ? fs.readFileSync(iconFile) : Buffer.alloc(0);
       return send(res, 200, body, "image/png", { "Cache-Control": "public, max-age=86400" });
     }
 
@@ -1967,3 +1970,5 @@ function shutdown(signal) {
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+
+

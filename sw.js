@@ -1,5 +1,5 @@
-const CACHE_NAME = "caderneta-mundial-2026-v2";
-const APP_SHELL = ["/", "/caderneta_mundial_2026.html", "/manifest.webmanifest", "/app-icon.png", "/icon.svg"];
+﻿const CACHE_NAME = "caderneta-mundial-2026-v2";
+const APP_SHELL = ["/", "/caderneta_mundial_2026.html", "/manifest.webmanifest", "/app-icon.png", "/app-icon-192.png", "/app-icon-512.png", "/icon.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).catch(() => {}));
   self.skipWaiting();
@@ -18,3 +18,4 @@ self.addEventListener("fetch", event => {
     return response;
   }).catch(() => caches.match(request).then(cached => cached || caches.match("/"))));
 });
+

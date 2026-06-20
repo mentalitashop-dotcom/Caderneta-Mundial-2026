@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
   <meta charset="UTF-8" />
@@ -11,8 +11,10 @@
   <meta name="apple-mobile-web-app-title" content="Caderneta 2026" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="icon" href="/app-icon.png" type="image/png" />
-  <link rel="apple-touch-icon" href="/app-icon.png" />
+  <link rel="icon" href="/app-icon-192.png" sizes="192x192" type="image/png" />
+  <link rel="icon" href="/app-icon-512.png" sizes="512x512" type="image/png" />
+  <link rel="shortcut icon" href="/app-icon-192.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/app-icon-192.png" />
   <style>
     :root {
       --bg: #f6f7f9;
@@ -3400,7 +3402,100 @@
         align-items: stretch;
         flex-direction: column;
       }
-    }  </style>
+    }
+
+    .duplicate-panel {
+      display: grid;
+      gap: 7px;
+      margin-top: 8px;
+      padding: 7px;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--card) 72%, transparent);
+      border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+    }
+
+    .duplicate-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .duplicate-chip {
+      display: grid;
+      gap: 1px;
+      min-width: 0;
+      padding: 5px 6px;
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 8.5px;
+      font-weight: 900;
+      line-height: 1.05;
+      text-transform: uppercase;
+    }
+
+    .duplicate-chip b {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .duplicate-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .duplicate-action-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5px;
+      min-width: 0;
+      padding: 4px 5px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--panel) 86%, transparent);
+    }
+
+    .duplicate-action-label {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 8.5px;
+      font-weight: 900;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+      main { max-width: 100%; overflow-x: hidden; }
+      .stats { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 6px !important; }
+      .stat { min-width: 0 !important; min-height: 52px !important; padding: 7px 5px !important; border-radius: 11px !important; }
+      .stat span { min-height: 22px !important; font-size: 7.8px !important; line-height: 1.1 !important; }
+      .stat strong { font-size: 15px !important; }
+      .country-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 5px !important; }
+      .country-card { min-height: 62px !important; padding: 6px !important; gap: 4px !important; border-radius: 9px !important; }
+      .country-card-top { gap: 3px !important; align-items: start !important; }
+      .country-card-name { display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 8.2px !important; line-height: 1.04 !important; }
+      .country-card-code { font-size: 7px !important; letter-spacing: 0 !important; }
+      .country-card-bottom { grid-template-columns: minmax(0, 1fr) !important; gap: 3px !important; }
+      .country-card-count { justify-self: end !important; font-size: 7.5px !important; }
+      .country-card-progress { height: 4px !important; }
+      .toolbar, .share-panel, .trade-panel, .list-compare-panel, .settings-panel { max-width: 100%; overflow-x: hidden; }
+      .live-controls, .settings-actions { max-width: 100%; }
+      .duplicate-panel { gap: 6px; padding: 6px; }
+      .duplicate-metrics { gap: 4px; }
+      .duplicate-chip { padding: 4px 5px; font-size: 7.4px; }
+      .duplicate-chip b { font-size: 12px; }
+      .duplicate-actions { grid-template-columns: 1fr; gap: 5px; }
+      .duplicate-action-group { padding: 4px 5px; }
+      .duplicate-action-label { font-size: 7.6px; }
+      .duplicate-control-btn { width: 22px !important; height: 22px !important; font-size: 10px !important; }
+    }
+
+  </style>
 </head>
 <body class="auth-locked auth-mode-login">
   <section id="authGate" class="auth-screen" aria-live="polite">
@@ -3464,7 +3559,7 @@
         </div>
       </div>
       <div class="auth-view auth-denied">
-        <h1 class="auth-title denied">ESTA APP NÃO FOI CRIADA PARA SI</h1>
+        <h1 class="auth-title denied">ESTA APP NÃƒO FOI CRIADA PARA SI</h1>
       </div>
     </div>
   </section>
@@ -3508,7 +3603,7 @@
 
     <section id="collectionProgress" class="collection-progress">
       <div class="collection-progress-copy">
-        <span>Progresso da coleção</span>
+        <span>Progresso da coleÃ§Ã£o</span>
         <strong id="collectionProgressText">0/0 obtidos - 0%</strong>
       </div>
       <div class="collection-progress-track" aria-hidden="true">
@@ -3544,15 +3639,15 @@
 
     <section id="albumHomeTitle" class="album-home-title hidden">
       <div>
-        <strong id="albumHomeTitleMain">Seleções</strong>
-        <span id="albumHomeTitleSub">Escolhe uma seleção para abrir a caderneta.</span>
+        <strong id="albumHomeTitleMain">SeleÃ§Ãµes</strong>
+        <span id="albumHomeTitleSub">Escolhe uma seleÃ§Ã£o para abrir a caderneta.</span>
       </div>
     </section>
 
     <section id="legacyImportPanel" class="legacy-import-panel">
       <div class="legacy-import-copy">
         <strong>Importar caderneta antiga</strong>
-        <span id="legacyImportStatus" class="legacy-import-status">Secção temporária para carregar o teu ficheiro antigo.</span>
+        <span id="legacyImportStatus" class="legacy-import-status">SecÃ§Ã£o temporÃ¡ria para carregar o teu ficheiro antigo.</span>
       </div>
       <label class="legacy-import-action">
         Importar ficheiro
@@ -3564,9 +3659,9 @@
       <div class="friend-mode-copy">
         <span class="friend-mode-pill">AMIGO</span>
         <strong id="friendBannerName">Caderneta do amigo</strong>
-        <small>Só leitura. Os teus cromos não são alterados aqui.</small>
+        <small>SÃ³ leitura. Os teus cromos nÃ£o sÃ£o alterados aqui.</small>
       </div>
-      <button class="secondary" type="button" onclick="showMyAlbum()">Voltar à minha caderneta</button>
+      <button class="secondary" type="button" onclick="showMyAlbum()">Voltar Ã  minha caderneta</button>
     </section>
 
     <div id="resultSummary" class="result-summary" aria-live="polite"></div>
@@ -3638,7 +3733,7 @@
           <span>Mostra quais consegues dar com os teus repetidos.</span>
         </button>
       </div>
-      <textarea id="listCompareInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui uma lista, por exemplo:&#10;&#10;FWC 📜: 13, 16&#10;MEX 🇲🇽: 14, 17&#10;GER 🇩🇪: 1, 5, 6, 7, 11,"></textarea>
+      <textarea id="listCompareInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui uma lista, por exemplo:&#10;&#10;FWC ðŸ“œ: 13, 16&#10;MEX ðŸ‡²ðŸ‡½: 14, 17&#10;GER ðŸ‡©ðŸ‡ª: 1, 5, 6, 7, 11,"></textarea>
       <div class="list-compare-actions">
         <button type="button" onclick="renderListComparison()">Comparar lista</button>
         <button class="secondary" type="button" onclick="clearListComparison()">Limpar</button>
@@ -3653,7 +3748,7 @@
           <span>Cola uma lista de cromos recebidos e adiciona tudo de uma vez.</span>
         </div>
       </div>
-      <textarea id="bulkAddInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui os cromos recebidos, por exemplo:&#10;&#10;FWC 📜: 13, 16&#10;MEX 🇲🇽: 14, 17&#10;GER 🇩🇪: 1, 5, 6, 7, 11,"></textarea>
+      <textarea id="bulkAddInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui os cromos recebidos, por exemplo:&#10;&#10;FWC ðŸ“œ: 13, 16&#10;MEX ðŸ‡²ðŸ‡½: 14, 17&#10;GER ðŸ‡©ðŸ‡ª: 1, 5, 6, 7, 11,"></textarea>
       <div class="list-compare-actions">
         <button type="button" onclick="renderBulkAddPreview()">Pre-visualizar</button>
         <button type="button" onclick="applyBulkAddList()">Adicionar a caderneta</button>
@@ -3701,10 +3796,10 @@
       </article>
     </section>
 
-    <section id="settingsPanel" class="share-panel settings-panel hidden" aria-label="Definições">
+    <section id="settingsPanel" class="share-panel settings-panel hidden" aria-label="DefiniÃ§Ãµes">
       <div class="share-panel-head">
         <div class="share-panel-title">
-          <strong>Definições</strong>
+          <strong>DefiniÃ§Ãµes</strong>
           <span>Personaliza a app e muda a tua password.</span>
         </div>
       </div>
@@ -3739,8 +3834,8 @@
         </article>
 
         <article class="setting-card">
-          <h2>Aparência</h2>
-          <p>O tema muda só a tua app. Não altera a cor do teu user.</p>
+          <h2>AparÃªncia</h2>
+          <p>O tema muda sÃ³ a tua app. NÃ£o altera a cor do teu user.</p>
           <div class="theme-mode-row" role="group" aria-label="Modo da app">
             <button id="lightModeButton" class="secondary" type="button" onclick="setAppThemeMode('light')">Light</button>
             <button id="darkModeButton" class="secondary" type="button" onclick="setAppThemeMode('dark')">Dark</button>
@@ -3786,28 +3881,28 @@
 
         <article class="setting-card">
           <h2>Atalhos</h2>
-          <p>Ferramentas rápidas da tua conta, sem precisares do menu antigo no telemóvel.</p>
+          <p>Ferramentas rÃ¡pidas da tua conta, sem precisares do menu antigo no telemÃ³vel.</p>
           <div class="settings-actions">
             <button type="button" onclick="openListComparePanel()">Comparar listas</button>
             <button class="secondary" type="button" onclick="openBulkAddPanel()">Adicionar lista</button>
-            <button class="secondary" type="button" onclick="openHistoryPanel()">Histórico</button>
-            <button class="secondary" type="button" onclick="openNotificationsPanel()">Notificações</button>
+            <button class="secondary" type="button" onclick="openHistoryPanel()">HistÃ³rico</button>
+            <button class="secondary" type="button" onclick="openNotificationsPanel()">NotificaÃ§Ãµes</button>
             <button class="danger" type="button" onclick="logoutLiveAccount()">Logout</button>
           </div>
         </article>
       </div>
     </section>
 
-    <section id="countryTabsWrap" class="country-tabs-wrap" aria-label="Países da caderneta">
-      <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver países anteriores">‹</button>
+    <section id="countryTabsWrap" class="country-tabs-wrap" aria-label="PaÃ­ses da caderneta">
+      <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver paÃ­ses anteriores">â€¹</button>
       <div class="country-list-toolbar">
         <div class="country-list-title">
-          <span>Países</span>
-          <strong>Seleções da caderneta</strong>
+          <span>PaÃ­ses</span>
+          <strong>SeleÃ§Ãµes da caderneta</strong>
         </div>
         <label class="country-sort-control">
           <span class="country-sort-label">Ordenar</span>
-          <select id="countrySortSelect" class="country-sort-select" aria-label="Ordenar países">
+          <select id="countrySortSelect" class="country-sort-select" aria-label="Ordenar paÃ­ses">
             <option value="album">Ordem da caderneta</option>
             <option value="alpha">Ordem crescente A-Z</option>
             <option value="groups">Grupos oficiais</option>
@@ -3817,7 +3912,7 @@
       <div class="country-tabs-viewport">
         <div id="countryTabs" class="country-tabs"></div>
       </div>
-      <button id="countryScrollRight" class="country-scroll-arrow" type="button" aria-label="Ver próximos países">›</button>
+      <button id="countryScrollRight" class="country-scroll-arrow" type="button" aria-label="Ver prÃ³ximos paÃ­ses">â€º</button>
     </section>
 
     <section id="content"></section>
@@ -3868,7 +3963,7 @@
         { id: "windows", name: "Windows dark", accent: "#0078d4", countryMode: "theme", bg: "#0f0f10", card: "#1b1b1d", panel: "#242426", text: "#f5f5f5", muted: "#c7c7c7", line: "#3a3a3c", header: "rgba(31,31,33,.94)" },
         { id: "graphite", name: "Grafite verde", accent: "#2dd4bf", countryMode: "theme", bg: "#0b1010", card: "#151c1c", panel: "#1c2828", text: "#f0fdfa", muted: "#b7c9c7", line: "#2b3d3d", header: "rgba(21,28,28,.94)" },
         { id: "violet", name: "Noite violeta", accent: "#8b5cf6", countryMode: "theme", bg: "#100f16", card: "#1b1824", panel: "#252033", text: "#faf5ff", muted: "#cdc4d9", line: "#382f4c", header: "rgba(27,24,36,.94)" },
-        { id: "wine", name: "Carvão vinho", accent: "#fb7185", countryMode: "theme", bg: "#120f12", card: "#1d181c", panel: "#2a2027", text: "#fff1f2", muted: "#d4bec5", line: "#44303a", header: "rgba(29,24,28,.94)" }
+        { id: "wine", name: "CarvÃ£o vinho", accent: "#fb7185", countryMode: "theme", bg: "#120f12", card: "#1d181c", panel: "#2a2027", text: "#fff1f2", muted: "#d4bec5", line: "#44303a", header: "rgba(29,24,28,.94)" }
       ]
     };
     const LIVE_REFRESH_MS = 15000;
@@ -4207,55 +4302,55 @@
       PAN: "#ffffff"
     };
     const COUNTRY_NAMES = {
-      FWC: "TROFÉUS INICIAIS",
-      MEX: "MÉXICO",
-      RSA: "ÁFRICA DO SUL",
+      FWC: "TROFÃ‰US INICIAIS",
+      MEX: "MÃ‰XICO",
+      RSA: "ÃFRICA DO SUL",
       KOR: "COREIA DO SUL",
-      CZE: "TCHÉQUIA",
-      CAN: "CANADÁ",
-      BIH: "BÓSNIA E HERZEGOVINA",
+      CZE: "TCHÃ‰QUIA",
+      CAN: "CANADÃ",
+      BIH: "BÃ“SNIA E HERZEGOVINA",
       QAT: "CATAR",
-      SUI: "SUIÇA",
+      SUI: "SUIÃ‡A",
       BRA: "BRASIL",
       MAR: "MARROCOS",
       HAI: "HAITI",
-      SCO: "ESCÓCIA",
+      SCO: "ESCÃ“CIA",
       USA: "ESTADOS UNIDOS",
       PAR: "PARAGUAI",
-      AUS: "AUSTRÁLIA",
+      AUS: "AUSTRÃLIA",
       TUR: "TURQUIA",
       GER: "ALEMANHA",
-      CUW: "CURAÇAO",
+      CUW: "CURAÃ‡AO",
       CIV: "COSTA DO MARFIM",
       ECU: "EQUADOR",
-      NED: "PAÍSES BAIXOS",
-      JPN: "JAPÃO",
-      SWE: "SUÉCIA",
-      TUN: "TUNÍSIA",
-      BEL: "BÉLGICA",
+      NED: "PAÃSES BAIXOS",
+      JPN: "JAPÃƒO",
+      SWE: "SUÃ‰CIA",
+      TUN: "TUNÃSIA",
+      BEL: "BÃ‰LGICA",
       EGV: "EGITO",
-      IRN: "IRÃO",
-      NZL: "NOVA ZELÂNDIA",
+      IRN: "IRÃƒO",
+      NZL: "NOVA ZELÃ‚NDIA",
       ESP: "ESPANHA",
       CPV: "CABO VERDE",
-      KSA: "ARÁBIA SAUDITA",
+      KSA: "ARÃBIA SAUDITA",
       URU: "URUGUAI",
-      FRA: "FRANÇA",
+      FRA: "FRANÃ‡A",
       SEN: "SENEGAL",
       IRQ: "IRAQUE",
       NOR: "NORUEGA",
       ARG: "ARGENTINA",
-      ALG: "ARGÉLIA",
-      AUT: "ÁUSTRIA",
-      JOR: "JORDÂNIA",
+      ALG: "ARGÃ‰LIA",
+      AUT: "ÃUSTRIA",
+      JOR: "JORDÃ‚NIA",
       POR: "PORTUGAL",
       COD: "REP. DEM. DO CONGO",
-      UZB: "UZBEQUISTÃO",
-      COL: "COLÔMBIA",
+      UZB: "UZBEQUISTÃƒO",
+      COL: "COLÃ”MBIA",
       ENG: "INGLATERRA",
-      CRO: "CROÁCIA",
+      CRO: "CROÃCIA",
       GHA: "GANA",
-      PAN: "PANAMÁ"
+      PAN: "PANAMÃ"
     };
     const OFFICIAL_WORLD_CUP_GROUPS = {
       "Grupo A": ["MEX", "RSA", "KOR", "CZE"],
@@ -4306,8 +4401,8 @@
 
     function cleanSticker(item) {
       const sticker = {
-        pais: String(item.pais || item.país || item.country || "Sem país").trim(),
-        codigo: String(item.codigo || item.código || item.code || item.id || "").trim(),
+        pais: String(item["país"] || item["país"] || item.country || "Sem paÃ­s").trim(),
+        codigo: String(item["código"] || item["código"] || item.code || item.id || "").trim(),
         nome: String(item.nome || item.name || item.jogador || item.player || "").trim(),
         tenho: normalizeOwned(item.tenho ?? item.owned ?? item.obtido ?? item.have),
         repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount),
@@ -4360,7 +4455,7 @@
 
       const lines = trimmed.split(/\r?\n/).filter(Boolean);
       const firstLine = parseCSVLine(lines[0]);
-      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos"].includes(h.trim().toLowerCase()));
+      const hasHeader = firstLine.some(h => ["pais", "paÃ­s", "country", "codigo", "cÃ³digo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos"].includes(h.trim().toLowerCase()));
 
       let headers = ["pais", "codigo", "nome", "tenho"];
       let start = 0;
@@ -4546,7 +4641,7 @@
       }
 
       if (activePage === "settings") {
-        currentViewTitle.textContent = "Definições";
+        currentViewTitle.textContent = "DefiniÃ§Ãµes";
         return;
       }
 
@@ -4567,10 +4662,10 @@
       albumStats?.classList.toggle("hidden", !showAlbum);
       collectionProgress?.classList.toggle("hidden", !showAlbum);
       albumHomeTitle?.classList.add("hidden");
-      if (albumHomeTitleMain) albumHomeTitleMain.textContent = isFriendView() ? `Caderneta de ${friendProfile}` : "Seleções";
+      if (albumHomeTitleMain) albumHomeTitleMain.textContent = isFriendView() ? `Caderneta de ${friendProfile}` : "SeleÃ§Ãµes";
       if (albumHomeTitleSub) albumHomeTitleSub.textContent = isFriendView()
         ? "Consulta os cromos deste amigo sem alterar a tua caderneta."
-        : "Escolhe uma seleção para abrir a caderneta.";
+        : "Escolhe uma seleÃ§Ã£o para abrir a caderneta.";
       albumToolbar?.classList.toggle("hidden", !showAlbum);
       legacyImportPanel?.classList.add("hidden");
       friendModeBanner?.classList.toggle("hidden", !isFriendView());
@@ -4957,7 +5052,7 @@
       if (!APP_THEMES[appThemeMode].some(theme => theme.id === id)) return;
       appThemePresetId = id;
       applyAppTheme();
-      setSettingsMessage(settingsAppearanceMessage, "Aparência aplicada.");
+      setSettingsMessage(settingsAppearanceMessage, "AparÃªncia aplicada.");
     }
 
     function renderAppThemePalette() {
@@ -4981,7 +5076,7 @@
       const used = new Set(usedUserColors.map(sanitizeUserColor));
       userColorPalette.innerHTML = availableUserColors.map(color => {
         const disabled = color !== currentUserColor && color !== DEFAULT_USER_COLOR && used.has(color);
-        const title = disabled ? "Cor já usada por outro user" : color;
+        const title = disabled ? "Cor jÃ¡ usada por outro user" : color;
         return `
           <button
             class="color-swatch ${color === currentUserColor ? "is-active" : ""}"
@@ -5013,7 +5108,7 @@
       const chosen = sanitizeUserColor(color);
       const used = new Set(usedUserColors.map(sanitizeUserColor));
       if (chosen !== currentUserColor && chosen !== DEFAULT_USER_COLOR && used.has(chosen)) {
-        setSettingsMessage(settingsThemeMessage, "Essa cor já está a ser usada por outro user.", true);
+        setSettingsMessage(settingsThemeMessage, "Essa cor jÃ¡ estÃ¡ a ser usada por outro user.", true);
         return;
       }
       currentUserColor = chosen;
@@ -5022,7 +5117,7 @@
       } catch {}
       document.documentElement.style.setProperty("--user-color", currentUserColor);
       renderUserColorPalette();
-      setSettingsMessage(settingsThemeMessage, "Cor escolhida. Guarda para ficar associada à tua conta.");
+      setSettingsMessage(settingsThemeMessage, "Cor escolhida. Guarda para ficar associada Ã  tua conta.");
     }
 
     function previewThemeColor() {
@@ -5065,7 +5160,7 @@
       if (!liveEnabled || !liveProfile) return;
       const response = await apiFetch("/api/auth/settings", { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Não foi possível ler as definições");
+      if (!response.ok) throw new Error(data.error || "NÃ£o foi possÃ­vel ler as definiÃ§Ãµes");
       applyUserSettings(data.settings || {});
     }
 
@@ -5080,7 +5175,7 @@
         return "Preenche todos os campos.";
       }
       if (newPassword.length < 8) return "A nova password deve ter pelo menos 8 caracteres.";
-      if (newPassword !== confirmPassword) return "A confirmação não coincide.";
+      if (newPassword !== confirmPassword) return "A confirmaÃ§Ã£o nÃ£o coincide.";
       if (currentPassword === newPassword) return "A nova password tem de ser diferente da atual.";
       return "";
     }
@@ -5125,7 +5220,7 @@
     }
 
     function countryFullName(country) {
-      if (country === "FWC - EQUIPAS HISTÓRICAS") return "EQUIPAS HISTÓRICAS";
+      if (country === "FWC - EQUIPAS HISTÃ“RICAS") return "EQUIPAS HISTÃ“RICAS";
       const code = String(country).split(" ")[0];
       return COUNTRY_NAMES[code] || "";
     }
@@ -5375,37 +5470,37 @@
     }
 
     function countryCompleteMessage(country) {
-      if (country === "FWC") return "Já completou os Troféus";
-      if (country === "FWC - EQUIPAS HISTÓRICAS") return "Já completou as Equipas Históricas";
-      return "Já completou esta seleção";
+      if (country === "FWC") return "JÃ¡ completou os TrofÃ©us";
+      if (country === "FWC - EQUIPAS HISTÃ“RICAS") return "JÃ¡ completou as Equipas HistÃ³ricas";
+      return "JÃ¡ completou esta seleÃ§Ã£o";
     }
 
     function countryDuplicateEmptyMessage(country) {
-      if (country === "FWC") return "Não tem nenhum repetido dos Troféus";
-      if (country === "FWC - EQUIPAS HISTÓRICAS") return "Não tem nenhum repetido das Equipas Históricas";
-      return "Não tem nenhum repetido desta seleção";
+      if (country === "FWC") return "NÃ£o tem nenhum repetido dos TrofÃ©us";
+      if (country === "FWC - EQUIPAS HISTÃ“RICAS") return "NÃ£o tem nenhum repetido das Equipas HistÃ³ricas";
+      return "NÃ£o tem nenhum repetido desta seleÃ§Ã£o";
     }
 
     function countryOwnedEmptyMessage(country) {
-      if (country === "FWC") return "Não tem nenhum cromo dos Troféus";
-      if (country === "FWC - EQUIPAS HISTÓRICAS") return "Não tem nenhum cromo das Equipas Históricas";
-      return "Não tem nenhum cromo desta seleção";
+      if (country === "FWC") return "NÃ£o tem nenhum cromo dos TrofÃ©us";
+      if (country === "FWC - EQUIPAS HISTÃ“RICAS") return "NÃ£o tem nenhum cromo das Equipas HistÃ³ricas";
+      return "NÃ£o tem nenhum cromo desta seleÃ§Ã£o";
     }
 
     function emptyViewMessage(view = currentView, country = selectedCountry) {
-      if (normalizeSearch(search.value)) return "Não há cromos para mostrar nesta pesquisa.";
+      if (normalizeSearch(search.value)) return "NÃ£o hÃ¡ cromos para mostrar nesta pesquisa.";
 
       if (country === "all") {
-        if (view === "missing") return isFriendView() ? `${friendProfile} ja completou a caderneta.` : "Já completaste a caderneta.";
-        if (view === "owned") return isFriendView() ? `${friendProfile} ainda nao tem nenhum cromo obtido.` : "Ainda não tens nenhum cromo obtido.";
-        if (view === "duplicates") return isFriendView() ? `${friendProfile} nao tem nenhum cromo repetido.` : "Não tens nenhum cromo repetido.";
-        return "Não há cromos para mostrar nesta vista.";
+        if (view === "missing") return isFriendView() ? `${friendProfile} ja completou a caderneta.` : "JÃ¡ completaste a caderneta.";
+        if (view === "owned") return isFriendView() ? `${friendProfile} ainda nao tem nenhum cromo obtido.` : "Ainda nÃ£o tens nenhum cromo obtido.";
+        if (view === "duplicates") return isFriendView() ? `${friendProfile} nao tem nenhum cromo repetido.` : "NÃ£o tens nenhum cromo repetido.";
+        return "NÃ£o hÃ¡ cromos para mostrar nesta vista.";
       }
 
       if (view === "missing") return countryCompleteMessage(country);
       if (view === "owned") return countryOwnedEmptyMessage(country);
       if (view === "duplicates") return countryDuplicateEmptyMessage(country);
-      return "Não há cromos para mostrar nesta seleção.";
+      return "NÃ£o hÃ¡ cromos para mostrar nesta seleÃ§Ã£o.";
     }
 
     async function copyTextToClipboard(text) {
@@ -5524,55 +5619,55 @@
         if (normalized && code && !aliases.has(normalized)) aliases.set(normalized, code);
       };
       const manualAliases = {
-        FWC: ["FWC", "TROFEUS", "TROFEUS INICIAIS", "TROFÉUS", "TROFÉUS INICIAIS", "EQUIPAS HISTORICAS", "EQUIPAS HISTÓRICAS"],
-        MEX: ["MEXICO", "MÉXICO"],
-        RSA: ["AFRICA DO SUL", "ÁFRICA DO SUL", "SOUTH AFRICA"],
+        FWC: ["FWC", "TROFEUS", "TROFEUS INICIAIS", "TROFÃ‰US", "TROFÃ‰US INICIAIS", "EQUIPAS HISTORICAS", "EQUIPAS HISTÃ“RICAS"],
+        MEX: ["MEXICO", "MÃ‰XICO"],
+        RSA: ["AFRICA DO SUL", "ÃFRICA DO SUL", "SOUTH AFRICA"],
         KOR: ["COREIA DO SUL", "KOREIA", "KOREA", "SOUTH KOREA"],
-        CZE: ["TCHEQUIA", "TCHÉQUIA", "CHEQUIA", "CHÉQUIA", "CZECHIA"],
-        CAN: ["CANADA", "CANADÁ"],
-        BIH: ["BOSNIA", "BÓSNIA", "BOSNIA E HERZEGOVINA", "BÓSNIA E HERZEGOVINA"],
+        CZE: ["TCHEQUIA", "TCHÃ‰QUIA", "CHEQUIA", "CHÃ‰QUIA", "CZECHIA"],
+        CAN: ["CANADA", "CANADÃ"],
+        BIH: ["BOSNIA", "BÃ“SNIA", "BOSNIA E HERZEGOVINA", "BÃ“SNIA E HERZEGOVINA"],
         QAT: ["CATAR", "QATAR"],
-        SUI: ["SUICA", "SUÍÇA", "SWITZERLAND"],
+        SUI: ["SUICA", "SUÃÃ‡A", "SWITZERLAND"],
         BRA: ["BRASIL", "BRAZIL"],
         MAR: ["MARROCOS", "MOROCCO"],
         HAI: ["HAITI", "HAITI"],
-        SCO: ["ESCOCIA", "ESCÓCIA", "SCOTLAND"],
+        SCO: ["ESCOCIA", "ESCÃ“CIA", "SCOTLAND"],
         USA: ["ESTADOS UNIDOS", "UNITED STATES", "EUA"],
         PAR: ["PARAGUAI", "PARAGUAY"],
-        AUS: ["AUSTRALIA", "AUSTRÁLIA"],
+        AUS: ["AUSTRALIA", "AUSTRÃLIA"],
         TUR: ["TURQUIA", "TURKEY"],
         GER: ["ALEMANHA", "GERMANY", "DEUTSCHLAND"],
-        CUW: ["CURACAO", "CURAÇAO", "CURAÇAO", "CURACAO"],
-        CIV: ["COSTA DO MARFIM", "COTE DIVOIRE", "CÔTE DIVOIRE", "IVORY COAST"],
+        CUW: ["CURACAO", "CURAÃ‡AO", "CURAÃ‡AO", "CURACAO"],
+        CIV: ["COSTA DO MARFIM", "COTE DIVOIRE", "CÃ”TE DIVOIRE", "IVORY COAST"],
         ECU: ["EQUADOR", "ECUADOR"],
-        NED: ["PAISES BAIXOS", "PAÍSES BAIXOS", "HOLANDA", "NETHERLANDS"],
-        JPN: ["JAPAO", "JAPÃO", "JAPAN"],
-        SWE: ["SUECIA", "SUÉCIA", "SWEDEN"],
-        TUN: ["TUNISIA", "TUNÍSIA"],
-        BEL: ["BELGICA", "BÉLGICA", "BELGIUM"],
+        NED: ["PAISES BAIXOS", "PAÃSES BAIXOS", "HOLANDA", "NETHERLANDS"],
+        JPN: ["JAPAO", "JAPÃƒO", "JAPAN"],
+        SWE: ["SUECIA", "SUÃ‰CIA", "SWEDEN"],
+        TUN: ["TUNISIA", "TUNÃSIA"],
+        BEL: ["BELGICA", "BÃ‰LGICA", "BELGIUM"],
         EGV: ["EGITO", "EGYPT"],
-        IRN: ["IRAO", "IRÃO", "IRAN"],
-        NZL: ["NOVA ZELANDIA", "NOVA ZELÂNDIA", "NEW ZEALAND"],
+        IRN: ["IRAO", "IRÃƒO", "IRAN"],
+        NZL: ["NOVA ZELANDIA", "NOVA ZELÃ‚NDIA", "NEW ZEALAND"],
         ESP: ["ESPANHA", "SPAIN"],
         CPV: ["CABO VERDE", "CAPE VERDE"],
-        KSA: ["ARABIA SAUDITA", "ARÁBIA SAUDITA", "SAUDI ARABIA"],
+        KSA: ["ARABIA SAUDITA", "ARÃBIA SAUDITA", "SAUDI ARABIA"],
         URU: ["URUGUAI", "URUGUAY"],
-        FRA: ["FRANCA", "FRANÇA", "FRANCE"],
-        SEN: ["SENEGAL", "SÉNÉGAL"],
+        FRA: ["FRANCA", "FRANÃ‡A", "FRANCE"],
+        SEN: ["SENEGAL", "SÃ‰NÃ‰GAL"],
         IRQ: ["IRAQUE", "IRAQ"],
         NOR: ["NORUEGA", "NORWAY"],
         ARG: ["ARGENTINA"],
-        ALG: ["ARGELIA", "ARGÉLIA", "ALGERIA"],
-        AUT: ["AUSTRIA", "ÁUSTRIA"],
-        JOR: ["JORDANIA", "JORDÂNIA", "JORDAN"],
+        ALG: ["ARGELIA", "ARGÃ‰LIA", "ALGERIA"],
+        AUT: ["AUSTRIA", "ÃUSTRIA"],
+        JOR: ["JORDANIA", "JORDÃ‚NIA", "JORDAN"],
         POR: ["PORTUGAL"],
         COD: ["CONGO", "REP DEM DO CONGO", "REP DEMOCRATICA DO CONGO", "REP. DEM. DO CONGO", "DR CONGO"],
-        UZB: ["UZBEQUISTAO", "UZBEQUISTÃO", "UZBEKISTAN"],
-        COL: ["COLOMBIA", "COLÔMBIA", "COLÓMBIA"],
+        UZB: ["UZBEQUISTAO", "UZBEQUISTÃƒO", "UZBEKISTAN"],
+        COL: ["COLOMBIA", "COLÃ”MBIA", "COLÃ“MBIA"],
         ENG: ["INGLATERRA", "ENGLAND"],
-        CRO: ["CROACIA", "CROÁCIA", "CROATIA"],
+        CRO: ["CROACIA", "CROÃCIA", "CROATIA"],
         GHA: ["GANA", "GHANA"],
-        PAN: ["PANAMA", "PANAMÁ"]
+        PAN: ["PANAMA", "PANAMÃ"]
       };
 
       Object.entries(manualAliases).forEach(([code, names]) => {
@@ -5645,7 +5740,7 @@
 
     function listNumberItems(value) {
       const items = [];
-      const matcher = /(00|\d{1,3})(?:\s*(?:-|\u2013|\u2014|a|ate|até)\s*(\d{1,3}))?(?:\s*\(\s*x?\s*(\d+)\s*\))?/gi;
+      const matcher = /(00|\d{1,3})(?:\s*(?:-|\u2013|\u2014|a|ate|atÃ©)\s*(\d{1,3}))?(?:\s*\(\s*x?\s*(\d+)\s*\))?/gi;
       let match;
       while ((match = matcher.exec(String(value || ""))) !== null) {
         const start = match[1].toUpperCase() === "00" ? 0 : Number(match[1]);
@@ -6462,17 +6557,17 @@
     function resizeProfilePhoto(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+        reader.onerror = () => reject(new Error("NÃ£o foi possÃ­vel ler a imagem."));
         reader.onload = () => {
           const image = new Image();
-          image.onerror = () => reject(new Error("O ficheiro escolhido não é uma imagem válida."));
+          image.onerror = () => reject(new Error("O ficheiro escolhido nÃ£o Ã© uma imagem vÃ¡lida."));
           image.onload = () => {
             const size = 256;
             const canvas = document.createElement("canvas");
             canvas.width = size;
             canvas.height = size;
             const context = canvas.getContext("2d");
-            if (!context) return reject(new Error("Não foi possível preparar a imagem."));
+            if (!context) return reject(new Error("NÃ£o foi possÃ­vel preparar a imagem."));
 
             const cropSize = Math.min(image.naturalWidth, image.naturalHeight);
             const sourceX = Math.max(0, (image.naturalWidth - cropSize) / 2);
@@ -6492,13 +6587,13 @@
 
       try {
         if (!file.type.startsWith("image/")) throw new Error("Escolhe um ficheiro de imagem.");
-        if (file.size > 8 * 1024 * 1024) throw new Error("A imagem não pode ultrapassar 8 MB.");
+        if (file.size > 8 * 1024 * 1024) throw new Error("A imagem nÃ£o pode ultrapassar 8 MB.");
         const photo = await resizeProfilePhoto(file);
         localStorage.setItem(profilePhotoStorageKey(), photo);
         syncProfilePhotoUI();
         setSettingsMessage(settingsProfilePhotoMessage, "Foto guardada neste dispositivo.");
       } catch (error) {
-        setSettingsMessage(settingsProfilePhotoMessage, error.message || "Não foi possível guardar a foto.", true);
+        setSettingsMessage(settingsProfilePhotoMessage, error.message || "NÃ£o foi possÃ­vel guardar a foto.", true);
       } finally {
         input.value = "";
       }
@@ -6626,7 +6721,7 @@
         friendStickers = data.exists && data.csv ? parseTextFile(data.csv) : [];
         if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
         liveComparison.innerHTML = friendStickers.length
-          ? `<div class="comparison-empty">Estás a ver a caderneta de ${escapeHTML(friend)}. Esta vista é só de leitura.</div>`
+          ? `<div class="comparison-empty">EstÃ¡s a ver a caderneta de ${escapeHTML(friend)}. Esta vista Ã© sÃ³ de leitura.</div>`
           : `<div class="comparison-empty">${escapeHTML(friend)} ainda nao tem caderneta online.</div>`;
         setSaveStatus(`A ver caderneta de ${friend}`);
         render();
@@ -6845,9 +6940,9 @@
       if (totalPages <= 1) return "";
       return `
         <div class="trade-pick-pagination">
-          <button class="secondary" type="button" onclick="setTradePickPage('${side}', ${page - 1})" ${page <= 1 ? "disabled" : ""}>‹</button>
-          <span>Página ${page}/${totalPages}</span>
-          <button class="secondary" type="button" onclick="setTradePickPage('${side}', ${page + 1})" ${page >= totalPages ? "disabled" : ""}>›</button>
+          <button class="secondary" type="button" onclick="setTradePickPage('${side}', ${page - 1})" ${page <= 1 ? "disabled" : ""}>â€¹</button>
+          <span>PÃ¡gina ${page}/${totalPages}</span>
+          <button class="secondary" type="button" onclick="setTradePickPage('${side}', ${page + 1})" ${page >= totalPages ? "disabled" : ""}>â€º</button>
         </div>
       `;
     }
@@ -7044,7 +7139,7 @@
         <div class="trade-modal-head">
           <div>
             <h2 id="tradeModalTitle">Proposta para ${escapeHTML(friendProfile)}</h2>
-            <p>Seleciona só cromos que o ${escapeHTML(friendProfile)} precisa e cromos dele que te faltam.</p>
+            <p>Seleciona sÃ³ cromos que o ${escapeHTML(friendProfile)} precisa e cromos dele que te faltam.</p>
             <div class="trade-modal-balance">${escapeHTML(balanceText)}</div>
           </div>
           <button class="trade-modal-close secondary" type="button" onclick="closeTradeModal()" aria-label="Fechar">x</button>
@@ -7053,7 +7148,7 @@
           <div class="trade-pick-grid">
             <div class="trade-pick-column">
               <div class="trade-pick-column-title">
-                <span>Tu dás</span>
+                <span>Tu dÃ¡s</span>
                 <span>${selectedTradeGiveIds.length}/${gives.length}</span>
               </div>
               ${renderTradeGroupedSummary(selectedGives)}
@@ -7071,10 +7166,10 @@
             </div>
           </div>
           <div class="trade-modal-actions">
-            <span class="trade-modal-balance">A proposta só pode ser enviada quando for 1 por 1, 2 por 2, 3 por 3...</span>
+            <span class="trade-modal-balance">A proposta sÃ³ pode ser enviada quando for 1 por 1, 2 por 2, 3 por 3...</span>
             <button type="button" onclick="proposeTrade()" ${balanced ? "" : "disabled"}>Enviar proposta</button>
           </div>
-        ` : `<div class="comparison-empty">Não há cromos suficientes para montar uma troca equilibrada.</div>`}
+        ` : `<div class="comparison-empty">NÃ£o hÃ¡ cromos suficientes para montar uma troca equilibrada.</div>`}
       `;
       restoreTradePickScrollState(scrollState);
     }
@@ -7179,7 +7274,7 @@
 
       return [...groups.entries()]
         .map(([country, codes]) => `${escapeHTML(country)} ${[...new Set(codes)].map(escapeHTML).join(", ")}`)
-        .join(" · ");
+        .join(" Â· ");
     }
 
     function tradeStickerDetailList(list) {
@@ -7290,7 +7385,7 @@
       return `
         <div class="trade-pagination">
           <button class="secondary" type="button" onclick="setTradeHistoryPage(${tradeHistoryPage - 1})" ${tradeHistoryPage <= 1 ? "disabled" : ""}>Anterior</button>
-          <span>Página ${tradeHistoryPage} de ${totalPages}</span>
+          <span>PÃ¡gina ${tradeHistoryPage} de ${totalPages}</span>
           <button class="secondary" type="button" onclick="setTradeHistoryPage(${tradeHistoryPage + 1})" ${tradeHistoryPage >= totalPages ? "disabled" : ""}>Seguinte</button>
         </div>
       `;
@@ -7697,7 +7792,7 @@
           throw new Error("O servidor demorou demasiado a responder. Tenta novamente.");
         }
         if (error instanceof TypeError) {
-          throw new Error("Não foi possível contactar o servidor. Tenta novamente.");
+          throw new Error("NÃ£o foi possÃ­vel contactar o servidor. Tenta novamente.");
         }
         throw error;
       } finally {
@@ -7907,7 +8002,7 @@
     }
 
     async function finishLiveLogin(user) {
-      if (!user?.username) throw new Error("Resposta de login inválida.");
+      if (!user?.username) throw new Error("Resposta de login invÃ¡lida.");
 
       liveProfile = user.username;
       sessionExpiryHandled = false;
@@ -7921,7 +8016,7 @@
       setAuthMode("app");
       updateLiveLoginUI();
       liveStatusText.textContent = "A carregar caderneta online...";
-      setSaveStatus("Login concluído. A carregar caderneta...");
+      setSaveStatus("Login concluÃ­do. A carregar caderneta...");
       startLiveRefresh();
       resetIdleLogoutTimer();
 
@@ -7937,9 +8032,9 @@
         liveStatusText.textContent = "Online ativo.";
         setSaveStatus("Online ligado com sucesso");
       } catch (error) {
-        console.error("Login concluído, mas a caderneta não carregou.", error);
-        liveStatusText.textContent = "Sessão iniciada. Não foi possível carregar a caderneta.";
-        setSaveStatus("Login concluído, mas houve um erro ao carregar os cromos");
+        console.error("Login concluÃ­do, mas a caderneta nÃ£o carregou.", error);
+        liveStatusText.textContent = "SessÃ£o iniciada. NÃ£o foi possÃ­vel carregar a caderneta.";
+        setSaveStatus("Login concluÃ­do, mas houve um erro ao carregar os cromos");
       }
 
       await Promise.allSettled([
@@ -8037,12 +8132,12 @@
       closeUserMenu();
       const expired = reason === "idle" || reason === "expired";
       liveStatusText.textContent = expired
-        ? "Sessão expirada. Entra novamente."
-        : "Sessão terminada. Entra para voltar ao modo online.";
+        ? "SessÃ£o expirada. Entra novamente."
+        : "SessÃ£o terminada. Entra para voltar ao modo online.";
       setAuthMode("login");
       updateLiveLoginUI();
-      setAuthMessage(expired ? "Sessão expirada. Faz login novamente." : "", "login");
-      setSaveStatus(expired ? "Sessão expirada" : "Sessão terminada");
+      setAuthMessage(expired ? "SessÃ£o expirada. Faz login novamente." : "", "login");
+      setSaveStatus(expired ? "SessÃ£o expirada" : "SessÃ£o terminada");
     }
 
     async function logoutLiveAccount(reason = "manual") {
@@ -8162,15 +8257,15 @@
         }
         updateLiveLoginUI();
       } catch (error) {
-        console.error("Não foi possível verificar a sessão online.", error);
+        console.error("NÃ£o foi possÃ­vel verificar a sessÃ£o online.", error);
         liveEnabled = true;
         liveProfile = "";
         inviteValid = false;
         setAuthMode("login");
-        setAuthMessage("Não foi possível verificar a sessão. Podes tentar fazer login novamente.", "login");
-        liveStatusText.textContent = "Não foi possível verificar a sessão online.";
+        setAuthMessage("NÃ£o foi possÃ­vel verificar a sessÃ£o. Podes tentar fazer login novamente.", "login");
+        liveStatusText.textContent = "NÃ£o foi possÃ­vel verificar a sessÃ£o online.";
         updateLiveLoginUI();
-        setSaveStatus("Não foi possível verificar a sessão");
+        setSaveStatus("NÃ£o foi possÃ­vel verificar a sessÃ£o");
       }
     }
     function updateSearchControls() {
@@ -8196,7 +8291,7 @@
     }
 
     function currentCountryLabel() {
-      if (selectedCountry === "all") return "todas as seleções";
+      if (selectedCountry === "all") return "todas as seleÃ§Ãµes";
       const name = countryFullName(selectedCountry);
       return name ? `${name} (${exportGroupLabel(selectedCountry)})` : selectedCountry;
     }
@@ -8208,7 +8303,7 @@
     function emptyActionButtons() {
       const actions = [];
       if (search.value.trim()) actions.push(`<button class="empty-action-btn" type="button" onclick="clearSearch()">Limpar pesquisa</button>`);
-      if (selectedCountry !== "all") actions.push(`<button class="empty-action-btn" type="button" onclick="setCountry('all')">Ver todas as seleções</button>`);
+      if (selectedCountry !== "all") actions.push(`<button class="empty-action-btn" type="button" onclick="setCountry('all')">Ver todas as seleÃ§Ãµes</button>`);
       if (currentView !== "all") actions.push(`<button class="empty-action-btn" type="button" onclick="setView('all')">Ver todos</button>`);
       return actions.length ? `<div class="empty-actions">${actions.join("")}</div>` : "";
     }
@@ -8474,8 +8569,8 @@
                 <h2 id="countryModalTitle" class="country-modal-title">${escapeHTML(name)}</h2>
               </div>
               <div class="country-modal-title-actions">
-                <button class="country-modal-nav" type="button" onclick="moveCountryModal(-1)" aria-label="Seleção anterior" ${previousCountry ? "" : "disabled"}>‹ ${escapeHTML(previousCountry ? exportGroupLabel(previousCountry) : "")}</button>
-                <button class="country-modal-nav" type="button" onclick="moveCountryModal(1)" aria-label="Seleção seguinte" ${nextCountry ? "" : "disabled"}>${escapeHTML(nextCountry ? exportGroupLabel(nextCountry) : "")} ›</button>
+                <button class="country-modal-nav" type="button" onclick="moveCountryModal(-1)" aria-label="SeleÃ§Ã£o anterior" ${previousCountry ? "" : "disabled"}>â€¹ ${escapeHTML(previousCountry ? exportGroupLabel(previousCountry) : "")}</button>
+                <button class="country-modal-nav" type="button" onclick="moveCountryModal(1)" aria-label="SeleÃ§Ã£o seguinte" ${nextCountry ? "" : "disabled"}>${escapeHTML(nextCountry ? exportGroupLabel(nextCountry) : "")} â€º</button>
                 <button class="country-modal-close" type="button" onclick="closeCountryModal()" aria-label="Fechar">x</button>
               </div>
             </div>
@@ -8494,17 +8589,36 @@
       `;
     }
 
-    function renderReservedDuplicateRow(sticker, stickerId, readonly) {
-      if (!normalizeDuplicates(sticker.repetidos)) return "";
-      return `
-        <div class="duplicate-row reserved-row" onclick="event.stopPropagation()">
-          <div class="duplicate-summary">Disponíveis: <span class="duplicate-summary-count">${availableDuplicates(sticker)}</span> · Guardados: <span class="duplicate-summary-count">${reservedDuplicates(sticker)}</span></div>
-          ${readonly ? "" : `<div class="duplicate-controls" style="${duplicateInputStyle(sticker.pais)}">
+    function renderDuplicatePanel(sticker, stickerId, readonly) {
+      const total = normalizeDuplicates(sticker.repetidos);
+      if (!total) return "";
+      const available = availableDuplicates(sticker);
+      const reserved = reservedDuplicates(sticker);
+      const controls = readonly ? "" : `
+        <div class="duplicate-actions" style="${duplicateInputStyle(sticker.pais)}">
+          <div class="duplicate-action-group">
+            <span class="duplicate-action-label">Repetidos</span>
             <div class="duplicate-buttons">
-              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustReservedDuplicates('${stickerId}', -1)" title="Reativar repetido" ${reservedDuplicates(sticker) ? "" : "disabled"}>↺</button>
-              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustReservedDuplicates('${stickerId}', 1)" title="Guardar para troca" ${availableDuplicates(sticker) ? "" : "disabled"}>⏸</button>
+              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido" ${total ? "" : "disabled"}>-</button>
+              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', 1)" title="Adicionar repetido">+</button>
             </div>
-          </div>`}
+          </div>
+          <div class="duplicate-action-group">
+            <span class="duplicate-action-label">Guardados</span>
+            <div class="duplicate-buttons">
+              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustReservedDuplicates('${stickerId}', -1)" title="Reativar repetido" ${reserved ? "" : "disabled"}>â†º</button>
+              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustReservedDuplicates('${stickerId}', 1)" title="Guardar para troca" ${available ? "" : "disabled"}>â¸</button>
+            </div>
+          </div>
+        </div>`;
+      return `
+        <div class="duplicate-panel" onclick="event.stopPropagation()">
+          <div class="duplicate-metrics">
+            <span class="duplicate-chip"><b>${total}</b>Total</span>
+            <span class="duplicate-chip"><b>${available}</b>Livres</span>
+            <span class="duplicate-chip"><b>${reserved}</b>Guard.</span>
+          </div>
+          ${controls}
         </div>
       `;
     }
@@ -8527,18 +8641,7 @@
               ${escapeHTML(currentView === "duplicates" ? `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}` : sticker.codigo)}
             </div>
             <div class="name">${escapeHTML(sticker.nome)}</div>
-            ${sticker.tenho ? `
-              <div class="duplicate-row" onclick="event.stopPropagation()">
-                <div class="duplicate-summary">Repetidos: <span class="duplicate-summary-count">${sticker.repetidos || 0}</span></div>
-                ${readonly ? "" : `<div class="duplicate-controls" style="${duplicateInputStyle(sticker.pais)}">
-                  <div class="duplicate-buttons">
-                    <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido" ${sticker.repetidos ? "" : "disabled"}>-</button>
-                    <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', 1)" title="Adicionar repetido">+</button>
-                  </div>
-                </div>`}
-              </div>
-              ${renderReservedDuplicateRow(sticker, stickerId, readonly)}
-            ` : ""}
+            ${sticker.tenho ? renderDuplicatePanel(sticker, stickerId, readonly) : ""}
           </div>
         </div>
       `;
@@ -8606,7 +8709,7 @@
 
       if (!album.length) {
         resultSummary.textContent = "";
-        content.innerHTML = renderEmptyState(isFriendView() ? `${friendProfile} ainda nao tem caderneta online.` : "Ainda não tens ficheiro carregado. Usei dados de exemplo até carregares o teu ficheiro.");
+        content.innerHTML = renderEmptyState(isFriendView() ? `${friendProfile} ainda nao tem caderneta online.` : "Ainda nÃ£o tens ficheiro carregado. Usei dados de exemplo atÃ© carregares o teu ficheiro.");
         return;
       }
 
@@ -8739,18 +8842,18 @@
         setLegacyImportStatus("A importar ficheiro...");
         const imported = parseTextFile(await file.text());
         if (!imported.length) {
-          setLegacyImportStatus("O ficheiro não tem cromos válidos.");
+          setLegacyImportStatus("O ficheiro nÃ£o tem cromos vÃ¡lidos.");
           return;
         }
 
         const result = applyImportedAlbumProgress(imported);
         if (!result.matched) {
-          setLegacyImportStatus("Nenhum cromo do ficheiro corresponde à caderneta atual.");
+          setLegacyImportStatus("Nenhum cromo do ficheiro corresponde Ã  caderneta atual.");
           return;
         }
 
         if (!result.updated) {
-          setLegacyImportStatus("O ficheiro corresponde, mas não trouxe cromos obtidos ou repetidos.");
+          setLegacyImportStatus("O ficheiro corresponde, mas nÃ£o trouxe cromos obtidos ou repetidos.");
           return;
         }
 
@@ -8761,7 +8864,7 @@
         await persistStateNow();
         setLegacyImportStatus(`Importados ${result.updated} cromos: ${result.owned} obtidos e ${result.duplicates} repetidos.`);
       } catch (error) {
-        setLegacyImportStatus("Não foi possível importar esse ficheiro.");
+        setLegacyImportStatus("NÃ£o foi possÃ­vel importar esse ficheiro.");
         setSaveStatus("Erro ao importar caderneta antiga");
         console.error(error);
       } finally {
@@ -8844,3 +8947,5 @@
   </script>
 </body>
 </html>
+
+
