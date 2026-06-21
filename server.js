@@ -441,6 +441,7 @@ function cleanSticker(item, albumOrder = 0) {
     tenho: normalizeOwned(item.tenho ?? item.owned ?? item.obtido ?? item.have),
     repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount),
     reservados: normalizeReserved(item.reservados ?? item.suspensos ?? item.guardados ?? item.reserved ?? item.held ?? item.inativos),
+    reservas: normalizeReservations(item.reservas ?? item.reservations ?? item.reservedFor ?? item.reservasjson ?? item.reservasJson),
     albumOrder
   };
 

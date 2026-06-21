@@ -4587,6 +4587,38 @@
         font-size: 11px;
       }
     }
+
+    /* friends-page-order-final */
+    body.friend-view main {
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.friend-view #friendModeBanner { order: 1; }
+    body.friend-view #livePanel { order: 2; }
+    body.friend-view #collectionProgress { order: 3; }
+    body.friend-view #albumStats { order: 4; }
+    body.friend-view #albumToolbar { order: 5; }
+    body.friend-view #countryTabsWrap { order: 6; }
+    body.friend-view #content { order: 7; }
+
+    body.friend-view #livePanel {
+      margin-bottom: 16px;
+    }
+
+    .friends-ranking-head {
+      margin-top: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .friend-ranking-percent b {
+      color: var(--friend-rank-color, var(--main));
+    }
+
+    .friend-ranking-main .friend-ranking-progress {
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body class="app-booting auth-locked auth-mode-login">
@@ -4755,13 +4787,7 @@
     <div id="resultSummary" class="result-summary" aria-live="polite"></div>
 
     <section id="livePanel" class="share-panel live-panel hidden" aria-label="Amigos">
-      <div class="share-panel-head">
-        <div class="share-panel-title">
-          <strong>Amigos</strong>
-          <span>Escolhe um user para ver a caderneta dele.</span>
-          <span id="liveStatusText" class="hidden"></span>
-        </div>
-      </div>
+      <span id="liveStatusText" class="hidden"></span>
       <div class="live-controls account-controls">
         <input id="liveUsernameInput" class="live-input" type="text" maxlength="24" placeholder="Utilizador" autocomplete="username" />
         <div class="password-field">
@@ -4774,8 +4800,8 @@
       </div>
       <div class="friends-ranking-head">
         <div>
-          <strong>Ranking dos amigos</strong>
-          <span>Clica num amigo para veres a caderneta dele.</span>
+          <strong>Amigos</strong>
+          <span>Escolhe um amigo para ver a caderneta dele.</span>
         </div>
       </div>
       <div id="friendInsights" class="share-comparison" aria-live="polite"></div>
@@ -5610,7 +5636,7 @@
 
       const lines = trimmed.split(/\r?\n/).filter(Boolean);
       const firstLine = parseCSVLine(lines[0]);
-      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos"].includes(h.trim().toLowerCase()));
+      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson"].includes(h.trim().toLowerCase()));
 
       let headers = ["pais", "codigo", "nome", "tenho"];
       let start = 0;
@@ -6082,7 +6108,7 @@
           (viewFilter === "missing" && !sticker.tenho) ||
           (viewFilter === "owned" && sticker.tenho) ||
           (viewFilter === "duplicates" && sticker.tenho && availableDuplicates(sticker) > 0) ||
-          (viewFilter === "reserved" && sticker.tenho && reservedDuplicates(sticker) > 0);
+          (viewFilter === "reserved" && !isFriendView() && sticker.tenho && reservedDuplicates(sticker) > 0);
 
         const matchesCountry =
           countryFilter === "all" ||
@@ -7661,10 +7687,10 @@
               <span class="friend-ranking-position">${index + 1}</span>
               <span class="friend-ranking-main">
                 <strong>${escapeHTML(item.profile)}</strong>
-                <small>${item.stats.owned}/${item.stats.total} obtidos - ${item.stats.percent}%</small>
                 <span class="friend-ranking-progress" aria-hidden="true"><i></i></span>
               </span>
               <span class="friend-ranking-trades">
+                <span class="friend-ranking-percent"><b>${item.stats.percent}%</b>completa</span>
                 <span><b>${item.canReceive.length}</b>tem para ti</span>
                 <span><b>${item.canGive.length}</b>precisa teus</span>
               </span>
@@ -10135,7 +10161,7 @@
       person?.focus();
     }
 
-    function reserveDuplicateList() {
+    async function reserveDuplicateList() {
       if (isFriendView()) return setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
       if (!requireLiveLogin()) return;
       const personInput = document.getElementById("reservePersonInput");
@@ -10175,7 +10201,11 @@
         return;
       }
       saveState();
-      persistStateNow().catch(error => console.error(error));
+      try {
+        await persistStateNow();
+      } catch (error) {
+        console.error(error);
+      }
       recordHistory(`Reserva criada para ${person}: ${reservedCount} cromos`, { type: "sticker", action: "duplicates_reserved_for", partner: person, stickers: reservedEntries.map(entry => entry.sticker) });
       setSaveStatus(`${reservedCount} cromos reservados para ${person}`);
       duplicateViewMode = "reserved";
