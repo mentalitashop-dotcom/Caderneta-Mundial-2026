@@ -5124,6 +5124,59 @@
         display: none !important;
       }
     }
+  
+    /* fast-subnav-v1 */
+    .friend-trade-prompt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: -4px 0 12px;
+      padding: 10px 12px;
+      border: 1px solid color-mix(in srgb, var(--friend-color) 42%, var(--line));
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--friend-color-soft) 78%, var(--card));
+    }
+    .friend-trade-prompt.hidden { display: none; }
+    .friend-trade-prompt strong { display: block; color: var(--main); font-size: 14px; line-height: 1.15; }
+    .friend-trade-prompt span { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .friend-trade-prompt button { flex: 0 0 auto; min-height: 36px; padding: 8px 12px; font-size: 12px; }
+
+    @media (min-width: 761px) {
+      .topbar {
+        grid-template-columns: minmax(180px, 1fr) minmax(320px, auto) minmax(180px, 1fr) !important;
+        grid-template-areas: "left brand user" "left nav user";
+        row-gap: 8px !important;
+        padding: 13px 22px 10px !important;
+      }
+      .brand-button { grid-area: brand; justify-self: center; text-align: center; }
+      .topbar > nav[aria-live="polite"] { display: none !important; }
+      .desktop-nav {
+        grid-area: nav;
+        justify-self: center;
+        pointer-events: auto;
+        width: min(430px, 100%);
+        min-height: 30px;
+        padding: 3px !important;
+        gap: 4px !important;
+      }
+      .desktop-nav button,
+      nav.desktop-nav button {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        min-height: 28px !important;
+        padding: 0 12px !important;
+        font-size: 11px !important;
+        transition: background .12s ease, color .12s ease, transform .12s ease;
+      }
+      .desktop-nav button:hover { transform: translateY(-1px); }
+      .user-menu { grid-area: user; align-self: center; }
+    }
+
+    @media (max-width: 760px) {
+      .friend-trade-prompt { align-items: stretch; flex-direction: column; padding: 10px; }
+      .friend-trade-prompt button { width: 100%; }
+    }
   </style>
 </head>
 <body class="app-booting auth-locked auth-mode-login">
@@ -5222,22 +5275,12 @@
             <span>Utilizador</span>
             <strong id="userMenuProfile">Conta</strong>
           </div>
-          <div class="user-menu-section-title">Caderneta</div>
-          <button type="button" role="menuitem" onclick="showMyAlbum()"><span>A minha caderneta</span></button>
-          <button type="button" role="menuitem" onclick="openDuplicatesView()"><span>Cromos repetidos</span></button>
-          <div class="user-menu-section-title">Social</div>
-          <button type="button" role="menuitem" onclick="openFriendsPage()"><span>Amigos</span></button>
-          <button type="button" role="menuitem" onclick="openTradesPanel()"><span>Amigos e trocas</span><span id="tradeMenuBadge" class="menu-badge hidden">0</span></button>
-          <button type="button" role="menuitem" onclick="openNotificationsPanel()"><span>Notificacoes</span><span id="notificationMenuBadge" class="menu-badge hidden">0</span></button>
-          <div class="user-menu-section-title">Ferramentas</div>
-          <button type="button" role="menuitem" onclick="openListComparePanel()"><span>Comparar listas</span></button>
-          <button type="button" role="menuitem" onclick="openBulkAddPanel()"><span>Adicionar lista</span></button>
-          <button type="button" role="menuitem" onclick="exportFullBackup()"><span>Backup da conta</span></button>
-          <button type="button" role="menuitem" onclick="installPwaApp()"><span>Instalar app</span></button>
-          <button type="button" role="menuitem" onclick="openHistoryPanel()"><span>Historico</span></button>
           <div class="user-menu-section-title">Conta</div>
-          <button type="button" role="menuitem" onclick="openSettingsPanel()"><span>Definicoes</span></button>
-          <button class="danger" type="button" role="menuitem" onclick="logoutLiveAccount()"><span>Logout</span></button>
+          <button type="button" role="menuitem" onclick="openNotificationsPanel()"><span>Notificacoes</span><span id="notificationMenuBadge" class="menu-badge hidden">0</span></button>
+          <button type="button" role="menuitem" onclick="openBulkAddPanel()"><span>Adicionar lista</span></button>
+          <button type="button" role="menuitem" onclick="openHistoryPanel()"><span>Historico</span></button>
+          <button type="button" role="menuitem" onclick="exportFullBackup()"><span>Backup da conta</span></button>
+          <button type="button" role="menuitem" onclick="installPwaApp()"><span>Instalar app</span></button>          <button class="danger" type="button" role="menuitem" onclick="logoutLiveAccount()"><span>Logout</span></button>
         </div>
       </div>
     </div>
@@ -5295,6 +5338,8 @@
       </div>
 
     </section>
+
+    <section id="friendTradePrompt" class="friend-trade-prompt hidden" aria-live="polite"></section>
 
     <div id="resultSummary" class="result-summary" aria-live="polite"></div>
 
@@ -5600,7 +5645,7 @@
         { id: "wine", name: "Carv?o vinho", accent: "#fb7185", countryMode: "theme", bg: "#120f12", card: "#1d181c", panel: "#2a2027", text: "#fff1f2", muted: "#d4bec5", line: "#44303a", header: "rgba(29,24,28,.94)" }
       ]
     };
-    const LIVE_REFRESH_MS = 15000;
+    const LIVE_REFRESH_MS = 8000;
     const IDLE_LOGOUT_MS = 30 * 60 * 1000;
     const AUTH_REQUEST_TIMEOUT_MS = 30000;
     const STARTUP_REQUEST_TIMEOUT_MS = 8000;
@@ -5641,6 +5686,7 @@
     let tradeRequests = [];
     let liveHistoryLogs = [];
     let liveProfilesList = [];
+    let onlineProfilePhoto = "";
     let undoState = null;
     let undoTimer = null;
     let tradeHistoryPage = 1;
@@ -5657,6 +5703,8 @@
     let listCompareMode = "duplicates";
     let modalTouchGesture = null;
     let liveRefreshTimer = null;
+    let liveRefreshInFlight = false;
+    let renderFrame = 0;
     let idleLogoutTimer = null;
     let authRequestLocked = false;
     let sessionExpiryHandled = false;
@@ -5697,6 +5745,7 @@
     const collectionModeSelect = document.getElementById("collectionModeSelect");
     const friendModeBanner = document.getElementById("friendModeBanner");
     const friendBannerName = document.getElementById("friendBannerName");
+    const friendTradePrompt = document.getElementById("friendTradePrompt");
     const countryModal = document.getElementById("countryModal");
     const countryModalPanel = document.getElementById("countryModalPanel");
     const countryModalBody = document.getElementById("countryModalBody");
@@ -6273,6 +6322,15 @@
       return isFriendView() ? friendProfile : "a tua caderneta";
     }
 
+    function scheduleRender() {
+      if (renderFrame) return;
+      renderFrame = requestAnimationFrame(() => {
+        renderFrame = 0;
+        render();
+      });
+    }
+
+
     function saveState() {
       const state = {};
       stickers.forEach(sticker => {
@@ -6377,6 +6435,8 @@
       albumToolbar?.classList.toggle("hidden", !showAlbum);
       homeDashboard?.classList.toggle("hidden", !shouldShowHomeDashboard());
       friendModeBanner?.classList.toggle("hidden", !isFriendView());
+      friendTradePrompt?.classList.toggle("hidden", !isFriendView());
+      renderFriendTradePrompt();
       if (friendBannerName) friendBannerName.textContent = friendProfile ? `Caderneta de ${friendProfile}` : "Caderneta do amigo";
       document.body.classList.toggle("friend-view", isFriendView());
       applyFriendColor(isFriendView() ? friendUserColor : DEFAULT_USER_COLOR);
@@ -6384,7 +6444,7 @@
       countryTabsWrap?.classList.toggle("hidden", !showAlbum);
       content?.classList.toggle("hidden", !showAlbum);
       livePanel?.classList.toggle("hidden", activePage !== "friends");
-      tradePanel?.classList.toggle("hidden", activePage !== "friends");
+      tradePanel?.classList.add("hidden");
       listComparePanel?.classList.toggle("hidden", activePage !== "compare");
       bulkAddPanel?.classList.toggle("hidden", activePage !== "bulk-add");
       notificationsPanel?.classList.toggle("hidden", activePage !== "notifications");
@@ -6851,6 +6911,7 @@
       } catch {}
       document.documentElement.style.setProperty("--user-color", currentUserColor);
       renderUserColorPalette();
+      syncProfilePhotoUI();
       setSettingsMessage(settingsThemeMessage, "Cor escolhida. Guarda para ficar associada à tua conta.");
     }
 
@@ -6873,12 +6934,23 @@
       }
     }
 
+    async function saveProfilePhotoSettings(photo) {
+      if (!requireLiveLogin()) return;
+      const data = await authRequest("/api/auth/settings", {
+        userColor: sanitizeUserColor(currentUserColor),
+        profilePhoto: photo || ""
+      });
+      applyUserSettings(data.settings || {});
+      setSaveStatus(photo ? "Foto do user guardada" : "Foto do user removida");
+    }
+
     function resetThemeColor() {
       chooseThemeColor(DEFAULT_USER_COLOR);
     }
 
     function applyUserSettings(settings = {}) {
       currentUserColor = sanitizeUserColor(settings.userColor || currentUserColor);
+      onlineProfilePhoto = typeof settings.profilePhoto === "string" ? settings.profilePhoto : onlineProfilePhoto;
       availableUserColors = Array.isArray(settings.colorPalette) && settings.colorPalette.length
         ? settings.colorPalette.map(sanitizeUserColor)
         : [...USER_COLOR_PALETTE];
@@ -6888,6 +6960,7 @@
       } catch {}
       document.documentElement.style.setProperty("--user-color", currentUserColor);
       renderUserColorPalette();
+      syncProfilePhotoUI();
     }
 
     async function loadUserSettings() {
@@ -8207,6 +8280,23 @@
         </div>
       `;
     }
+    function renderFriendTradePrompt() {
+      if (!friendTradePrompt) return;
+      if (!isFriendView()) {
+        friendTradePrompt.innerHTML = "";
+        return;
+      }
+      const gives = possibleTradeGivesFriendNeeds();
+      const receives = possibleTradeReceives();
+      const size = Math.min(gives.length, receives.length, 50);
+      friendTradePrompt.innerHTML = `
+        <div>
+          <strong>Troca com ${escapeHTML(friendProfile)}</strong>
+          <span>${size ? `${size} por ${size} possivel agora` : "Ainda nao ha troca equilibrada"}</span>
+        </div>
+        <button type="button" ${size ? "" : "disabled"} onclick="openSuggestedTrade(50)">Solicitar troca</button>
+      `;
+    }
     async function refreshFriendInsights() {
       if (!friendInsights) return;
       if (!liveEnabled || !liveProfile) {
@@ -8235,9 +8325,9 @@
       switchAppPage("friends", { clearFilters: false });
       syncFriendSelects(profile);
       await loadFriendAlbum(profile, "friends");
-      renderTradePanel();
+      renderFriendTradePrompt();
       loadTradeRequests().catch(() => {});
-      document.getElementById("tradePanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      openSuggestedTrade(50);
     }
 
     function autoTradeSuggestion(maxItems = 5) {
@@ -8276,6 +8366,7 @@
     }
 
     function savedProfilePhoto() {
+      if (onlineProfilePhoto) return onlineProfilePhoto;
       try {
         return localStorage.getItem(profilePhotoStorageKey()) || "";
       } catch {
@@ -8335,9 +8426,11 @@
         if (!file.type.startsWith("image/")) throw new Error("Escolhe um ficheiro de imagem.");
         if (file.size > 8 * 1024 * 1024) throw new Error("A imagem n?o pode ultrapassar 8 MB.");
         const photo = await resizeProfilePhoto(file);
+        onlineProfilePhoto = photo;
         localStorage.setItem(profilePhotoStorageKey(), photo);
+        await saveProfilePhotoSettings(photo);
         syncProfilePhotoUI();
-        setSettingsMessage(settingsProfilePhotoMessage, "Foto guardada neste dispositivo.");
+        setSettingsMessage(settingsProfilePhotoMessage, "Foto guardada na tua conta.");
       } catch (error) {
         setSettingsMessage(settingsProfilePhotoMessage, error.message || "N?o foi poss\u00edvel guardar a foto.", true);
       } finally {
@@ -8345,13 +8438,17 @@
       }
     }
 
-    function clearProfilePhoto() {
+    async function clearProfilePhoto() {
       try {
         localStorage.removeItem(profilePhotoStorageKey());
       } catch {}
+      onlineProfilePhoto = "";
+      if (liveEnabled && liveProfile) {
+        try { await saveProfilePhotoSettings(""); } catch (error) { setSettingsMessage(settingsProfilePhotoMessage, error.message, true); }
+      }
       if (profilePhotoInput) profilePhotoInput.value = "";
       syncProfilePhotoUI();
-      setSettingsMessage(settingsProfilePhotoMessage, "Foto removida.");
+      setSettingsMessage(settingsProfilePhotoMessage, "Foto removida da tua conta.");
     }
 
     function closeUserMenu() {
@@ -9322,12 +9419,8 @@
     }
 
     function openTradesPanel() {
-      switchAppPage("friends", { clearFilters: false });
-      syncFriendSelects();
-      loadLiveProfiles().then(() => refreshFriendInsights()).catch(() => renderFriendInsights([]));
-      loadLiveProfiles().then(() => refreshTradeOverview()).catch(() => renderTradeOverview());
-      renderTradePanel();
-      loadTradeRequests().catch(() => {});
+      openFriendsPage();
+      if (hasSelectedFriend()) openSuggestedTrade(50);
     }
 
     function openListComparePanel() {
@@ -9805,6 +9898,7 @@
       if (!user?.username) throw new Error("Resposta de login inválida.");
 
       liveProfile = user.username;
+      onlineProfilePhoto = user.profilePhoto || "";
       sessionExpiryHandled = false;
       friendProfile = "";
       friendStickers = [];
@@ -9914,6 +10008,7 @@
 
     function endLiveSession(reason = "manual") {
       liveProfile = "";
+      onlineProfilePhoto = "";
       liveUpdatedAt = "";
       friendProfile = "";
       friendStickers = [];
@@ -10927,7 +11022,7 @@
       render();
     }
 
-    search?.addEventListener("input", render);
+    search?.addEventListener("input", scheduleRender);
     authLoginUsernameInput?.addEventListener("input", () => { if (liveUsernameInput) liveUsernameInput.value = authLoginUsernameInput.value; });
     authLoginPasswordInput?.addEventListener("input", () => { if (livePasswordInput) livePasswordInput.value = authLoginPasswordInput.value; });
     authRegisterUsernameInput?.addEventListener("input", () => { if (liveUsernameInput) liveUsernameInput.value = authRegisterUsernameInput.value; });

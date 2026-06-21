@@ -273,11 +273,18 @@ function cleanUserColor(value) {
   return validateUserColor(color) ? color : DEFAULT_USER_COLOR;
 }
 
+
+function cleanProfilePhoto(value) {
+  const photo = String(value || "").trim();
+  if (!photo) return "";
+  if (photo.length > 180000) return "";
+  return /^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+/=]+$/i.test(photo) ? photo : "";
+}
 async function usedUserColors(db, excludedUserId = "") {
   const docs = await db.collection(COLLECTIONS.users)
     .find(
       { _id: { $ne: excludedUserId } },
-      { projection: { userColor: 1, themeColor: 1 } }
+      { projection: { userColor: 1, themeColor: 1, profilePhoto: 1 } }
     )
     .toArray();
 
@@ -742,7 +749,8 @@ function publicUser(user) {
     username: user.username,
     role: user.role || "verificado",
     verified: user.verified !== false,
-    userColor: cleanUserColor(user.userColor || user.themeColor)
+    userColor: cleanUserColor(user.userColor || user.themeColor),
+    profilePhoto: cleanProfilePhoto(user.profilePhoto)
   };
 }
 
@@ -771,7 +779,7 @@ async function findVerifiedUser(db, username) {
   let user = await findUserAccount(
     db,
     username,
-    { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, userColor: 1, themeColor: 1 } }
+    { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, userColor: 1, themeColor: 1, profilePhoto: 1 } }
   );
 
   user = await normalizeUserAccount(db, user);
@@ -1456,7 +1464,7 @@ async function handleAuthRoute(req, res, url) {
       const account = await findUserAccount(
         db,
         user.username,
-        { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, userColor: 1, themeColor: 1 } }
+        { projection: { username: 1, usernameLower: 1, role: 1, verified: 1, userColor: 1, themeColor: 1, profilePhoto: 1 } }
       );
       const usedColors = await usedUserColors(db, user.id);
       const userColor = cleanUserColor(account?.userColor || account?.themeColor);
@@ -1465,6 +1473,7 @@ async function handleAuthRoute(req, res, url) {
         ok: true,
         settings: {
           userColor,
+          profilePhoto: cleanProfilePhoto(account?.profilePhoto),
           colorPalette: USER_COLOR_PALETTE,
           usedColors
         },
@@ -1475,6 +1484,8 @@ async function handleAuthRoute(req, res, url) {
     if (req.method === "POST") {
       const payload = await readJson(req);
       const rawUserColor = normalizeColor(payload.userColor || payload.themeColor);
+      const hasProfilePhoto = Object.prototype.hasOwnProperty.call(payload, "profilePhoto");
+      const profilePhoto = hasProfilePhoto ? cleanProfilePhoto(payload.profilePhoto) : undefined;
 
       if (!validateUserColor(rawUserColor)) {
         return sendJson(res, 400, { error: "Escolhe uma cor da paleta." });
@@ -1498,14 +1509,24 @@ async function handleAuthRoute(req, res, url) {
 
       await db.collection(COLLECTIONS.users).updateOne(
         { _id: user.id },
-        { $set: { userColor, settingsUpdatedAt: new Date() }, $unset: { themeColor: "" } }
+        {
+          $set: {
+            userColor,
+            ...(hasProfilePhoto ? { profilePhoto } : {}),
+            settingsUpdatedAt: new Date()
+          },
+          $unset: { themeColor: "" }
+        }
       );
 
+      const savedPhotoAccount = hasProfilePhoto ? null : await findUserAccount(db, user.username, { projection: { profilePhoto: 1 } });
+      const savedProfilePhoto = hasProfilePhoto ? profilePhoto : cleanProfilePhoto(savedPhotoAccount?.profilePhoto);
       const usedColors = await usedUserColors(db, user.id);
       return sendJson(res, 200, {
         ok: true,
         settings: {
           userColor,
+          profilePhoto: savedProfilePhoto,
           colorPalette: USER_COLOR_PALETTE,
           usedColors
         }
@@ -1737,7 +1758,7 @@ async function handleLiveRoute(req, res, url) {
     const users = await db.collection(COLLECTIONS.users)
       .find(
         { role: "verificado", verified: true },
-        { projection: { _id: 0, username: 1, userColor: 1, themeColor: 1 } }
+        { projection: { _id: 0, username: 1, userColor: 1, themeColor: 1, profilePhoto: 1 } }
       )
       .sort({ usernameLower: 1 })
       .limit(100)
@@ -1745,7 +1766,8 @@ async function handleLiveRoute(req, res, url) {
     return sendJson(res, 200, {
       profiles: users.map(item => ({
         profile: item.username || item.profile,
-        userColor: cleanUserColor(item.userColor || item.themeColor)
+        userColor: cleanUserColor(item.userColor || item.themeColor),
+        profilePhoto: cleanProfilePhoto(item.profilePhoto)
       }))
     });
   }
@@ -1812,6 +1834,7 @@ async function handleLiveRoute(req, res, url) {
           exists: false,
           profile: requestedProfile,
           userColor: DEFAULT_USER_COLOR,
+          profilePhoto: "",
           csv: "",
           updatedAt: ""
         });
@@ -1829,6 +1852,7 @@ async function handleLiveRoute(req, res, url) {
         exists: true,
         profile: profileUser.username,
         userColor: profileUser.userColor || DEFAULT_USER_COLOR,
+        profilePhoto: profileUser.profilePhoto || "",
         csv: stickersToCSV(stickers),
         counts: countStickerState(stickers),
         updatedAt: snapshot?.updatedAt || ""
