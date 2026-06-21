@@ -5177,6 +5177,105 @@
       .friend-trade-prompt { align-items: stretch; flex-direction: column; padding: 10px; }
       .friend-trade-prompt button { width: 100%; }
     }
+  
+    /* lists-side-dashboard-v1 */
+    .lists-panel {
+      overflow: visible;
+    }
+
+    .lists-shell {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(210px, 270px) minmax(0, 1fr);
+      align-items: start;
+      gap: 18px;
+    }
+
+    .lists-side-nav {
+      position: sticky;
+      top: 112px;
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .lists-side-nav button {
+      pointer-events: auto;
+      cursor: pointer;
+      min-width: 0;
+      min-height: 78px;
+      display: grid;
+      align-content: center;
+      gap: 5px;
+      padding: 13px 14px;
+      border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--text);
+      text-align: left;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, .045);
+    }
+
+    .lists-side-nav button:hover,
+    .lists-side-nav button.active {
+      border-color: color-mix(in srgb, var(--main) 46%, var(--line));
+      background: color-mix(in srgb, var(--main) 8%, var(--card));
+      box-shadow: 0 12px 26px rgba(15, 23, 42, .09);
+    }
+
+    .lists-side-nav button.active {
+      border-left: 4px solid var(--main);
+    }
+
+    .lists-side-nav strong {
+      color: var(--text);
+      font-weight: 900;
+    }
+
+    .lists-side-nav small {
+      color: var(--muted);
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .lists-workspace,
+    .list-tool-content {
+      min-width: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .list-tool-content.hidden {
+      display: none !important;
+    }
+
+    .list-tool-title {
+      padding: 2px 0 4px;
+    }
+
+    .settings-grid-site {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (max-width: 1050px) {
+      .lists-shell {
+        grid-template-columns: 1fr;
+      }
+      .lists-side-nav {
+        position: static;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .lists-side-nav,
+      .settings-grid-site {
+        grid-template-columns: 1fr;
+      }
+      .lists-side-nav button {
+        min-height: 66px;
+      }
+    }
   </style>
 </head>
 <body class="app-booting auth-locked auth-mode-login">
@@ -5262,7 +5361,6 @@
         <button type="button" data-page="duplicates" onclick="openDuplicatesView()">Repetidos</button>
         <button type="button" data-page="friends" onclick="openFriendsPage()">Amigos</button>
         <button type="button" data-page="compare" onclick="openListComparePanel()">Listas</button>
-        <button type="button" data-page="settings" onclick="openSettingsPanel()">Definicoes</button>
       </nav>
       <div id="userMenu" class="user-menu">
         <button id="userMenuButton" class="user-menu-button" type="button" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
@@ -5276,6 +5374,8 @@
             <strong id="userMenuProfile">Conta</strong>
           </div>
           <div class="user-menu-section-title">Conta</div>
+          <button type="button" role="menuitem" onclick="openAccountPanel()"><span>Conta</span></button>
+          <button type="button" role="menuitem" onclick="openSettingsPanel()"><span>Definicoes</span></button>
           <button type="button" role="menuitem" onclick="openNotificationsPanel()"><span>Notificacoes</span><span id="notificationMenuBadge" class="menu-badge hidden">0</span></button>
           <button type="button" role="menuitem" onclick="openBulkAddPanel()"><span>Adicionar lista</span></button>
           <button type="button" role="menuitem" onclick="openHistoryPanel()"><span>Historico</span></button>
@@ -5382,47 +5482,61 @@
       <div id="tradeList" class="trade-list" aria-live="polite"></div>
     </section>
 
-    <section id="listComparePanel" class="share-panel list-compare-panel hidden" aria-label="Comparar listas">
+    <section id="listComparePanel" class="share-panel list-compare-panel lists-panel hidden" aria-label="Listas">
       <div class="share-panel-head">
         <div class="share-panel-title">
-          <strong>Comparar listas</strong>
-          <span>Cola a lista de outra pessoa e compara com a tua caderneta.</span>
+          <strong>Listas</strong>
+          <span>Escolhe o que queres fazer com uma lista de cromos.</span>
         </div>
       </div>
-      <div class="list-compare-tabs" role="tablist" aria-label="Tipo de lista a comparar">
-        <button id="compareDuplicatesTab" class="list-compare-tab active" type="button" role="tab" aria-selected="true" onclick="setListCompareMode('duplicates')">
-          <strong>Repetidos da pessoa</strong>
-          <span>Mostra quais desses cromos te faltam.</span>
-        </button>
-        <button id="compareMissingTab" class="list-compare-tab" type="button" role="tab" aria-selected="false" onclick="setListCompareMode('missing')">
-          <strong>Faltas da pessoa</strong>
-          <span>Mostra quais consegues dar com os teus repetidos.</span>
-        </button>
-      </div>
-      <textarea id="listCompareInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui uma lista, por exemplo:&#10;&#10;FWC : 13, 16&#10;MEX : 14, 17&#10;GER : 1, 5, 6, 7, 11,"></textarea>
-      <div class="list-compare-actions">
-        <button type="button" onclick="renderListComparison()">Comparar lista</button>
-        <button class="secondary" type="button" onclick="clearListComparison()">Limpar</button>
-      </div>
-      <div id="listCompareResult" class="list-compare-result" aria-live="polite"></div>
-    </section>
+      <div class="lists-shell">
+        <nav class="lists-side-nav" aria-label="Ações de listas">
+          <button id="listToolCompareButton" class="active" type="button" onclick="setListTool('compare')">
+            <strong>Comparar lista</strong>
+            <small>Vê se uma lista de outra pessoa cruza com a tua caderneta.</small>
+          </button>
+          <button id="listToolAddButton" type="button" onclick="setListTool('add')">
+            <strong>Adicionar cromos</strong>
+            <small>Cola uma lista grande e adiciona tudo de uma vez.</small>
+          </button>
+        </nav>
 
-    <section id="bulkAddPanel" class="share-panel list-compare-panel hidden" aria-label="Adicionar lista">
-      <div class="share-panel-head">
-        <div class="share-panel-title">
-          <strong>Adicionar lista</strong>
-          <span>Cola uma lista de cromos recebidos e adiciona tudo de uma vez.</span>
+        <div class="lists-workspace">
+          <section id="listCompareTool" class="list-tool-content" aria-label="Comparar listas">
+            <div class="list-compare-tabs" role="tablist" aria-label="Tipo de lista a comparar">
+              <button id="compareDuplicatesTab" class="list-compare-tab active" type="button" role="tab" aria-selected="true" onclick="setListCompareMode('duplicates')">
+                <strong>Repetidos da pessoa</strong>
+                <span>Mostra quais desses cromos te faltam.</span>
+              </button>
+              <button id="compareMissingTab" class="list-compare-tab" type="button" role="tab" aria-selected="false" onclick="setListCompareMode('missing')">
+                <strong>Faltas da pessoa</strong>
+                <span>Mostra quais consegues dar com os teus repetidos.</span>
+              </button>
+            </div>
+            <textarea id="listCompareInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui uma lista, por exemplo:&#10;&#10;FWC : 13, 16&#10;MEX : 14, 17&#10;GER : 1, 5, 6, 7, 11,"></textarea>
+            <div class="list-compare-actions">
+              <button type="button" onclick="renderListComparison()">Comparar lista</button>
+              <button class="secondary" type="button" onclick="clearListComparison()">Limpar</button>
+            </div>
+            <div id="listCompareResult" class="list-compare-result" aria-live="polite"></div>
+          </section>
+
+          <section id="bulkAddPanel" class="list-tool-content hidden" aria-label="Adicionar lista">
+            <div class="share-panel-title list-tool-title">
+              <strong>Adicionar lista</strong>
+              <span>Cola uma lista de cromos recebidos e adiciona tudo de uma vez.</span>
+            </div>
+            <textarea id="bulkAddInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui os cromos recebidos, por exemplo:&#10;&#10;FWC : 13, 16&#10;MEX : 14, 17&#10;GER : 1, 5, 6, 7, 11,"></textarea>
+            <div class="list-compare-actions">
+              <button type="button" onclick="renderBulkAddPreview()">Pre-visualizar</button>
+              <button type="button" onclick="applyBulkAddList()">Adicionar a caderneta</button>
+              <button class="secondary" type="button" onclick="clearBulkAddList()">Limpar</button>
+            </div>
+            <div id="bulkAddResult" class="list-compare-result" aria-live="polite"></div>
+          </section>
         </div>
       </div>
-      <textarea id="bulkAddInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui os cromos recebidos, por exemplo:&#10;&#10;FWC : 13, 16&#10;MEX : 14, 17&#10;GER : 1, 5, 6, 7, 11,"></textarea>
-      <div class="list-compare-actions">
-        <button type="button" onclick="renderBulkAddPreview()">Pre-visualizar</button>
-        <button type="button" onclick="applyBulkAddList()">Adicionar a caderneta</button>
-        <button class="secondary" type="button" onclick="clearBulkAddList()">Limpar</button>
-      </div>
-      <div id="bulkAddResult" class="list-compare-result" aria-live="polite"></div>
     </section>
-
     <section id="notificationsPanel" class="share-panel list-compare-panel hidden" aria-label="Notificacoes">
       <div class="share-panel-head">
         <div class="share-panel-title">
@@ -5475,11 +5589,11 @@
       </article>
     </section>
 
-    <section id="settingsPanel" class="share-panel settings-panel hidden" aria-label="Definições">
+    <section id="accountPanel" class="share-panel settings-panel hidden" aria-label="Conta">
       <div class="share-panel-head">
         <div class="share-panel-title">
-          <strong>Definições</strong>
-          <span>Personaliza a app e muda a tua password.</span>
+          <strong>Conta</strong>
+          <span>Dados do user, foto, cor e segurança.</span>
         </div>
       </div>
       <div class="settings-grid">
@@ -5512,17 +5626,6 @@
           <div id="settingsProfilePhotoMessage" class="settings-message" aria-live="polite"></div>
         </article>
 
-        <article class="setting-card">
-          <h2>Aparência</h2>
-          <p>O tema muda s? a tua app. N?o altera a cor do teu user.</p>
-          <div class="theme-mode-row" role="group" aria-label="Modo da app">
-            <button id="lightModeButton" class="secondary" type="button" onclick="setAppThemeMode('light')">Light</button>
-            <button id="darkModeButton" class="secondary" type="button" onclick="setAppThemeMode('dark')">Dark</button>
-          </div>
-          <div id="appThemePalette" class="color-swatches" aria-label="Cores da app"></div>
-          <div id="settingsAppearanceMessage" class="settings-message" aria-live="polite"></div>
-        </article>
-
         <article class="setting-card password-card">
           <h2>Password</h2>
           <p>Escolhe uma nova password sem mexer nos teus cromos.</p>
@@ -5545,33 +5648,49 @@
         </article>
 
         <article class="setting-card">
-          <h2>App e backup</h2>
-          <p>Instala no iPhone como app e guarda uma copia completa da tua conta.</p>
+          <h2>Backup da conta</h2>
+          <p>Guarda uma copia completa dos teus dados online.</p>
+          <div class="settings-actions">
+            <button type="button" onclick="exportFullBackup()">Exportar backup</button>
+            <button class="danger" type="button" onclick="logoutLiveAccount()">Logout</button>
+          </div>
+          <div id="settingsBackupMessage" class="settings-message" aria-live="polite"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="settingsPanel" class="share-panel settings-panel hidden" aria-label="Definições">
+      <div class="share-panel-head">
+        <div class="share-panel-title">
+          <strong>Definições</strong>
+          <span>Aparência e comportamento da app neste dispositivo.</span>
+        </div>
+      </div>
+      <div class="settings-grid settings-grid-site">
+        <article class="setting-card">
+          <h2>Aparência</h2>
+          <p>O tema muda só a tua app. Não altera a cor do teu user.</p>
+          <div class="theme-mode-row" role="group" aria-label="Modo da app">
+            <button id="lightModeButton" class="secondary" type="button" onclick="setAppThemeMode('light')">Light</button>
+            <button id="darkModeButton" class="secondary" type="button" onclick="setAppThemeMode('dark')">Dark</button>
+          </div>
+          <div id="appThemePalette" class="color-swatches" aria-label="Cores da app"></div>
+          <div id="settingsAppearanceMessage" class="settings-message" aria-live="polite"></div>
+        </article>
+
+        <article class="setting-card">
+          <h2>App no dispositivo</h2>
+          <p>Instala no iPhone ou Android como app e mantém o acesso mais rápido.</p>
           <div class="install-card">
             <strong>Caderneta no telemovel</strong>
             <small id="installHelpText">No iPhone abre no Safari, carrega em Partilhar e escolhe Adicionar ao ecra principal.</small>
             <div class="settings-actions">
               <button id="installAppButton" type="button" onclick="installPwaApp()">Instalar app</button>
-              <button class="secondary" type="button" onclick="exportFullBackup()">Exportar backup</button>
             </div>
-          </div>
-          <div id="settingsBackupMessage" class="settings-message" aria-live="polite"></div>
-        </article>
-
-        <article class="setting-card">
-          <h2>Atalhos</h2>
-          <p>Ferramentas rápidas da tua conta, sem precisares do menu antigo no telemóvel.</p>
-          <div class="settings-actions">
-            <button type="button" onclick="openListComparePanel()">Comparar listas</button>
-            <button class="secondary" type="button" onclick="openBulkAddPanel()">Adicionar lista</button>
-            <button class="secondary" type="button" onclick="openHistoryPanel()">Histórico</button>
-            <button class="secondary" type="button" onclick="openNotificationsPanel()">Notificações</button>
-            <button class="danger" type="button" onclick="logoutLiveAccount()">Logout</button>
           </div>
         </article>
       </div>
     </section>
-
     <section id="countryTabsWrap" class="country-tabs-wrap" aria-label="Pa\u00edses da caderneta">
       <button id="countryScrollLeft" class="country-scroll-arrow" type="button" aria-label="Ver pa\u00edses anteriores"><</button>
       <div class="country-list-toolbar">
@@ -5609,7 +5728,7 @@
     <button type="button" data-page="friends" onclick="openFriendsPage()" aria-label="Amigos" title="Amigos"><span class="mobile-nav-icon mobile-nav-people-icon" aria-hidden="true"></span></button>
     <button type="button" data-page="friends" onclick="openTradesPanel()" aria-label="Trocas" title="Trocas"><span class="mobile-nav-icon mobile-nav-trade-icon" aria-hidden="true"></span><span id="mobileTradeBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
     <button type="button" data-page="duplicates" onclick="openDuplicatesView()" aria-label="Repetidos" title="Repetidos"><span class="mobile-nav-icon mobile-nav-card-icon" aria-hidden="true"></span></button>
-    <button type="button" data-page="settings" onclick="openSettingsPanel()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span><span id="mobileNotificationBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
+    <button type="button" data-page="account" onclick="openAccountPanel()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span><span id="mobileNotificationBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
   </nav>
 
   <footer id="saveStatus" class="save-status">A iniciar...</footer>
@@ -5701,6 +5820,7 @@
     let tradeOverviewItems = [];
     let tradeOverviewLoading = false;
     let listCompareMode = "duplicates";
+    let activeListTool = "compare";
     let modalTouchGesture = null;
     let liveRefreshTimer = null;
     let liveRefreshInFlight = false;
@@ -5787,6 +5907,7 @@
     const bulkAddInput = document.getElementById("bulkAddInput");
     const bulkAddResult = document.getElementById("bulkAddResult");
     const settingsPanel = document.getElementById("settingsPanel");
+    const accountPanel = document.getElementById("accountPanel");
     const settingsBackupMessage = document.getElementById("settingsBackupMessage");
     const installAppButton = document.getElementById("installAppButton");
     const installHelpText = document.getElementById("installHelpText");
@@ -6380,12 +6501,7 @@
       }
 
       if (activePage === "compare") {
-        currentViewTitle.textContent = "Comparar listas";
-        return;
-      }
-
-      if (activePage === "bulk-add") {
-        currentViewTitle.textContent = "Adicionar lista";
+        currentViewTitle.textContent = "Listas";
         return;
       }
 
@@ -6396,6 +6512,11 @@
 
       if (activePage === "history") {
         currentViewTitle.textContent = "Historico";
+        return;
+      }
+
+      if (activePage === "account") {
+        currentViewTitle.textContent = "Conta";
         return;
       }
 
@@ -6421,7 +6542,7 @@
       if (activePage !== "album" && reserveModalOpen) {
         closeReserveModal();
       }
-      if (activePage !== "settings" && mobileToolsModalOpen) {
+      if (activePage !== "settings" && activePage !== "account" && mobileToolsModalOpen) {
         closeMobileToolsModal();
       }
       albumStats?.classList.toggle("hidden", !showAlbum);
@@ -6446,10 +6567,12 @@
       livePanel?.classList.toggle("hidden", activePage !== "friends");
       tradePanel?.classList.add("hidden");
       listComparePanel?.classList.toggle("hidden", activePage !== "compare");
-      bulkAddPanel?.classList.toggle("hidden", activePage !== "bulk-add");
+      bulkAddPanel?.classList.toggle("hidden", activePage !== "compare" || activeListTool !== "add");
       notificationsPanel?.classList.toggle("hidden", activePage !== "notifications");
       historyPanel?.classList.toggle("hidden", activePage !== "history");
+      accountPanel?.classList.toggle("hidden", activePage !== "account");
       settingsPanel?.classList.toggle("hidden", activePage !== "settings");
+      updateListToolUI();
       updateMobileBottomNav();
       updateDesktopNav();
       updateViewTitle();
@@ -8605,7 +8728,7 @@
 
     function openMobileAccountHub() {
       if (!isMobileShell()) {
-        openSettingsPanel();
+        openAccountPanel();
         return;
       }
       mobileToolsModalOpen = true;
@@ -8642,7 +8765,8 @@
           <button class="trade-modal-close secondary" type="button" onclick="closeMobileToolsModal()" aria-label="Fechar">x</button>
         </div>
         <div class="mobile-tools-grid">
-          ${mobileToolButton("Definicoes", "Tema, foto e password", "openSettingsPanel()")}
+          ${mobileToolButton("Conta", "Foto, cor e password", "openAccountPanel()")}
+          ${mobileToolButton("Definicoes", "Tema e app", "openSettingsPanel()")}
           ${mobileToolButton("Notificacoes", "Trocas e atividade", "openNotificationsPanel()")}
           ${mobileToolButton("Comparar listas", "Ver se uma lista te ajuda", "openListComparePanel()")}
           ${mobileToolButton("Adicionar lista", "Somar cromos em massa", "openBulkAddPanel()")}
@@ -9423,26 +9547,53 @@
       if (hasSelectedFriend()) openSuggestedTrade(50);
     }
 
+    function updateListToolUI() {
+      const compareTool = document.getElementById("listCompareTool");
+      const compareButton = document.getElementById("listToolCompareButton");
+      const addButton = document.getElementById("listToolAddButton");
+      compareTool?.classList.toggle("hidden", activeListTool !== "compare");
+      bulkAddPanel?.classList.toggle("hidden", activePage !== "compare" || activeListTool !== "add");
+      compareButton?.classList.toggle("active", activeListTool === "compare");
+      addButton?.classList.toggle("active", activeListTool === "add");
+    }
+
+    function setListTool(tool) {
+      activeListTool = tool === "add" ? "add" : "compare";
+      updateListToolUI();
+      if (activeListTool === "compare") {
+        renderListComparison();
+        setTimeout(() => listCompareInput?.focus(), 0);
+      } else {
+        renderBulkAddPreview();
+        setTimeout(() => bulkAddInput?.focus(), 0);
+      }
+    }
     function openListComparePanel() {
+      activeListTool = "compare";
       switchAppPage("compare");
-      renderListComparison();
-      setTimeout(() => listCompareInput?.focus(), 0);
+      setListTool("compare");
     }
 
     function openBulkAddPanel() {
-      switchAppPage("bulk-add");
-      renderBulkAddPreview();
-      setTimeout(() => bulkAddInput?.focus(), 0);
+      activeListTool = "add";
+      switchAppPage("compare");
+      setListTool("add");
     }
 
-    function openSettingsPanel() {
-      switchAppPage("settings");
+    function openAccountPanel() {
+      switchAppPage("account");
       syncThemeControls();
       syncProfilePhotoUI();
       setSettingsMessage(settingsThemeMessage, "");
       setSettingsMessage(settingsProfilePhotoMessage, "");
       setSettingsMessage(settingsPasswordMessage, "");
+      setSettingsMessage(settingsBackupMessage, "");
       setTimeout(() => themeColorInput?.focus(), 0);
+    }
+    function openSettingsPanel() {
+      switchAppPage("settings");
+      syncThemeControls();
+      setSettingsMessage(settingsAppearanceMessage, "");
     }
 
     function refreshFromUserMenu() {
