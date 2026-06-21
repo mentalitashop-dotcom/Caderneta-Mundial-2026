@@ -2747,6 +2747,10 @@
       gap: 6px;
     }
 
+    .duplicate-country-counts:not(.is-two) {
+      grid-template-columns: 1fr;
+    }
+
     .duplicate-country-counts span {
       display: grid;
       gap: 2px;
@@ -3856,6 +3860,61 @@
 
   
 
+    .duplicate-results-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .duplicate-filter-tabs {
+      display: inline-flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
+    }
+
+    .duplicate-filter-tabs button {
+      min-height: 34px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--main);
+      border: 0;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .duplicate-filter-tabs button.active {
+      background: var(--main);
+      color: #fff;
+    }
+
+    .duplicate-filter-tabs small {
+      margin-left: 4px;
+      opacity: .78;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .reserve-modal .trade-modal-panel {
+      width: min(720px, 100%);
+    }
+
+    .reserve-modal-body {
+      display: grid;
+      gap: 14px;
+    }
+
+    .reserve-modal-body .duplicate-reserve-box {
+      margin: 0;
+      box-shadow: none;
+    }
     .duplicate-reserve-box {
       display: grid;
       gap: 10px;
@@ -3933,7 +3992,62 @@
 
     @media (max-width: 640px) {
       .reserve-form-grid { grid-template-columns: 1fr; }
-      .duplicate-reserve-box { padding: 10px; }
+      .duplicate-results-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .duplicate-filter-tabs {
+      display: inline-flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
+    }
+
+    .duplicate-filter-tabs button {
+      min-height: 34px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--main);
+      border: 0;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .duplicate-filter-tabs button.active {
+      background: var(--main);
+      color: #fff;
+    }
+
+    .duplicate-filter-tabs small {
+      margin-left: 4px;
+      opacity: .78;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .reserve-modal .trade-modal-panel {
+      width: min(720px, 100%);
+    }
+
+    .reserve-modal-body {
+      display: grid;
+      gap: 14px;
+    }
+
+    .reserve-modal-body .duplicate-reserve-box {
+      margin: 0;
+      box-shadow: none;
+    }
+    .duplicate-reserve-box { padding: 10px; }
       .reserved-person-grid { grid-template-columns: 1fr; }
     }
 
@@ -3986,6 +4100,31 @@
       .mobile-bottom-nav { padding: 5px !important; gap: 3px !important; }
       .mobile-bottom-nav button { min-height: 46px !important; border-radius: 15px !important; }
       .mobile-nav-icon, .mobile-account-avatar { width: 27px !important; height: 27px !important; }
+    }
+
+    /* mobile-instagram-shell */
+    .mobile-tools-modal .trade-modal-panel {
+      width: min(430px, calc(100vw - 18px));
+      max-height: calc(100vh - 100px);
+      border-radius: 24px 24px 0 0;
+      align-self: end;
+      margin-bottom: 0;
+    }
+    .mobile-tools-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding-top: 4px; }
+    .mobile-tool-action { min-height: 58px; display: grid; gap: 3px; align-content: center; justify-items: start; padding: 11px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); text-align: left; box-shadow: none; }
+    .mobile-tool-action strong { color: var(--main); font-size: 13px; line-height: 1.1; }
+    .mobile-tool-action small { color: var(--muted); font-size: 10px; font-weight: 800; line-height: 1.15; }
+    .mobile-tool-action.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .mobile-tool-action.danger strong, .mobile-tool-action.danger small { color: #fff; }
+    @media (max-width: 760px) {
+      body { padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important; }
+      header { position: sticky !important; top: 0 !important; z-index: 160 !important; transform: translateZ(0); }
+      main { padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important; }
+      .topbar { min-height: 54px; background: var(--header-bg); }
+      .mobile-bottom-nav { position: fixed !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; z-index: 250 !important; display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)) !important; gap: 2px !important; padding: 7px max(10px, env(safe-area-inset-left)) calc(7px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right)) !important; border: 0 !important; border-top: 1px solid color-mix(in srgb, var(--line) 82%, transparent) !important; border-radius: 0 !important; background: color-mix(in srgb, var(--card) 96%, transparent) !important; box-shadow: 0 -12px 34px rgba(15, 23, 42, .14) !important; backdrop-filter: blur(18px) !important; transform: translateZ(0); }
+      .mobile-bottom-nav button { min-height: 48px !important; border-radius: 14px !important; }
+      .save-status { padding-bottom: calc(82px + env(safe-area-inset-bottom)) !important; }
+      .sticker-toast-stack { bottom: calc(78px + env(safe-area-inset-bottom)) !important; }
     }
   </style>
 </head>
@@ -4284,6 +4423,19 @@
       </article>
     </section>
 
+    <section id="reserveModal" class="trade-modal reserve-modal hidden" aria-hidden="true">
+      <div class="trade-modal-backdrop" onclick="closeReserveModal()"></div>
+      <article class="trade-modal-panel" role="dialog" aria-modal="true" aria-label="Reservar cromos">
+        <div id="reserveModalBody"></div>
+      </article>
+    </section>
+    <section id="mobileToolsModal" class="trade-modal mobile-tools-modal hidden" aria-hidden="true">
+      <div class="trade-modal-backdrop" onclick="closeMobileToolsModal()"></div>
+      <article class="trade-modal-panel" role="dialog" aria-modal="true" aria-label="Atalhos da conta">
+        <div id="mobileToolsModalBody"></div>
+      </article>
+    </section>
+
     <section id="settingsPanel" class="share-panel settings-panel hidden" aria-label="Definições">
       <div class="share-panel-head">
         <div class="share-panel-title">
@@ -4418,7 +4570,7 @@
     <button type="button" data-page="friends" onclick="openFriendsPage()" aria-label="Amigos" title="Amigos"><span class="mobile-nav-icon mobile-nav-people-icon" aria-hidden="true"></span></button>
     <button type="button" data-page="trades" onclick="openTradesPanel()" aria-label="Trocas" title="Trocas"><span class="mobile-nav-icon mobile-nav-trade-icon" aria-hidden="true"></span><span id="mobileTradeBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
     <button type="button" data-page="duplicates" onclick="openDuplicatesView()" aria-label="Repetidos" title="Repetidos"><span class="mobile-nav-icon mobile-nav-card-icon" aria-hidden="true"></span></button>
-    <button type="button" data-page="settings" onclick="openSettingsPanel()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span><span id="mobileNotificationBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
+    <button type="button" data-page="settings" onclick="openMobileAccountHub()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span><span id="mobileNotificationBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
   </nav>
 
   <footer id="saveStatus" class="save-status">A iniciar...</footer>
@@ -4495,6 +4647,9 @@
     let undoTimer = null;
     let tradeHistoryPage = 1;
     let tradeModalOpen = false;
+    let reserveModalOpen = false;
+    let mobileToolsModalOpen = false;
+    let duplicateViewMode = "available";
     let tradeDetailId = "";
     let selectedTradeGiveIds = [];
     let selectedTradeReceiveIds = [];
@@ -4564,6 +4719,10 @@
     const tradeList = document.getElementById("tradeList");
     const tradeModal = document.getElementById("tradeModal");
     const tradeModalBody = document.getElementById("tradeModalBody");
+    const reserveModal = document.getElementById("reserveModal");
+    const reserveModalBody = document.getElementById("reserveModalBody");
+    const mobileToolsModal = document.getElementById("mobileToolsModal");
+    const mobileToolsModalBody = document.getElementById("mobileToolsModalBody");
     const notificationsPanel = document.getElementById("notificationsPanel");
     const notificationsResult = document.getElementById("notificationsResult");
     const historyPanel = document.getElementById("historyPanel");
@@ -5205,6 +5364,12 @@
       }
       if (activePage !== "trades" && tradeModalOpen) {
         closeTradeModal();
+      }
+      if (activePage !== "album" && reserveModalOpen) {
+        closeReserveModal();
+      }
+      if (activePage !== "settings" && mobileToolsModalOpen) {
+        closeMobileToolsModal();
       }
       albumStats?.classList.toggle("hidden", !showAlbum);
       collectionProgress?.classList.toggle("hidden", !showAlbum);
@@ -7322,6 +7487,60 @@
       syncProfilePhotoUI();
     }
 
+    function isMobileShell() {
+      return window.matchMedia?.("(max-width: 760px)")?.matches || window.innerWidth <= 760;
+    }
+
+    function openMobileAccountHub() {
+      if (!isMobileShell()) {
+        openSettingsPanel();
+        return;
+      }
+      mobileToolsModalOpen = true;
+      document.body.classList.add("modal-open");
+      renderMobileToolsModal();
+    }
+
+    function closeMobileToolsModal() {
+      mobileToolsModalOpen = false;
+      mobileToolsModal?.classList.add("hidden");
+      mobileToolsModal?.setAttribute("aria-hidden", "true");
+      if (!countryModalOpen && !tradeModalOpen && !reserveModalOpen) document.body.classList.remove("modal-open");
+    }
+
+    function mobileToolButton(title, subtitle, action, danger = false) {
+      return `<button class="mobile-tool-action ${danger ? "danger" : ""}" type="button" onclick="closeMobileToolsModal(); ${action}"><strong>${escapeHTML(title)}</strong><small>${escapeHTML(subtitle)}</small></button>`;
+    }
+
+    function renderMobileToolsModal() {
+      if (!mobileToolsModal || !mobileToolsModalBody) return;
+      if (!mobileToolsModalOpen) {
+        mobileToolsModal.classList.add("hidden");
+        mobileToolsModal.setAttribute("aria-hidden", "true");
+        return;
+      }
+      mobileToolsModal.classList.remove("hidden");
+      mobileToolsModal.setAttribute("aria-hidden", "false");
+      mobileToolsModalBody.innerHTML = `
+        <div class="trade-modal-head">
+          <div>
+            <h2>${escapeHTML(liveProfile || "Conta")}</h2>
+            <p>Atalhos rapidos da tua caderneta.</p>
+          </div>
+          <button class="trade-modal-close secondary" type="button" onclick="closeMobileToolsModal()" aria-label="Fechar">x</button>
+        </div>
+        <div class="mobile-tools-grid">
+          ${mobileToolButton("Definicoes", "Tema, foto e password", "openSettingsPanel()")}
+          ${mobileToolButton("Notificacoes", "Trocas e atividade", "openNotificationsPanel()")}
+          ${mobileToolButton("Comparar listas", "Ver se uma lista te ajuda", "openListComparePanel()")}
+          ${mobileToolButton("Adicionar lista", "Somar cromos em massa", "openBulkAddPanel()")}
+          ${mobileToolButton("Historico", "Ultimas alteracoes", "openHistoryPanel()")}
+          ${mobileToolButton("Backup", "Exportar conta", "exportFullBackup()")}
+          ${mobileToolButton("Instalar app", "Atalho no telemovel", "installPwaApp()")}
+          ${mobileToolButton("Logout", "Sair da conta", "logoutLiveAccount()", true)}
+        </div>
+      `;
+    }
     function tradeCompatibilityForAlbum(profile, album, userColor = DEFAULT_USER_COLOR) {
       const friendById = new Map(album.map(sticker => [sticker.id, sticker]));
       const mineById = new Map(stickers.map(sticker => [sticker.id, sticker]));
@@ -9282,7 +9501,7 @@
       const name = countryFullName(country) || country;
       const code = exportGroupLabel(country);
       const amount = mode === "reserved" ? stats.reserved : stats.available;
-      const label = mode === "reserved" ? "Guardados" : "Livres";
+      const label = mode === "reserved" ? "Guardados" : "Repetidos";
       const preview = stats.preview.length ? stats.preview.join(", ") + (stats.unique > stats.preview.length ? "..." : "") : "Sem cromos";
       const openMode = mode === "reserved" ? "reserved" : "duplicates";
       return `
@@ -9291,9 +9510,8 @@
             <strong>${escapeHTML(name)}</strong>
             <span>${escapeHTML(code)}</span>
           </span>
-          <span class="duplicate-country-counts is-two">
+          <span class="duplicate-country-counts">
             <span><b>${amount}</b>${label}</span>
-            <span><b>${stats.unique}</b>Cromos</span>
           </span>
           <span class="duplicate-country-preview">${escapeHTML(preview)}</span>
         </button>
@@ -9348,6 +9566,61 @@
       `;
     }
 
+    function openReserveModal() {
+      if (isFriendView()) return setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
+      if (!requireLiveLogin()) return;
+      reserveModalOpen = true;
+      document.body.classList.add("modal-open");
+      renderReserveModal();
+    }
+
+    function closeReserveModal() {
+      reserveModalOpen = false;
+      reserveModal?.classList.add("hidden");
+      reserveModal?.setAttribute("aria-hidden", "true");
+      if (!countryModalOpen && !tradeModalOpen) document.body.classList.remove("modal-open");
+    }
+
+    function renderReserveModal() {
+      if (!reserveModal || !reserveModalBody) return;
+      if (!reserveModalOpen) {
+        reserveModal.classList.add("hidden");
+        reserveModal.setAttribute("aria-hidden", "true");
+        return;
+      }
+      reserveModal.classList.remove("hidden");
+      reserveModal.setAttribute("aria-hidden", "false");
+      reserveModalBody.innerHTML = `
+        <div class="trade-modal-head">
+          <div>
+            <h2>Reservar cromos</h2>
+            <p>Cola a lista dos cromos que vais guardar para uma pessoa. Eles saem dos repetidos livres.</p>
+          </div>
+          <button class="trade-modal-close secondary" type="button" onclick="closeReserveModal()" aria-label="Fechar">x</button>
+        </div>
+        <div class="reserve-modal-body">
+          ${renderReservationForm()}
+        </div>
+      `;
+      setTimeout(() => document.getElementById("reservePersonInput")?.focus(), 0);
+    }
+
+    function setDuplicateViewMode(mode) {
+      duplicateViewMode = mode === "reserved" ? "reserved" : "available";
+      render();
+    }
+
+    function renderDuplicateFilterToolbar(availableCount, reservedCount) {
+      return `
+        <div class="duplicate-results-toolbar">
+          <div class="duplicate-filter-tabs" role="tablist" aria-label="Filtro de cromos repetidos">
+            <button type="button" class="${duplicateViewMode === "available" ? "active" : ""}" onclick="setDuplicateViewMode('available')">Repetidos <small>${availableCount}</small></button>
+            <button type="button" class="${duplicateViewMode === "reserved" ? "active" : ""}" onclick="setDuplicateViewMode('reserved')">Guardados <small>${reservedCount}</small></button>
+          </div>
+          <button type="button" onclick="openReserveModal()">Reservar cromos</button>
+        </div>
+      `;
+    }
     function renderReservedGroups(album = currentAlbumStickers()) {
       const groups = groupedReservationsByPerson(album);
       if (!groups.length) return `<div class="comparison-empty">Nao tens cromos guardados.</div>`;
@@ -9442,14 +9715,14 @@
       const countries = albumCountries();
       const availableCountries = countries.filter(country => album.some(sticker => sticker.pais === country && sticker.tenho && availableDuplicates(sticker) > 0));
       const reservedCount = album.reduce((sum, sticker) => sum + reservedDuplicates(sticker), 0);
+      const availableCount = album.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
+      const content = duplicateViewMode === "reserved"
+        ? `<section class="duplicate-section duplicate-reserved-section"><div class="duplicate-section-title"><span>Cromos Guardados</span><small>${reservedCount}</small></div>${renderReservedGroups(album)}</section>`
+        : renderDuplicateCountrySection("Cromos Repetidos", "Nao tens repetidos livres.", availableCountries, album, "available");
       return `
         <section class="search-results duplicate-results" aria-label="Cromos repetidos">
-          ${renderReservationForm()}
-          ${renderDuplicateCountrySection("Cromos Repetidos", "Nao tens repetidos livres.", availableCountries, album, "available")}
-          <section class="duplicate-section duplicate-reserved-section">
-            <div class="duplicate-section-title"><span>Cromos Guardados</span><small>${reservedCount}</small></div>
-            ${renderReservedGroups(album)}
-          </section>
+          ${renderDuplicateFilterToolbar(availableCount, reservedCount)}
+          ${content}
         </section>
       `;
     }
@@ -9613,6 +9886,8 @@
       setCountrySortMode(event.target.value);
     });
     window.addEventListener("keydown", event => {
+      if (event.key === "Escape" && mobileToolsModalOpen) closeMobileToolsModal();
+      if (event.key === "Escape" && reserveModalOpen) closeReserveModal();
       if (event.key === "Escape" && countryModalOpen) closeCountryModal();
       if (event.key === "Escape" && tradeModalOpen) closeTradeModal();
       if (event.key === "ArrowLeft" && countryModalOpen) moveCountryModal(-1);
