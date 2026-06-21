@@ -5276,6 +5276,168 @@
         min-height: 66px;
       }
     }
+  
+    /* album-dashboard-and-reserved-tabs-v1 */
+    .album-dashboard-shell.hidden { display: none !important; }
+
+    .album-dashboard-shell {
+      display: grid;
+      grid-template-columns: minmax(142px, 190px) minmax(0, 1fr) minmax(142px, 178px);
+      align-items: start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .dashboard-left-stack,
+    .dashboard-main-stack,
+    .dashboard-right-stack {
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .album-dashboard-shell .stats {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 9px;
+      margin: 0;
+    }
+
+    .album-dashboard-shell .stat {
+      min-height: 60px;
+      border-radius: 10px;
+    }
+
+    @media (min-width: 761px) {
+      .album-dashboard-shell .stat[data-view="duplicates"] {
+        display: none;
+      }
+      .album-dashboard-shell .collection-progress,
+      .album-dashboard-shell .toolbar {
+        margin: 0;
+      }
+    }
+
+    .dashboard-side-card {
+      pointer-events: auto;
+      cursor: pointer;
+      min-height: 58px;
+      display: grid;
+      align-content: center;
+      justify-items: end;
+      gap: 2px;
+      padding: 9px 12px;
+      border: 3px solid color-mix(in srgb, var(--text) 76%, transparent);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--card) 82%, transparent);
+      color: var(--text);
+      text-transform: uppercase;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, .08);
+    }
+
+    .dashboard-side-card:hover,
+    .dashboard-side-card:focus-visible {
+      border-color: var(--main);
+      transform: translateY(-1px);
+    }
+
+    .dashboard-side-card span {
+      max-width: 100%;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 1000;
+      line-height: 1.05;
+      text-align: right;
+    }
+
+    .dashboard-side-card strong {
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 1000;
+      line-height: .95;
+    }
+
+    body[data-theme-mode="dark"] .dashboard-side-card {
+      border-color: rgba(255,255,255,.86);
+      background: rgba(255,255,255,.035);
+    }
+
+    .reserved-person-title {
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0;
+      background: transparent !important;
+      border: 0 !important;
+    }
+
+    .reserved-person-tab {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--main) 18%, var(--card));
+      border: 1px solid color-mix(in srgb, var(--main) 42%, var(--line));
+      color: var(--main) !important;
+      font-size: 12px !important;
+      font-weight: 1000 !important;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+
+    body[data-theme-mode="dark"] .reserved-person-tab {
+      background: color-mix(in srgb, var(--main) 28%, #101827);
+      border-color: color-mix(in srgb, var(--main) 66%, #ffffff22);
+      color: #f8fafc !important;
+    }
+
+    @media (max-width: 1050px) {
+      .album-dashboard-shell.hidden { display: none !important; }
+
+    .album-dashboard-shell {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .album-dashboard-shell .stats,
+      .dashboard-right-stack {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .album-dashboard-shell .stat[data-view="duplicates"] {
+        display: grid;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .album-dashboard-shell.hidden { display: none !important; }
+
+    .album-dashboard-shell {
+        gap: 8px;
+      }
+      .album-dashboard-shell .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .dashboard-right-stack {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+      }
+      .dashboard-side-card {
+        min-height: 48px;
+        padding: 6px 7px;
+        border-width: 2px;
+        border-radius: 10px;
+      }
+      .dashboard-side-card span {
+        font-size: 7.4px;
+      }
+      .dashboard-side-card strong {
+        font-size: 13px;
+      }
+      .reserved-person-tab {
+        width: 100%;
+        justify-content: center;
+        font-size: 10px !important;
+      }
+    }
   </style>
 </head>
 <body class="app-booting auth-locked auth-mode-login">
@@ -5388,41 +5550,62 @@
 
   <main>
 
-    <section id="collectionProgress" class="collection-progress">
-      <div class="collection-progress-copy">
-        <span>Progresso da colecao</span>
-        <strong id="collectionProgressText">0/0 obtidos - 0%</strong>
+    <section id="albumDashboard" class="album-dashboard-shell" aria-label="Resumo da caderneta">
+      <div class="dashboard-left-stack">
+        <section id="albumStats" class="stats" aria-label="Resumo da caderneta">
+          <div class="stat" data-view="all"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
+          <div class="stat" data-view="owned"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
+          <div class="stat" data-view="missing"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
+          <div class="stat" data-view="duplicates"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
+        </section>
       </div>
-      <div class="collection-progress-track" aria-hidden="true">
-        <div id="collectionProgressBar" class="collection-progress-bar"></div>
-      </div>
-    </section>
 
-    <section id="albumStats" class="stats" aria-label="Resumo da caderneta">
-      <div class="stat" data-view="all"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
-      <div class="stat" data-view="missing"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
-      <div class="stat" data-view="owned"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
-      <div class="stat" data-view="duplicates"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
-    </section>
-<section id="albumToolbar" class="toolbar">
-      <div class="search-shell">
-        <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
-        <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
-      </div>
-      <div class="toolbar-actions">
-        <div class="collection-mode-row">
-          <span>Ver</span>
-          <select id="collectionModeSelect" class="collection-mode-select" onchange="setCollectionMode(this.value)">
-            <option value="all">Todas</option>
-            <option value="incomplete">Incompletas</option>
-            <option value="almost">Quase completas</option>
-            <option value="complete">Completas</option>
-          </select>
-        </div>
-        <button id="exportListButton" class="export-list-btn" type="button" onclick="exportMissingAndDuplicates()"><span>Exportar lista</span><small id="exportSummary">0 faltam - 0 rep.</small></button>
-      </div>
-    </section>
+      <div class="dashboard-main-stack">
+        <section id="collectionProgress" class="collection-progress">
+          <div class="collection-progress-copy">
+            <span>Progresso da colecao</span>
+            <strong id="collectionProgressText">0/0 obtidos - 0%</strong>
+          </div>
+          <div class="collection-progress-track" aria-hidden="true">
+            <div id="collectionProgressBar" class="collection-progress-bar"></div>
+          </div>
+        </section>
 
+        <section id="albumToolbar" class="toolbar">
+          <div class="search-shell">
+            <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
+            <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
+          </div>
+          <div class="toolbar-actions">
+            <div class="collection-mode-row">
+              <span>Ver</span>
+              <select id="collectionModeSelect" class="collection-mode-select" onchange="setCollectionMode(this.value)">
+                <option value="all">Todas</option>
+                <option value="incomplete">Incompletas</option>
+                <option value="almost">Quase completas</option>
+                <option value="complete">Completas</option>
+              </select>
+            </div>
+            <button id="exportListButton" class="export-list-btn" type="button" onclick="exportMissingAndDuplicates()"><span>Exportar lista</span><small id="exportSummary">0 faltam - 0 rep.</small></button>
+          </div>
+        </section>
+      </div>
+
+      <aside id="duplicateDashboard" class="dashboard-right-stack" aria-label="Resumo de repetidos">
+        <button class="dashboard-side-card" type="button" onclick="openDuplicatesView()">
+          <span>Cromos repetidos</span>
+          <strong id="sideDuplicatesTotal">0</strong>
+        </button>
+        <button class="dashboard-side-card" type="button" onclick="openDuplicatesView()">
+          <span>Cromos disponíveis</span>
+          <strong id="sideDuplicatesAvailable">0</strong>
+        </button>
+        <button class="dashboard-side-card" type="button" onclick="openDuplicatesView(); duplicateViewMode='reserved'; render()">
+          <span>Cromos guardados</span>
+          <strong id="sideReservedCount">0</strong>
+        </button>
+      </aside>
+    </section>
     <section id="albumHomeTitle" class="album-home-title hidden">
       <div>
         <strong id="albumHomeTitleMain">Selecoes</strong>
@@ -5843,6 +6026,7 @@
     let deferredInstallPrompt = null;
 
     const content = document.getElementById("content");
+    const albumDashboard = document.getElementById("albumDashboard");
     const albumStats = document.getElementById("albumStats");
     const collectionProgress = document.getElementById("collectionProgress");
     const collectionProgressText = document.getElementById("collectionProgressText");
@@ -5966,6 +6150,9 @@
     const missingCount = document.getElementById("missingCount");
     const ownedCount = document.getElementById("ownedCount");
     const duplicatesCount = document.getElementById("duplicatesCount");
+    const sideDuplicatesTotal = document.getElementById("sideDuplicatesTotal");
+    const sideDuplicatesAvailable = document.getElementById("sideDuplicatesAvailable");
+    const sideReservedCount = document.getElementById("sideReservedCount");
 
     const demoStickers = [
       { pais: "Portugal", codigo: "POR1", nome: "Cromo exemplo 1", tenho: false },
@@ -6545,6 +6732,7 @@
       if (activePage !== "settings" && activePage !== "account" && mobileToolsModalOpen) {
         closeMobileToolsModal();
       }
+      albumDashboard?.classList.toggle("hidden", !showAlbum);
       albumStats?.classList.toggle("hidden", !showAlbum);
       collectionProgress?.classList.toggle("hidden", !showAlbum);
       albumHomeTitle?.classList.add("hidden");
@@ -10405,6 +10593,9 @@
         duplicatesCount.title = `${duplicates} repetidos livres, ${reserved} guardados`;
         duplicatesCount.setAttribute("aria-label", `${duplicates} repetidos livres e ${reserved} guardados`);
       }
+      if (sideDuplicatesTotal) sideDuplicatesTotal.textContent = `${duplicates + reserved}(${reserved})`;
+      if (sideDuplicatesAvailable) sideDuplicatesAvailable.textContent = `${duplicates}(${reserved})`;
+      if (sideReservedCount) sideReservedCount.textContent = reserved;
       const percent = total ? Math.round((owned / total) * 100) : 0;
       if (collectionProgressText) collectionProgressText.textContent = `${owned}/${total} obtidos - ${percent}%`;
       if (collectionProgressBar) collectionProgressBar.style.width = `${percent}%`;
