@@ -4126,6 +4126,123 @@
       .save-status { padding-bottom: calc(82px + env(safe-area-inset-bottom)) !important; }
       .sticker-toast-stack { bottom: calc(78px + env(safe-area-inset-bottom)) !important; }
     }
+
+    /* mobile-fixed-shell-final */
+    @media (max-width: 760px) {
+      body {
+        padding-bottom: 0 !important;
+      }
+
+      header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        z-index: 260 !important;
+      }
+
+      main {
+        padding-top: 74px !important;
+        padding-bottom: calc(92px + env(safe-area-inset-bottom)) !important;
+      }
+
+      .country-tabs-wrap {
+        top: 64px !important;
+      }
+
+      .mobile-bottom-nav {
+        bottom: 0 !important;
+        padding-bottom: calc(7px + env(safe-area-inset-bottom)) !important;
+      }
+
+      .save-status {
+        display: none !important;
+      }
+    }
+
+    /* hide-technical-status */
+    .save-status {
+      display: none !important;
+    }
+
+    /* mobile-country-bottom-sheet */
+    @media (max-width: 640px) {
+      .country-modal {
+        align-items: end;
+        justify-items: stretch;
+        place-items: end stretch;
+        padding: 0;
+      }
+
+      .country-modal-backdrop {
+        background: rgba(15, 23, 42, .46);
+        backdrop-filter: blur(2px);
+      }
+
+      .country-modal-panel {
+        width: 100%;
+        max-height: calc(100dvh - 74px);
+        border-radius: 22px 22px 0 0;
+        border-right: 0;
+        border-bottom: 0;
+        border-left: 0;
+        box-shadow: 0 -18px 48px rgba(0, 0, 0, .26);
+        animation: countrySheetIn .18s ease-out;
+      }
+
+      .country-modal-panel::before {
+        content: "";
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: block;
+        width: 46px;
+        height: 5px;
+        margin: 9px auto 0;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--muted) 42%, transparent);
+      }
+
+      .country-modal-inner {
+        min-height: min(62vh, 620px);
+        padding-bottom: calc(14px + env(safe-area-inset-bottom));
+      }
+
+      .country-modal-head {
+        padding: 10px 12px 12px;
+        gap: 9px;
+      }
+
+      .country-modal-title-row {
+        align-items: center;
+        gap: 8px;
+      }
+
+      .country-modal-title {
+        font-size: 18px;
+      }
+
+      .country-modal-code {
+        font-size: 10px;
+      }
+
+      .country-modal-close {
+        min-width: 34px;
+        width: 34px;
+        height: 34px;
+        font-size: 18px;
+      }
+
+      .country-modal-content {
+        padding: 10px;
+      }
+
+      @keyframes countrySheetIn {
+        from { transform: translateY(18px); opacity: .86; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+    }
   </style>
 </head>
 <body class="app-booting auth-locked auth-mode-login">
@@ -4570,7 +4687,7 @@
     <button type="button" data-page="friends" onclick="openFriendsPage()" aria-label="Amigos" title="Amigos"><span class="mobile-nav-icon mobile-nav-people-icon" aria-hidden="true"></span></button>
     <button type="button" data-page="trades" onclick="openTradesPanel()" aria-label="Trocas" title="Trocas"><span class="mobile-nav-icon mobile-nav-trade-icon" aria-hidden="true"></span><span id="mobileTradeBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
     <button type="button" data-page="duplicates" onclick="openDuplicatesView()" aria-label="Repetidos" title="Repetidos"><span class="mobile-nav-icon mobile-nav-card-icon" aria-hidden="true"></span></button>
-    <button type="button" data-page="settings" onclick="openMobileAccountHub()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span><span id="mobileNotificationBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
+    <button type="button" data-page="settings" onclick="openSettingsPanel()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span><span id="mobileNotificationBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
   </nav>
 
   <footer id="saveStatus" class="save-status">A iniciar...</footer>
@@ -4631,6 +4748,7 @@
     let selectedCountry = "all";
     let countrySortMode = "album";
     let countryModalOpen = false;
+    let countryModalDuplicateOnly = false;
     let saveTimer = null;
     let countryScrollFrame = null;
     let countryTabsOffset = 0;
@@ -5453,6 +5571,7 @@
       modalView = "all";
       selectedCountry = "all";
       countryModalOpen = false;
+      countryModalDuplicateOnly = false;
       document.body.classList.remove("modal-open");
       updateViewTitle();
       updateActiveStat();
@@ -5585,6 +5704,7 @@
 
     function openCountryModal(country) {
       selectedCountry = country;
+      countryModalDuplicateOnly = false;
       modalView = "all";
       countryModalOpen = true;
       document.body.classList.add("modal-open");
@@ -5593,6 +5713,7 @@
 
     function closeCountryModal() {
       countryModalOpen = false;
+      countryModalDuplicateOnly = false;
       selectedCountry = "all";
       modalView = "all";
       document.body.classList.remove("modal-open");
@@ -9285,7 +9406,7 @@
       });
     }
 
-    function renderStickerSections(countryStickers) {
+    function renderStickerSections(countryStickers, options = {}) {
       const ordered = sortedCountryStickers(countryStickers);
       const country = ordered[0]?.pais || "";
       if (String(country).startsWith("FWC -")) {
@@ -9299,8 +9420,8 @@
         });
 
         return [
-          firstHistorical.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHistorical.map(renderStickerCard).join("")}</div></div>` : "",
-          secondHistorical.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHistorical.map(renderStickerCard).join("")}</div></div>` : ""
+          firstHistorical.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHistorical.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : "",
+          secondHistorical.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHistorical.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : ""
         ].join("");
       }
 
@@ -9310,9 +9431,9 @@
       const secondHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) >= 11);
 
       return [
-        teamStickers.length ? `<div class="sticker-section sticker-section-featured"><div class="sticker-grid">${teamStickers.map(renderStickerCard).join("")}</div></div>` : "",
-        firstHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHalfStickers.map(renderStickerCard).join("")}</div></div>` : "",
-        secondHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHalfStickers.map(renderStickerCard).join("")}</div></div>` : ""
+        teamStickers.length ? `<div class="sticker-section sticker-section-featured"><div class="sticker-grid">${teamStickers.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : "",
+        firstHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHalfStickers.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : "",
+        secondHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHalfStickers.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : ""
       ].join("");
     }
 
@@ -9358,10 +9479,15 @@
       };
       const tabButton = view => `<button type="button" class="${modalView === view ? "active" : ""}" onclick="setModalView('${view}')">${viewTitleText(view)} (${viewCounts[view]})</button>`;
 
+      if (countryModalDuplicateOnly && !["duplicates", "reserved"].includes(modalView)) modalView = "duplicates";
+      const duplicateModalMode = countryModalDuplicateOnly || modalView === "duplicates" || modalView === "reserved";
+      const modalTabs = countryModalDuplicateOnly
+        ? `<div class="country-modal-tabs"><button type="button" class="active">${viewTitleText(modalView)} (${viewCounts[modalView]})</button></div>`
+        : `<div class="country-modal-tabs">${["all", "missing", "owned", "duplicates"].map(tabButton).join("")}</div>`;
       countryModal.classList.remove("hidden");
       countryModal.setAttribute("aria-hidden", "false");
       countryModalBody.innerHTML = `
-        <div class="country-modal-inner ${modalView === "duplicates" ? "is-duplicate-modal" : ""}" style="${sectionStyle(country)}">
+        <div class="country-modal-inner ${duplicateModalMode ? "is-duplicate-modal" : ""}" style="${sectionStyle(country)}">
           <header class="country-modal-head">
             <div class="country-modal-title-row">
               <div>
@@ -9378,12 +9504,10 @@
             <div class="country-progress" aria-hidden="true">
               <div class="country-progress-bar" style="--progress-width:${stats.percent}%"></div>
             </div>
-            <div class="country-modal-tabs">
-              ${["all", "missing", "owned", "duplicates"].map(tabButton).join("")}
-            </div>
+            ${modalTabs}
           </header>
           <div class="country-modal-content">
-            ${list.length ? `<div class="stickers">${renderStickerSections(list)}</div>` : renderEmptyState(emptyViewMessage(modalView, country), "")}
+            ${list.length ? `<div class="stickers">${renderStickerSections(list, { duplicatePalette: duplicateModalMode, noToggle: duplicateModalMode })}</div>` : renderEmptyState(emptyViewMessage(modalView, country), "")}
           </div>
         </div>
       `;
@@ -9427,13 +9551,14 @@
       const stickerId = escapeJS(sticker.id);
       const readonly = isFriendView();
       const cardStyle = `${checkboxStyle(sticker.pais)}${options.duplicatePalette ? `;${duplicateStickerStyle(sticker.pais)}` : ""}`;
+      const lockToggle = readonly || options.noToggle;
       return `
         <div
-          class="sticker ${sticker.tenho ? "is-owned" : ""} ${readonly ? "is-readonly" : ""}"
+          class="sticker ${sticker.tenho ? "is-owned" : ""} ${lockToggle ? "is-readonly" : ""}"
           style="${cardStyle}"
-          role="${readonly ? "group" : "checkbox"}"
-          ${readonly ? `aria-label="Cromo de ${escapeHTML(friendProfile)}"` : `aria-checked="${sticker.tenho ? "true" : "false"}" tabindex="0" onclick="toggleStickerOwned('${stickerId}')" onkeydown="handleStickerCardKey(event, '${stickerId}')"`}
-          title="${readonly ? `Cromo de ${escapeHTML(friendProfile)}` : (sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido")}"
+          role="${lockToggle ? "group" : "checkbox"}"
+          ${lockToggle ? `aria-label="${readonly ? `Cromo de ${escapeHTML(friendProfile)}` : "Cromo repetido"}"` : `aria-checked="${sticker.tenho ? "true" : "false"}" tabindex="0" onclick="toggleStickerOwned('${stickerId}')" onkeydown="handleStickerCardKey(event, '${stickerId}')"`}
+          title="${lockToggle ? "Ajusta os repetidos nos botoes" : (sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido")}"
         >
           <div class="sticker-state" aria-hidden="true"></div>
           <div class="sticker-info">
@@ -9490,6 +9615,7 @@
 
     function openCountryDuplicatesModal(country, mode = "duplicates") {
       selectedCountry = country;
+      countryModalDuplicateOnly = true;
       modalView = mode;
       countryModalOpen = true;
       document.body.classList.add("modal-open");
@@ -9821,9 +9947,9 @@
                 const firstHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) <= 10);
                 const secondHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) >= 11);
                 return [
-                  teamStickers.length ? `<div class="sticker-section sticker-section-featured"><div class="sticker-grid">${teamStickers.map(renderStickerCard).join("")}</div></div>` : "",
-                  firstHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHalfStickers.map(renderStickerCard).join("")}</div></div>` : "",
-                  secondHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHalfStickers.map(renderStickerCard).join("")}</div></div>` : ""
+                  teamStickers.length ? `<div class="sticker-section sticker-section-featured"><div class="sticker-grid">${teamStickers.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : "",
+                  firstHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHalfStickers.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : "",
+                  secondHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHalfStickers.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : ""
                 ].join("");
               })()}
             </div>
