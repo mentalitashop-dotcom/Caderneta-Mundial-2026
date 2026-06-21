@@ -1821,60 +1821,43 @@
 
     .sticker-state {
       position: absolute;
-      top: -1px;
-      right: 10px;
-      width: 22px;
-      height: 34px;
-      border: 0;
-      border-radius: 0 0 3px 3px;
-      background: transparent;
+      top: 7px;
+      right: 7px;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--check-border, #111827);
+      border-radius: 999px;
+      background: rgba(255,255,255,.78);
       color: transparent;
       display: grid;
-      place-items: start center;
-      padding-top: 5px;
+      place-items: center;
       pointer-events: none;
-      transform: translateY(-6px) scale(.72);
-      opacity: 0;
-      filter: drop-shadow(0 5px 8px rgba(17, 24, 39, .22));
-      transition: opacity .16s ease, transform .16s ease;
+      box-shadow: 0 3px 8px rgba(17, 24, 39, .10);
+      transition: background .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
     }
 
     .sticker-state::before {
       content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, #f43f5e, #dc143c);
-      clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
-      border-radius: 0 0 3px 3px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.22);
-      transform: none;
-    }
-
-    .sticker-state::after {
-      content: "✓";
-      position: relative;
-      z-index: 1;
-      color: #ffffff;
-      font-size: 15px;
-      line-height: 1;
-      font-weight: 1000;
-      text-shadow: 0 1px 2px rgba(0,0,0,.28);
+      width: 8px;
+      height: 8px;
+      transform: scale(0);
+      clip-path: polygon(14% 44%, 0 59%, 40% 100%, 100% 16%, 84% 0, 37% 64%);
+      background: currentColor;
+      transition: transform .15s ease;
     }
 
     .sticker:hover .sticker-state {
-      transform: translateY(-4px) scale(.78);
+      transform: scale(1.06);
     }
 
     .sticker.is-owned .sticker-state {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      background: transparent;
-      color: #ffffff;
-      box-shadow: none;
+      background: var(--check-bg, #111827);
+      color: var(--check-mark, #ffffff);
+      box-shadow: 0 6px 14px var(--sticker-shadow, rgba(17, 24, 39, .16));
     }
 
     .sticker.is-owned .sticker-state::before {
-      transform: none;
+      transform: scale(1);
     }
     .sticker-info {
       flex: 1;
@@ -2709,7 +2692,7 @@
     }
 
     .duplicate-results .sticker-state {
-      display: grid;
+      display: none;
     }
 
     .duplicate-results .code {
@@ -2819,8 +2802,7 @@
     }
 
     body[data-theme-mode="dark"] .search-results .sticker.is-owned .sticker-state {
-      background: transparent;
-      box-shadow: none;
+      background: var(--check-bg, var(--main));
     }
 
     body[data-theme-mode="dark"] .duplicate-results .duplicate-buttons {
@@ -3947,7 +3929,18 @@
       <div class="stat" data-view="owned"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
       <div class="stat" data-view="duplicates"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
     </section>
-<section id="albumToolbar" class="toolbar">
+    <section id="homeDashboard" class="home-dashboard" aria-label="Resumo inicial da caderneta">
+      <div class="home-dashboard-head">
+        <div>
+          <span>Visao rapida</span>
+          <strong>A tua caderneta</strong>
+        </div>
+        <button class="secondary compact-action" type="button" onclick="openTradesPanel()">Ver trocas</button>
+      </div>
+      <div id="homeDashboardGrid" class="home-dashboard-grid"></div>
+    </section>
+
+    <section id="albumToolbar" class="toolbar">
       <div class="search-shell">
         <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
         <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
@@ -5076,7 +5069,7 @@
       return { total, owned, percent, missing: total - owned };
     }
     function shouldShowHomeDashboard() {
-      return false;
+      return activePage === "album" && !isFriendView() && currentView === "all" && selectedCountry === "all" && !search?.value?.trim();
     }
 
     function dashboardCountryCard(country, label) {
@@ -5092,8 +5085,60 @@
     }
 
     function renderHomeDashboard() {
-      homeDashboard?.classList.add("hidden");
-      if (homeDashboardGrid) homeDashboardGrid.innerHTML = "";
+      if (!homeDashboard || !homeDashboardGrid) return;
+      if (!shouldShowHomeDashboard()) {
+        homeDashboard?.classList.add("hidden");
+        return;
+      }
+      const countries = albumCountries();
+      const progress = countries
+        .map(country => ({ country, ...countryProgressFor(country) }))
+        .filter(item => item.total > 0);
+      const almost = progress
+        .filter(item => item.missing > 0)
+        .sort((a, b) => a.missing - b.missing || b.percent - a.percent)[0];
+      const complete = progress.filter(item => item.missing === 0).length;
+      const recent = readHistoryLog().find(item => item.type === "sticker" || item.action?.startsWith?.("sticker") || item.stickers?.length);
+      const bestTrade = tradeOverviewItems.slice().sort((a, b) => b.balanced - a.balanced || b.friendCanGiveUnique - a.friendCanGiveUnique)[0];
+      const duplicateTotal = stickers.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
+      const cards = [];
+      if (almost) cards.push(dashboardCountryCard(almost.country, "Mais perto"));
+      cards.push(`
+        <button class="dashboard-card" type="button" onclick="openDuplicatesView()">
+          <span>Repetidos livres</span>
+          <strong>${duplicateTotal}</strong>
+          <small>Dispon\u00edveis para trocas e listas</small>
+          <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${Math.min(100, duplicateTotal)}%"></i></div>
+        </button>
+      `);
+      cards.push(`
+        <button class="dashboard-card" type="button" onclick="setCollectionMode('complete')">
+          <span>Seleções completas</span>
+          <strong>${complete}</strong>
+          <small>Filtra a lista para veres as completas</small>
+          <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${progress.length ? Math.round((complete / progress.length) * 100) : 0}%"></i></div>
+        </button>
+      `);
+      cards.push(`
+        <button class="dashboard-card" type="button" onclick="${bestTrade ? `openTradesForFriend('${escapeJS(bestTrade.profile)}')` : 'openTradesPanel()'}">
+          <span>Melhor troca</span>
+          <strong>${bestTrade ? escapeHTML(bestTrade.profile) : "Sem dados"}</strong>
+          <small>${bestTrade ? `${bestTrade.balanced} por ${bestTrade.balanced} poss\u00edvel` : "Abre trocas para atualizar"}</small>
+          <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${bestTrade ? Math.min(100, bestTrade.balanced * 10) : 0}%"></i></div>
+        </button>
+      `);
+      if (recent) {
+        cards.push(`
+          <button class="dashboard-card" type="button" onclick="openHistoryPanel()">
+            <span>Ultima atividade</span>
+            <strong>${escapeHTML(recent.text || "Histórico")}</strong>
+            <small>${escapeHTML(historyTimeLabel(recent.at))}</small>
+            <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:100%"></i></div>
+          </button>
+        `);
+      }
+      homeDashboardGrid.innerHTML = cards.join("");
+      homeDashboard.classList.remove("hidden");
     }
 
     function countryMatchesCollectionMode(country) {
@@ -5222,7 +5267,7 @@
           viewFilter === "all" ||
           (viewFilter === "missing" && !sticker.tenho) ||
           (viewFilter === "owned" && sticker.tenho) ||
-          (viewFilter === "duplicates" && sticker.tenho && availableDuplicates(sticker) > 0) ||
+          (viewFilter === "duplicates" && sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0) ||
           (viewFilter === "reserved" && sticker.tenho && reservedDuplicates(sticker) > 0);
 
         const matchesCountry =
@@ -8897,7 +8942,7 @@
         all: album.filter(sticker => sticker.pais === country).length,
         missing: album.filter(sticker => sticker.pais === country && !sticker.tenho).length,
         owned: album.filter(sticker => sticker.pais === country && sticker.tenho).length,
-        duplicates: album.filter(sticker => sticker.pais === country && sticker.tenho && availableDuplicates(sticker) > 0).length,
+        duplicates: album.filter(sticker => sticker.pais === country && sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0).length,
         reserved: album.filter(sticker => sticker.pais === country && sticker.tenho && reservedDuplicates(sticker) > 0).length
       };
       const tabButton = view => `<button type="button" class="${modalView === view ? "active" : ""}" onclick="setModalView('${view}')">${viewTitleText(view)} (${viewCounts[view]})</button>`;
@@ -8923,7 +8968,7 @@
               <div class="country-progress-bar" style="--progress-width:${stats.percent}%"></div>
             </div>
             <div class="country-modal-tabs">
-              ${["all", "missing", "owned", "duplicates"].map(tabButton).join("")}
+              ${["all", "missing", "owned", "duplicates", "reserved"].map(tabButton).join("")}
             </div>
           </header>
           <div class="country-modal-content">
@@ -8995,7 +9040,7 @@
       return currentView === "all" ||
         (currentView === "missing" && !sticker.tenho) ||
         (currentView === "owned" && sticker.tenho) ||
-        (currentView === "duplicates" && sticker.tenho && availableDuplicates(sticker) > 0);
+        (currentView === "duplicates" && sticker.tenho && normalizeDuplicates(sticker.repetidos) > 0);
     }
 
     function renderSearchStickerResults(list) {
@@ -9079,28 +9124,15 @@
     }
 
     function renderDuplicateStickerResults(list) {
-      const album = currentAlbumStickers();
-      const countryOrder = new Map(albumCountries().map((country, index) => [country, index]));
-      const sortDuplicateStickers = (items) => items.slice().sort((a, b) => {
-        const countryRank = (countryOrder.get(a.pais) ?? 999) - (countryOrder.get(b.pais) ?? 999);
-        return countryRank || stickerNumber(a) - stickerNumber(b);
-      });
-      const availableList = sortDuplicateStickers(album.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0));
-      const reservedList = sortDuplicateStickers(album.filter(sticker => sticker.tenho && reservedDuplicates(sticker) > 0));
-      const section = (title, count, items, emptyText, modeClass) => `
-        <section class="duplicate-section duplicate-sticker-section ${modeClass}">
-          <div class="duplicate-section-title"><span>${escapeHTML(title)}</span><small>${count}</small></div>
-          ${items.length ? `<div class="sticker-grid">${items.map(sticker => renderStickerCard(sticker, { duplicatePalette: true })).join("")}</div>` : `<div class="comparison-empty">${escapeHTML(emptyText)}</div>`}
-        </section>
-      `;
+      const countries = albumCountries();
+      const availableCountries = countries.filter(country => list.some(sticker => sticker.pais === country && availableDuplicates(sticker) > 0));
+      const reservedCountries = countries.filter(country => list.some(sticker => sticker.pais === country && reservedDuplicates(sticker) > 0));
       return `
         <section class="search-results duplicate-results" aria-label="Cromos repetidos">
-          <div class="country-modal-tabs duplicate-page-tabs" aria-hidden="true">
-            <button type="button" class="active">Cromos Repetidos (${availableList.length})</button>
-            <button type="button">Cromos Guardados (${reservedList.length})</button>
-          </div>
-          ${section("Cromos Repetidos", availableList.length, availableList, "Nao tens repetidos livres.", "is-available")}
-          ${section("Cromos Guardados", reservedList.length, reservedList, "Nao tens cromos guardados.", "is-reserved")}
+          <div class="search-results-title">Cromos repetidos</div>
+          <div class="search-results-note">Os livres entram nas trocas/listas. Os guardados ficam separados para nao confundires.</div>
+          ${renderDuplicateCountrySection("Repetidos livres", "Nao tens repetidos livres.", availableCountries, list, "available")}
+          ${renderDuplicateCountrySection("Guardados para troca", "Nao tens cromos guardados.", reservedCountries, list, "reserved")}
         </section>
       `;
     }
