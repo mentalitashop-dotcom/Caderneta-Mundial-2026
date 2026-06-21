@@ -369,8 +369,34 @@ function normalizeReserved(value) {
   return normalizeDuplicates(value);
 }
 
+function normalizeReservationPerson(value) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, 80) || "Sem nome";
+}
+
+function normalizeReservations(value) {
+  let raw = value;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+    try { raw = JSON.parse(trimmed); } catch { return []; }
+  }
+
+  const list = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? [raw] : []);
+  return list.map(item => ({
+    person: normalizeReservationPerson(item?.person || item?.name || item?.reservedFor || item?.para),
+    count: normalizeDuplicates(item?.count ?? item?.quantity ?? item?.qty ?? item?.total ?? item?.value ?? 1),
+    createdAt: String(item?.createdAt || item?.date || "").slice(0, 40)
+  })).filter(item => item.count > 0);
+}
+
+function reservationTotal(sticker) {
+  return normalizeReservations(sticker?.reservas ?? sticker?.reservations).reduce((sum, item) => sum + item.count, 0);
+}
+
 function reservedDuplicates(sticker) {
-  return Math.min(normalizeReserved(sticker?.reservados ?? sticker?.reserved), normalizeDuplicates(sticker?.repetidos ?? sticker?.duplicates));
+  const reservations = normalizeReservations(sticker?.reservas ?? sticker?.reservations);
+  const raw = reservations.length ? reservationTotal({ reservas: reservations }) : normalizeReserved(sticker?.reservados ?? sticker?.reserved);
+  return Math.min(raw, normalizeDuplicates(sticker?.repetidos ?? sticker?.duplicates));
 }
 
 function availableDuplicates(sticker) {
@@ -468,7 +494,8 @@ function stickersToCSV(stickers) {
     sticker.nome,
     sticker.tenho ? "sim" : "nao",
     sticker.repetidos || 0,
-    reservedDuplicates(sticker)
+    reservedDuplicates(sticker),
+    JSON.stringify(normalizeReservations(sticker.reservas ?? sticker.reservations))
   ].map(csvEscape).join(","));
 
   return [header, ...rows].join("\n");

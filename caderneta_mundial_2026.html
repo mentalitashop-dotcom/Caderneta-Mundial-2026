@@ -10,11 +10,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Caderneta 2026" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="icon" href="/app-icon-192.png" sizes="192x192" type="image/png" />
-  <link rel="icon" href="/app-icon-512.png" sizes="512x512" type="image/png" />
-  <link rel="shortcut icon" href="/app-icon-192.png" type="image/png" />
-  <link rel="apple-touch-icon" href="/app-icon-192.png" />
+  <link rel="manifest" href="/manifest.webmanifest?v=13" />
+  <link rel="icon" href="/icon.svg?v=13" type="image/svg+xml" />
+  <link rel="icon" href="/app-icon-192.png?v=13" sizes="192x192" type="image/png" />
+  <link rel="icon" href="/app-icon-512.png?v=13" sizes="512x512" type="image/png" />
+  <link rel="shortcut icon" href="/app-icon-192.png?v=13" type="image/png" />
+  <link rel="apple-touch-icon" href="/app-icon-512.png?v=13" />
+  <meta name="msapplication-TileImage" content="/app-icon-512.png?v=13" />
   <style>
     :root {
       --bg: #f6f7f9;
@@ -295,6 +297,85 @@
     }
 
 
+    body.app-booting header,
+    body.app-booting main,
+    body.app-booting footer,
+    body.app-booting .auth-screen {
+      display: none !important;
+    }
+
+    .startup-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(0, 122, 255, .16), transparent 34%),
+        #0b1220;
+      color: #ffffff;
+    }
+
+    body.app-booting .startup-screen {
+      display: grid;
+    }
+
+    .startup-card {
+      width: min(360px, 100%);
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+      text-align: center;
+    }
+
+    .startup-icon {
+      width: 112px;
+      height: 112px;
+      border-radius: 28px;
+      object-fit: cover;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .38);
+    }
+
+    .startup-title {
+      margin: 6px 0 0;
+      font-size: 23px;
+      line-height: 1.1;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .startup-copy {
+      min-height: 20px;
+      margin: 0;
+      color: rgba(255, 255, 255, .72);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .startup-loader {
+      width: min(260px, 76vw);
+      height: 8px;
+      margin-top: 4px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .16);
+    }
+
+    .startup-loader span {
+      display: block;
+      width: 42%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ffffff, #17c964, #ff3b30);
+      animation: startup-loader-slide 1.15s ease-in-out infinite;
+    }
+
+    @keyframes startup-loader-slide {
+      0% { transform: translateX(-110%); }
+      55% { transform: translateX(85%); }
+      100% { transform: translateX(250%); }
+    }
     body.auth-locked header,
     body.auth-locked main,
     body.auth-locked footer {
@@ -3908,7 +3989,15 @@
     }
   </style>
 </head>
-<body class="auth-locked auth-mode-login">
+<body class="app-booting auth-locked auth-mode-login">
+  <section id="startupScreen" class="startup-screen" aria-live="polite">
+    <div class="startup-card">
+      <img class="startup-icon" src="/app-icon-512.png?v=13" alt="" />
+      <h1 class="startup-title">Caderneta Mundial 2026</h1>
+      <p id="startupMessage" class="startup-copy">A acordar o servidor...</p>
+      <div class="startup-loader" aria-hidden="true"><span></span></div>
+    </div>
+  </section>
   <section id="authGate" class="auth-screen" aria-live="polite">
     <div class="auth-card">
       <div class="auth-view auth-login">
@@ -4509,6 +4598,8 @@
     const liveLogoutButton = document.getElementById("liveLogoutButton");
     const liveLoginButton = document.getElementById("liveLoginButton");
     const liveRegisterButton = document.getElementById("liveRegisterButton");
+    const startupScreen = document.getElementById("startupScreen");
+    const startupMessage = document.getElementById("startupMessage");
     const authGate = document.getElementById("authGate");
     const authLoginStatusText = document.getElementById("authLoginStatusText");
     const authRegisterStatusText = document.getElementById("authRegisterStatusText");
@@ -4961,6 +5052,14 @@
       return [header, ...rows].join("\n");
     }
 
+    function setStartupMessage(text) {
+      if (startupMessage) startupMessage.textContent = text || "A preparar a app...";
+    }
+
+    function hideStartupScreen() {
+      document.body.classList.remove("app-booting");
+      if (startupScreen) startupScreen.setAttribute("aria-hidden", "true");
+    }
     function setSaveStatus(text) {
       if (saveStatus) saveStatus.textContent = text;
     }
@@ -8678,10 +8777,12 @@
       inviteToken = readInviteToken();
 
       try {
+        setStartupMessage("A ligar ao servidor...");
         const response = await fetch("/api/auth/status", { cache: "no-store" });
         if (!response.ok) throw new Error("Sem modo online");
         const data = await response.json();
         liveEnabled = Boolean(data.enabled);
+        setStartupMessage("A verificar a tua sessão...");
 
         const rememberedUser = localStorage.getItem("caderneta_live_profile") || "";
         liveUsernameInput.value = rememberedUser;
@@ -8695,12 +8796,15 @@
           liveStatusText.textContent = "Online indisponivel. Confirma a variavel MONGODB_URI no Render.";
           updateLiveLoginUI();
           setSaveStatus("Online indisponivel");
+          hideStartupScreen();
           return;
         }
 
         if (data.loggedIn && data.user) {
           inviteValid = true;
+          setStartupMessage("A carregar a tua caderneta...");
           await finishLiveLogin(data.user);
+          hideStartupScreen();
           return;
         }
 
@@ -8713,6 +8817,7 @@
           setAuthMode("denied");
           updateLiveLoginUI();
           setSaveStatus("Acesso bloqueado");
+          hideStartupScreen();
           return;
         }
 
@@ -8729,6 +8834,7 @@
           setSaveStatus("Login apenas");
         }
         updateLiveLoginUI();
+        hideStartupScreen();
       } catch (error) {
         console.error("N?o foi poss\u00edvel verificar a sess?o online.", error);
         liveEnabled = true;
@@ -8739,6 +8845,7 @@
         liveStatusText.textContent = "N?o foi poss\u00edvel verificar a sess?o online.";
         updateLiveLoginUI();
         setSaveStatus("N?o foi poss\u00edvel verificar a sess?o");
+        hideStartupScreen();
       }
     }
     function updateSearchControls() {
