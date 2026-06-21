@@ -4922,6 +4922,28 @@
         max-height: min(76dvh, 620px) !important;
       }
     }
+
+    /* friends-trades-integrated */
+    body:not(.friend-view) #tradePanel {
+      margin-top: 12px;
+    }
+
+    body.friend-view #tradePanel {
+      order: 3;
+      margin-bottom: 16px;
+    }
+
+    body.friend-view #collectionProgress { order: 4; }
+    body.friend-view #albumStats { order: 5; }
+    body.friend-view #albumToolbar { order: 6; }
+    body.friend-view #countryTabsWrap { order: 7; }
+    body.friend-view #content { order: 8; }
+
+    body.friend-view #tradePanel .share-panel-head .share-panel-title strong::after {
+      content: " nos amigos";
+      color: var(--muted);
+      font-weight: 800;
+    }
   </style>
 </head>
 <body class="app-booting auth-locked auth-mode-login">
@@ -5018,7 +5040,7 @@
           <button type="button" role="menuitem" onclick="openDuplicatesView()"><span>Cromos repetidos</span></button>
           <div class="user-menu-section-title">Social</div>
           <button type="button" role="menuitem" onclick="openFriendsPage()"><span>Amigos</span></button>
-          <button type="button" role="menuitem" onclick="openTradesPanel()"><span>Trocas</span><span id="tradeMenuBadge" class="menu-badge hidden">0</span></button>
+          <button type="button" role="menuitem" onclick="openTradesPanel()"><span>Amigos e trocas</span><span id="tradeMenuBadge" class="menu-badge hidden">0</span></button>
           <button type="button" role="menuitem" onclick="openNotificationsPanel()"><span>Notificacoes</span><span id="notificationMenuBadge" class="menu-badge hidden">0</span></button>
           <div class="user-menu-section-title">Ferramentas</div>
           <button type="button" role="menuitem" onclick="openListComparePanel()"><span>Comparar listas</span></button>
@@ -5119,11 +5141,7 @@
         </div>
       </div>
       <div id="tradeOverview" class="trade-overview" aria-live="polite"></div>
-      <div class="live-controls">
-        <select id="tradeFriendSelect" class="live-input" onchange="selectTradeFriend(this.value)">
-          <option value="">Escolhe um amigo</option>
-        </select>
-      </div>
+
       <div id="tradeSuggestions" aria-live="polite"></div>
       <div class="share-panel-title">
         <strong>Propostas</strong>
@@ -5357,7 +5375,7 @@
   <nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navegacao principal mobile">
     <button type="button" data-page="album" onclick="goHome()" aria-label="Inicio" title="Inicio"><span class="mobile-nav-icon mobile-nav-home-icon" aria-hidden="true"></span></button>
     <button type="button" data-page="friends" onclick="openFriendsPage()" aria-label="Amigos" title="Amigos"><span class="mobile-nav-icon mobile-nav-people-icon" aria-hidden="true"></span></button>
-    <button type="button" data-page="trades" onclick="openTradesPanel()" aria-label="Trocas" title="Trocas"><span class="mobile-nav-icon mobile-nav-trade-icon" aria-hidden="true"></span><span id="mobileTradeBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
+    <button type="button" data-page="friends" onclick="openTradesPanel()" aria-label="Trocas" title="Trocas"><span class="mobile-nav-icon mobile-nav-trade-icon" aria-hidden="true"></span><span id="mobileTradeBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
     <button type="button" data-page="duplicates" onclick="openDuplicatesView()" aria-label="Repetidos" title="Repetidos"><span class="mobile-nav-icon mobile-nav-card-icon" aria-hidden="true"></span></button>
     <button type="button" data-page="settings" onclick="openSettingsPanel()" aria-label="Conta" title="Conta"><span id="mobileUserAvatar" class="mobile-account-avatar" aria-hidden="true">U</span><span id="mobileNotificationBadge" class="mobile-nav-badge hidden" aria-hidden="true">0</span></button>
   </nav>
@@ -6115,11 +6133,6 @@
         return;
       }
 
-      if (activePage === "trades") {
-        currentViewTitle.textContent = "Trocas";
-        return;
-      }
-
       if (activePage === "compare") {
         currentViewTitle.textContent = "Comparar listas";
         return;
@@ -6156,7 +6169,7 @@
         modalView = "all";
         document.body.classList.remove("modal-open");
       }
-      if (activePage !== "trades" && tradeModalOpen) {
+      if (activePage !== "friends" && tradeModalOpen) {
         closeTradeModal();
       }
       if (activePage !== "album" && reserveModalOpen) {
@@ -6183,7 +6196,7 @@
       countryTabsWrap?.classList.toggle("hidden", !showAlbum);
       content?.classList.toggle("hidden", !showAlbum);
       livePanel?.classList.toggle("hidden", activePage !== "friends");
-      tradePanel?.classList.toggle("hidden", activePage !== "trades");
+      tradePanel?.classList.toggle("hidden", activePage !== "friends");
       listComparePanel?.classList.toggle("hidden", activePage !== "compare");
       bulkAddPanel?.classList.toggle("hidden", activePage !== "bulk-add");
       notificationsPanel?.classList.toggle("hidden", activePage !== "notifications");
@@ -8030,11 +8043,12 @@
     }
 
     async function openTradesForFriend(profile) {
-      switchAppPage("trades");
+      switchAppPage("friends", { clearFilters: false });
       syncFriendSelects(profile);
-      await loadFriendAlbum(profile, "trades");
+      await loadFriendAlbum(profile, "friends");
       renderTradePanel();
       loadTradeRequests().catch(() => {});
+      document.getElementById("tradePanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function autoTradeSuggestion(maxItems = 5) {
@@ -8189,11 +8203,12 @@
       switchAppPage("friends");
       renderFriendInsights([]);
       loadLiveProfiles().then(() => refreshFriendInsights()).catch(() => renderFriendInsights([]));
+      loadLiveProfiles().then(() => refreshTradeOverview()).catch(() => renderTradeOverview());
+      loadTradeRequests().catch(() => {});
+      renderTradePanel();
       if (liveComparison) liveComparison.innerHTML = "";
       render();
-
     }
-
     function showMyAlbum() {
       clearAlbumFilters();
       activePage = "album";
@@ -8278,7 +8293,7 @@
     }
 
     async function selectTradeFriend(profile) {
-      await loadFriendAlbum(profile, "trades");
+      await loadFriendAlbum(profile, "friends");
     }
 
 
@@ -9015,17 +9030,9 @@
       }
 
       const pending = tradeRequests.filter(trade => trade.status === "pending");
-      const history = tradeRequests.filter(trade => trade.status !== "pending");
-      const totalHistoryPages = Math.max(1, Math.ceil(history.length / TRADE_HISTORY_PAGE_SIZE));
-      tradeHistoryPage = Math.max(1, Math.min(tradeHistoryPage, totalHistoryPages));
-      const historyStart = (tradeHistoryPage - 1) * TRADE_HISTORY_PAGE_SIZE;
-      const visibleHistory = history.slice(historyStart, historyStart + TRADE_HISTORY_PAGE_SIZE);
-
       tradeList.innerHTML = `
         <div class="trade-card-title">Propostas atuais</div>
         ${pending.length ? renderTradeCards(pending) : `<div class="comparison-empty">Nao ha propostas pendentes.</div>`}
-        <div class="trade-card-title">Historico de trocas</div>
-        ${history.length ? renderTradeCards(visibleHistory) + renderTradeHistoryPagination(totalHistoryPages) : `<div class="comparison-empty">Ainda nao ha historico.</div>`}
       `;
     }
 
@@ -9118,8 +9125,9 @@
     }
 
     function openTradesPanel() {
-      switchAppPage("trades");
+      switchAppPage("friends", { clearFilters: false });
       syncFriendSelects();
+      loadLiveProfiles().then(() => refreshFriendInsights()).catch(() => renderFriendInsights([]));
       loadLiveProfiles().then(() => refreshTradeOverview()).catch(() => renderTradeOverview());
       renderTradePanel();
       loadTradeRequests().catch(() => {});
