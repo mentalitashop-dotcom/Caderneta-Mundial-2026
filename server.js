@@ -1694,6 +1694,7 @@ async function createUserBackup(db, user) {
       tenho: Boolean(sticker.tenho),
       repetidos: Number(sticker.repetidos || 0),
       reservados: reservedDuplicates(sticker),
+      reservas: normalizeReservations(sticker.reservas ?? sticker.reservations),
       disponiveis: availableDuplicates(sticker)
     })),
     csv: stickersToCSV(stickers),

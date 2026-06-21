@@ -4243,6 +4243,350 @@
         to { transform: translateY(0); opacity: 1; }
       }
     }
+
+    /* duplicate-reserve-redesign-final */
+    .duplicate-row-compact,
+    .owned-duplicate-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+      min-width: 0;
+      margin-top: 7px;
+    }
+
+    .duplicate-row-compact .duplicate-summary,
+    .owned-duplicate-row .duplicate-summary {
+      min-width: 0;
+      flex: 1 1 auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .duplicate-row-compact .duplicate-buttons,
+    .owned-duplicate-row .duplicate-buttons {
+      flex: 0 0 auto;
+      gap: 4px;
+    }
+
+    .duplicate-row-compact .duplicate-control-btn,
+    .owned-duplicate-row .duplicate-control-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .duplicate-results .sticker {
+      min-height: 86px;
+      align-items: stretch;
+      padding: 10px;
+    }
+
+    .duplicate-results .sticker-info {
+      display: grid;
+      align-content: space-between;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .reserved-person-section {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .reserved-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap: 8px;
+    }
+
+    .reserved-mini-card {
+      position: relative;
+      display: grid;
+      align-content: start;
+      gap: 3px;
+      min-height: 70px;
+      padding: 8px 8px 8px 10px;
+      overflow: hidden;
+      border: 1px solid var(--duplicate-card-border, var(--line));
+      border-left: 4px solid var(--check-bg, var(--main));
+      border-radius: 10px;
+      background: var(--duplicate-card-bg, var(--card));
+      color: var(--duplicate-card-text, var(--text));
+      box-shadow: 0 8px 18px var(--duplicate-card-shadow, rgba(15, 23, 42, .08));
+    }
+
+    .reserved-mini-card strong {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 12px;
+      line-height: 1.05;
+      font-weight: 1000;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .reserved-mini-card span {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      color: var(--duplicate-card-muted, var(--muted));
+      font-size: 10px;
+      line-height: 1.15;
+    }
+
+    .reserved-mini-card small {
+      justify-self: start;
+      margin-top: 2px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: var(--check-bg, var(--main));
+      color: var(--check-mark, #fff);
+      font-size: 9px;
+      font-weight: 1000;
+      line-height: 1.2;
+    }
+
+    .reserved-person-actions {
+      margin-top: 8px;
+    }
+
+    @media (max-width: 640px) {
+      .duplicate-results .sticker-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+      }
+
+      .duplicate-results .sticker {
+        min-height: 80px !important;
+        padding: 8px !important;
+      }
+
+      .duplicate-results .code {
+        font-size: 12px !important;
+      }
+
+      .duplicate-results .name,
+      .duplicate-results .duplicate-summary {
+        font-size: 9px !important;
+      }
+
+      .duplicate-row-compact .duplicate-control-btn,
+      .owned-duplicate-row .duplicate-control-btn {
+        width: 21px !important;
+        height: 21px !important;
+        font-size: 11px !important;
+      }
+
+      .reserved-mini-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .reserved-mini-card {
+        min-height: 64px;
+        padding: 7px 6px;
+        border-radius: 9px;
+      }
+
+      .reserved-mini-card strong {
+        font-size: 10px;
+      }
+
+      .reserved-mini-card span {
+        font-size: 8.5px;
+      }
+
+      .reserved-mini-card small {
+        font-size: 8px;
+        padding: 2px 5px;
+      }
+    }
+
+    /* friends-ranking-redesign */
+    .friends-ranking-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 10px 0 8px;
+    }
+
+    .friends-ranking-head div {
+      display: grid;
+      gap: 2px;
+    }
+
+    .friends-ranking-head strong {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 1000;
+    }
+
+    .friends-ranking-head span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .friend-ranking-list {
+      display: grid;
+      gap: 7px;
+      margin-top: 8px;
+    }
+
+    .friend-ranking-card {
+      width: 100%;
+      min-height: 62px;
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border: 1px solid color-mix(in srgb, var(--friend-rank-color, var(--main)) 48%, var(--line));
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--card) 86%, var(--friend-rank-color, var(--main)) 14%);
+      color: var(--text);
+      box-shadow: none;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .friend-ranking-card:hover,
+    .friend-ranking-card.active {
+      border-color: var(--friend-rank-color, var(--main));
+      box-shadow: inset 4px 0 0 var(--friend-rank-color, var(--main)), 0 10px 24px rgba(15, 23, 42, .10);
+      transform: translateY(-1px);
+    }
+
+    .friend-ranking-position {
+      width: 30px;
+      height: 30px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--friend-rank-color, var(--main));
+      color: #fff;
+      font-size: 12px;
+      font-weight: 1000;
+    }
+
+    .friend-ranking-main {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .friend-ranking-main strong {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 1000;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .friend-ranking-main small {
+      color: var(--main);
+      font-size: 11px;
+      font-weight: 1000;
+    }
+
+    .friend-ranking-progress {
+      height: 6px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--line) 80%, transparent);
+    }
+
+    .friend-ranking-progress i {
+      display: block;
+      width: var(--friend-progress, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: var(--friend-rank-color, var(--main));
+    }
+
+    .friend-ranking-trades {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .friend-ranking-trades span {
+      min-width: 74px;
+      display: grid;
+      gap: 1px;
+      padding: 5px 7px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--panel) 82%, transparent);
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 900;
+      line-height: 1.05;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .friend-ranking-trades b {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    body[data-theme-mode="dark"] .friend-ranking-card {
+      background: color-mix(in srgb, var(--card) 78%, var(--friend-rank-color, var(--main)) 22%);
+    }
+
+    @media (max-width: 640px) {
+      .friends-ranking-head {
+        margin-top: 6px;
+      }
+
+      .friend-ranking-card {
+        min-height: 58px;
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 8px;
+        padding: 8px;
+        border-radius: 15px;
+      }
+
+      .friend-ranking-position {
+        width: 25px;
+        height: 25px;
+        font-size: 10px;
+      }
+
+      .friend-ranking-main strong {
+        font-size: 12px;
+      }
+
+      .friend-ranking-main small {
+        font-size: 9px;
+      }
+
+      .friend-ranking-trades {
+        grid-column: 2;
+        justify-content: flex-start;
+      }
+
+      .friend-ranking-trades span {
+        min-width: 58px;
+        padding: 4px 5px;
+        font-size: 6.8px;
+      }
+
+      .friend-ranking-trades b {
+        font-size: 11px;
+      }
+    }
   </style>
 </head>
 <body class="app-booting auth-locked auth-mode-login">
@@ -4405,7 +4749,7 @@
         <strong id="friendBannerName">Caderneta do amigo</strong>
         <small>So leitura. Os teus cromos nao sao alterados aqui.</small>
       </div>
-      <button class="secondary" type="button" onclick="showMyAlbum()">Voltar a minha caderneta</button>
+
     </section>
 
     <div id="resultSummary" class="result-summary" aria-live="polite"></div>
@@ -4428,12 +4772,11 @@
         <button id="liveRegisterButton" class="secondary" type="button" onclick="registerLiveAccount()">Criar conta</button>
         <button id="liveLogoutButton" class="secondary hidden" type="button" onclick="logoutLiveAccount()">Sair</button>
       </div>
-      <div class="live-controls">
-        <select id="liveFriendSelect" class="live-input" onchange="selectLiveFriend(this.value)">
-          <option value="">Escolhe um amigo</option>
-        </select>
-        <button type="button" onclick="showMyAlbum()">A minha caderneta</button>
-        <button class="secondary" type="button" onclick="refreshFriendInsights()">Atualizar ranking</button>
+      <div class="friends-ranking-head">
+        <div>
+          <strong>Ranking dos amigos</strong>
+          <span>Clica num amigo para veres a caderneta dele.</span>
+        </div>
       </div>
       <div id="friendInsights" class="share-comparison" aria-live="polite"></div>
       <div id="liveComparison" class="share-comparison" aria-live="polite"></div>
@@ -4785,6 +5128,7 @@
     let inviteFromCurrentLink = false;
     let currentUserColor = DEFAULT_USER_COLOR;
     let friendUserColor = DEFAULT_USER_COLOR;
+    let friendRankingItems = [];
     let availableUserColors = [...USER_COLOR_PALETTE];
     let usedUserColors = [];
     let profileColors = {};
@@ -6888,7 +7232,13 @@
     }
 
     function albumSnapshot() {
-      return stickers.map(sticker => ({ id: sticker.id, tenho: Boolean(sticker.tenho), repetidos: normalizeDuplicates(sticker.repetidos), reservados: reservedDuplicates(sticker) }));
+      return stickers.map(sticker => ({
+        id: sticker.id,
+        tenho: Boolean(sticker.tenho),
+        repetidos: normalizeDuplicates(sticker.repetidos),
+        reservados: reservedDuplicates(sticker),
+        reservas: normalizeReservations(sticker.reservas)
+      }));
     }
 
     function restoreAlbumSnapshot(snapshot) {
@@ -6898,12 +7248,15 @@
         if (!saved) return;
         sticker.tenho = Boolean(saved.tenho);
         sticker.repetidos = normalizeDuplicates(saved.repetidos);
-        sticker.reservados = Math.min(normalizeReserved(saved.reservados), sticker.repetidos);
+        sticker.reservas = normalizeReservations(saved.reservas);
+        sticker.reservados = Array.isArray(saved.reservas)
+          ? reservationTotal(sticker)
+          : Math.min(normalizeReserved(saved.reservados), sticker.repetidos);
+        syncStickerReservations(sticker);
       });
       saveState();
       render();
     }
-
     function hideUndoBar() {
       const bar = document.getElementById("undoBar");
       if (bar) bar.remove();
@@ -7295,30 +7648,31 @@
 
     function renderFriendInsights(items = null) {
       if (!friendInsights) return;
-      const list = Array.isArray(items) ? items : [];
+      if (Array.isArray(items)) friendRankingItems = items;
+      const list = Array.isArray(items) ? items : friendRankingItems;
       if (!list.length) {
-        friendInsights.innerHTML = `<div class="comparison-empty">Atualiza o ranking para veres quem combina melhor contigo nas trocas.</div>`;
+        friendInsights.innerHTML = `<div class="comparison-empty">Ainda nao ha amigos para mostrar no ranking.</div>`;
         return;
       }
       friendInsights.innerHTML = `
-        <div class="insight-grid">
-          ${list.map(item => `
-            <article class="insight-card" style="border-color:${escapeHTML(item.userColor)}">
-              <div class="insight-card-head">
+        <div class="friend-ranking-list">
+          ${list.map((item, index) => `
+            <button class="friend-ranking-card ${friendProfile === item.profile ? "active" : ""}" type="button" style="--friend-rank-color:${escapeHTML(item.userColor)};--friend-progress:${item.stats.percent}%" onclick="loadFriendAlbum('${escapeJS(item.profile)}', 'friends')">
+              <span class="friend-ranking-position">${index + 1}</span>
+              <span class="friend-ranking-main">
                 <strong>${escapeHTML(item.profile)}</strong>
-                <small>${item.stats.owned}/${item.stats.total} - ${item.stats.percent}%</small>
-              </div>
-              <small>Podes dar ${item.canGive.length} e receber ${item.canReceive.length}. Troca equilibrada ate ${item.tradeSize} cromos.</small>
-              <div class="trade-actions">
-                <button type="button" onclick="loadFriendAlbum('${escapeJS(item.profile)}', 'friends')">Ver caderneta</button>
-                <button class="secondary" type="button" onclick="openTradesForFriend('${escapeJS(item.profile)}')">Trocar</button>
-              </div>
-            </article>
+                <small>${item.stats.owned}/${item.stats.total} obtidos - ${item.stats.percent}%</small>
+                <span class="friend-ranking-progress" aria-hidden="true"><i></i></span>
+              </span>
+              <span class="friend-ranking-trades">
+                <span><b>${item.canReceive.length}</b>tem para ti</span>
+                <span><b>${item.canGive.length}</b>precisa teus</span>
+              </span>
+            </button>
           `).join("")}
         </div>
       `;
     }
-
     async function refreshFriendInsights() {
       if (!friendInsights) return;
       if (!liveEnabled || !liveProfile) {
@@ -7339,7 +7693,7 @@
       }));
       const ordered = results
         .filter(Boolean)
-        .sort((a, b) => b.tradeSize - a.tradeSize || b.canReceive.length - a.canReceive.length || a.profile.localeCompare(b.profile, "pt-PT"));
+        .sort((a, b) => b.stats.percent - a.stats.percent || b.stats.owned - a.stats.owned || a.profile.localeCompare(b.profile, "pt-PT"));
       renderFriendInsights(ordered);
     }
 
@@ -7503,11 +7857,9 @@
       switchAppPage("friends");
       renderFriendInsights([]);
       loadLiveProfiles().then(() => refreshFriendInsights()).catch(() => renderFriendInsights([]));
-      liveComparison.innerHTML = hasSelectedFriend()
-        ? `<div class="comparison-empty">A ver a caderneta de ${escapeHTML(friendProfile)}.</div>`
-        : `<div class="comparison-empty">Escolhe um user para abrir a caderneta dele.</div>`;
+      if (liveComparison) liveComparison.innerHTML = "";
       render();
-      setTimeout(() => liveFriendSelect?.focus(), 0);
+
     }
 
     function showMyAlbum() {
@@ -7518,7 +7870,7 @@
       friendUpdatedAt = "";
       friendUserColor = DEFAULT_USER_COLOR;
       syncFriendSelects("");
-      liveComparison.innerHTML = `<div class="comparison-empty">Voltaste a tua caderneta.</div>`;
+      if (liveComparison) liveComparison.innerHTML = "";
       setSaveStatus("A ver a tua caderneta");
       closeUserMenu();
       render();
@@ -7538,7 +7890,7 @@
       search.value = "";
       document.body.classList.remove("modal-open");
       syncFriendSelects("");
-      liveComparison.innerHTML = `<div class="comparison-empty">A ver os teus cromos repetidos.</div>`;
+      if (liveComparison) liveComparison.innerHTML = "";
       setSaveStatus("A ver os cromos repetidos");
       closeUserMenu();
       render();
@@ -7567,7 +7919,7 @@
       activePage = page;
       updatePageVisibility();
       syncFriendSelects(friend);
-      liveComparison.innerHTML = `<div class="comparison-empty">A carregar a caderneta de ${escapeHTML(friend)}...</div>`;
+      if (liveComparison) liveComparison.innerHTML = "";
       setSaveStatus(`A carregar ${friend}`);
 
       try {
@@ -7577,10 +7929,9 @@
         friendUserColor = sanitizeUserColor(data.userColor || profileColors[friend] || DEFAULT_USER_COLOR);
         friendStickers = data.exists && data.csv ? parseTextFile(data.csv) : [];
         if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
-        liveComparison.innerHTML = friendStickers.length
-          ? `<div class="comparison-empty">Estás a ver a caderneta de ${escapeHTML(friend)}. Esta vista é só de leitura.</div>`
-          : `<div class="comparison-empty">${escapeHTML(friend)} ainda nao tem caderneta online.</div>`;
+        if (liveComparison) liveComparison.innerHTML = "";
         setSaveStatus(`A ver caderneta de ${friend}`);
+        renderFriendInsights();
         render();
         renderTradePanel();
       } catch (error) {
@@ -8653,7 +9004,7 @@
       liveLoginButton.disabled = !liveEnabled || authRequestLocked;
       liveRegisterButton.disabled = true;
       liveLogoutButton.classList.toggle("hidden", !loggedIn);
-      liveFriendSelect.disabled = !loggedIn;
+      if (liveFriendSelect) liveFriendSelect.disabled = !loggedIn;
       if (tradeFriendSelect) tradeFriendSelect.disabled = !loggedIn;
 
       authLoginUsernameInput.disabled = loggedIn || !liveEnabled;
@@ -9040,7 +9391,7 @@
       if (tradeList) tradeList.innerHTML = "";
       if (tradeSuggestions) tradeSuggestions.innerHTML = "";
       if (tradePanel) tradePanel.classList.add("hidden");
-      liveFriendSelect.innerHTML = `<option value="">Escolhe um amigo</option>`;
+      if (liveFriendSelect) liveFriendSelect.innerHTML = `<option value="">Escolhe um amigo</option>`;
       closeUserMenu();
       const expired = reason === "idle" || reason === "expired";
       liveStatusText.textContent = expired
@@ -9082,9 +9433,7 @@
           render();
           renderTradePanel();
           if (activePage === "friends") {
-            liveComparison.innerHTML = friendStickers.length
-              ? `<div class="comparison-empty">Caderneta de ${escapeHTML(activeFriend)} atualizada.</div>`
-              : `<div class="comparison-empty">${escapeHTML(activeFriend)} ainda nao tem caderneta online.</div>`;
+            if (liveComparison) liveComparison.innerHTML = "";
           }
           setSaveStatus(`Caderneta de ${activeFriend} atualizada`);
         } else {
@@ -9237,11 +9586,16 @@
       const owned = album.filter(s => s.tenho).length;
       const missing = total - owned;
       const duplicates = album.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
+      const reserved = album.reduce((sum, sticker) => sum + reservedDuplicates(sticker), 0);
 
       if (totalCount) totalCount.textContent = total;
       if (ownedCount) ownedCount.textContent = owned;
       if (missingCount) missingCount.textContent = missing;
-      if (duplicatesCount) duplicatesCount.textContent = duplicates;
+      if (duplicatesCount) {
+        duplicatesCount.textContent = `${duplicates}(${reserved})`;
+        duplicatesCount.title = `${duplicates} repetidos livres, ${reserved} guardados`;
+        duplicatesCount.setAttribute("aria-label", `${duplicates} repetidos livres e ${reserved} guardados`);
+      }
       const percent = total ? Math.round((owned / total) * 100) : 0;
       if (collectionProgressText) collectionProgressText.textContent = `${owned}/${total} obtidos - ${percent}%`;
       if (collectionProgressBar) collectionProgressBar.style.width = `${percent}%`;
@@ -9514,39 +9868,33 @@
     }
 
     function renderDuplicatePanel(sticker, stickerId, readonly) {
-      const total = normalizeDuplicates(sticker.repetidos);
-      if (!total) return "";
       const available = availableDuplicates(sticker);
-      const reserved = reservedDuplicates(sticker);
+      if (!available) return "";
       const controls = readonly ? "" : `
-        <div class="duplicate-actions" style="${duplicateInputStyle(sticker.pais)}">
-          <div class="duplicate-action-group">
-            <span class="duplicate-action-label">Repetidos</span>
-            <div class="duplicate-buttons">
-              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido" ${total ? "" : "disabled"}>-</button>
-              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', 1)" title="Adicionar repetido">+</button>
-            </div>
-          </div>
-          <div class="duplicate-action-group">
-            <span class="duplicate-action-label">Guardados</span>
-            <div class="duplicate-buttons">
-              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustReservedDuplicates('${stickerId}', -1)" title="Reativar repetido" ${reserved ? "" : "disabled"}>R</button>
-              <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustReservedDuplicates('${stickerId}', 1)" title="Guardar para troca" ${available ? "" : "disabled"}>G</button>
-            </div>
-          </div>
-        </div>`;
+        <span class="duplicate-buttons" style="${duplicateInputStyle(sticker.pais)}">
+          <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido">-</button>
+          <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', 1)" title="Adicionar repetido">+</button>
+        </span>`;
       return `
-        <div class="duplicate-panel" onclick="event.stopPropagation()">
-          <div class="duplicate-metrics">
-            <span class="duplicate-chip"><b>${total}</b>Total</span>
-            <span class="duplicate-chip"><b>${available}</b>Livres</span>
-            <span class="duplicate-chip"><b>${reserved}</b>Guardados</span>
-          </div>
+        <div class="duplicate-row duplicate-row-compact" onclick="event.stopPropagation()">
+          <span class="duplicate-summary">Repetidos: <span class="duplicate-summary-count">${available}</span></span>
           ${controls}
         </div>
       `;
     }
-
+    function renderOwnedDuplicateControls(sticker, stickerId, readonly) {
+      if (readonly || !sticker.tenho) return "";
+      const total = normalizeDuplicates(sticker.repetidos);
+      return `
+        <div class="duplicate-row owned-duplicate-row" onclick="event.stopPropagation()">
+          <span class="duplicate-summary">Repetidos: <span class="duplicate-summary-count">${total}</span></span>
+          <span class="duplicate-buttons" style="${duplicateInputStyle(sticker.pais)}">
+            <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido" ${total ? "" : "disabled"}>-</button>
+            <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', 1)" title="Adicionar repetido">+</button>
+          </span>
+        </div>
+      `;
+    }
     function renderStickerCard(sticker, options = {}) {
       const stickerId = escapeJS(sticker.id);
       const readonly = isFriendView();
@@ -9566,7 +9914,7 @@
               ${escapeHTML((currentView === "duplicates" || options.duplicatePalette) ? `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}` : sticker.codigo)}
             </div>
             <div class="name">${escapeHTML(sticker.nome)}</div>
-            ${sticker.tenho && options.duplicatePalette ? renderDuplicatePanel(sticker, stickerId, readonly) : ""}
+            ${sticker.tenho && options.duplicatePalette ? renderDuplicatePanel(sticker, stickerId, readonly) : renderOwnedDuplicateControls(sticker, stickerId, readonly)}
           </div>
         </div>
       `;
@@ -9747,24 +10095,36 @@
         </div>
       `;
     }
+    function renderReservedMiniCard(entry) {
+      const sticker = entry.sticker;
+      return `
+        <article class="reserved-mini-card" style="${duplicateStickerStyle(sticker.pais)};${checkboxStyle(sticker.pais)}">
+          <strong>${escapeHTML(stickerShortLabel(sticker))}</strong>
+          <span>${escapeHTML(sticker.nome)}</span>
+          <small>${entry.count > 1 ? `${entry.count}x` : "1x"}</small>
+        </article>
+      `;
+    }
+
     function renderReservedGroups(album = currentAlbumStickers()) {
       const groups = groupedReservationsByPerson(album);
       if (!groups.length) return `<div class="comparison-empty">Nao tens cromos guardados.</div>`;
-      return `<div class="reserved-person-grid">${groups.map(group => `
-        <article class="reserved-person-card">
-          <div class="reserved-person-head">
-            <strong>Guardado para: ${escapeHTML(group.person)}</strong>
-            <span>${group.total} cromos</span>
+      return groups.map(group => `
+        <section class="duplicate-section reserved-person-section">
+          <div class="duplicate-section-title">
+            <span>Reservado para: ${escapeHTML(group.person)}</span>
+            <small>${group.total} cromos</small>
           </div>
-          <div class="reserved-person-list">${renderGroupedEntries(group.entries, "Sem cromos", entry => formatCountedSticker({ sticker: entry.sticker, count: entry.count }, entry.count))}</div>
+          <div class="reserved-mini-grid">
+            ${group.entries.map(renderReservedMiniCard).join("")}
+          </div>
           <div class="reserved-person-actions">
             <button type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'completed')">Trocada</button>
             <button class="secondary" type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'rejected')">Recusada</button>
           </div>
-        </article>
-      `).join("")}</div>`;
+        </section>
+      `).join("");
     }
-
     function clearReserveForm() {
       const person = document.getElementById("reservePersonInput");
       const list = document.getElementById("reserveListInput");
@@ -9782,7 +10142,18 @@
       const listInput = document.getElementById("reserveListInput");
       const result = document.getElementById("reserveListResult");
       const person = normalizeReservationPerson(personInput?.value);
-      const parsed = parsePastedStickerList(listInput?.value || "");
+      const rawList = listInput?.value || "";
+      if (!person) {
+        if (result) result.innerHTML = `<article class="list-compare-card"><h2>Falta o nome</h2><small>Escreve para quem vais guardar estes cromos.</small></article>`;
+        personInput?.focus();
+        return;
+      }
+      if (!rawList.trim()) {
+        if (result) result.innerHTML = `<article class="list-compare-card"><h2>Falta a lista</h2><small>Cola a lista dos cromos que queres reservar.</small></article>`;
+        listInput?.focus();
+        return;
+      }
+      const parsed = parsePastedStickerList(rawList);
       let reservedCount = 0;
       const reservedEntries = [];
       parsed.entries.forEach(entry => {
@@ -9804,12 +10175,13 @@
         return;
       }
       saveState();
+      persistStateNow().catch(error => console.error(error));
       recordHistory(`Reserva criada para ${person}: ${reservedCount} cromos`, { type: "sticker", action: "duplicates_reserved_for", partner: person, stickers: reservedEntries.map(entry => entry.sticker) });
       setSaveStatus(`${reservedCount} cromos reservados para ${person}`);
-      if (result) result.innerHTML = `<article class="list-compare-card"><h2>Reservado para ${escapeHTML(person)}</h2>${renderGroupedEntries(reservedEntries, "", entry => formatCountedSticker(entry, entry.count))}</article>`;
+      duplicateViewMode = "reserved";
+      closeReserveModal();
       render();
     }
-
     function finishReservedTrade(personName, status) {
       if (isFriendView()) return setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
       if (!requireLiveLogin()) return;
