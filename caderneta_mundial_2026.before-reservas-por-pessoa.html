@@ -3775,87 +3775,6 @@
 
   
 
-    .duplicate-reserve-box {
-      display: grid;
-      gap: 10px;
-      padding: 12px;
-      margin-bottom: 14px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--card);
-      box-shadow: var(--shadow);
-    }
-
-    .reserve-form-grid {
-      display: grid;
-      grid-template-columns: minmax(180px, .45fr) minmax(260px, 1fr);
-      gap: 10px;
-      align-items: stretch;
-    }
-
-    .reserve-list-input {
-      min-height: 84px;
-      margin: 0;
-    }
-
-    .reserved-person-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 10px;
-    }
-
-    .reserved-person-card {
-      display: grid;
-      gap: 10px;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--card);
-      box-shadow: var(--shadow);
-    }
-
-    .reserved-person-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: baseline;
-    }
-
-    .reserved-person-head strong {
-      font-size: 13px;
-      font-weight: 1000;
-      color: var(--text);
-    }
-
-    .reserved-person-head span {
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 900;
-      white-space: nowrap;
-    }
-
-    .reserved-person-list {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .reserved-person-actions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .is-duplicate-modal .sticker-state {
-      display: none;
-    }
-
-    @media (max-width: 640px) {
-      .reserve-form-grid { grid-template-columns: 1fr; }
-      .duplicate-reserve-box { padding: 10px; }
-      .reserved-person-grid { grid-template-columns: 1fr; }
-    }
-
     /* duplicate-results-polish */
     .duplicate-results .duplicate-chip {
       background: color-mix(in srgb, var(--duplicate-card-bg, var(--card)) 72%, var(--card));
@@ -4784,51 +4703,8 @@
       return normalizeDuplicates(value);
     }
 
-    function normalizeReservationPerson(value) {
-      return String(value || "").trim().replace(/\s+/g, " ").slice(0, 40) || "Sem nome";
-    }
-
-    function normalizeReservations(value) {
-      let raw = value;
-      if (typeof raw === "string") {
-        const trimmed = raw.trim();
-        if (!trimmed) return [];
-        try { raw = JSON.parse(trimmed); } catch { return []; }
-      }
-      if (!Array.isArray(raw)) return [];
-      return raw.map(item => ({
-        person: normalizeReservationPerson(item.person || item.pessoa || item.name || item.nome),
-        count: normalizeDuplicates(item.count ?? item.quantidade ?? item.qtd ?? 1),
-        createdAt: item.createdAt || new Date().toISOString()
-      })).filter(item => item.count > 0);
-    }
-
-    function reservationTotal(sticker) {
-      if (!Array.isArray(sticker?.reservas)) return 0;
-      return normalizeReservations(sticker.reservas).reduce((sum, item) => sum + item.count, 0);
-    }
-
-    function syncStickerReservations(sticker) {
-      if (!sticker) return sticker;
-      const duplicates = normalizeDuplicates(sticker.repetidos);
-      if (Array.isArray(sticker.reservas)) {
-        let remaining = duplicates;
-        sticker.reservas = normalizeReservations(sticker.reservas).map(item => {
-          const count = Math.min(item.count, remaining);
-          remaining -= count;
-          return { ...item, count };
-        }).filter(item => item.count > 0);
-        sticker.reservados = Math.min(reservationTotal(sticker), duplicates);
-      } else {
-        sticker.reservados = Math.min(normalizeReserved(sticker.reservados), duplicates);
-      }
-      return sticker;
-    }
-
     function reservedDuplicates(sticker) {
-      const detailed = reservationTotal(sticker);
-      const raw = Array.isArray(sticker?.reservas) ? detailed : normalizeReserved(sticker?.reservados);
-      return Math.min(raw, normalizeDuplicates(sticker?.repetidos));
+      return Math.min(normalizeReserved(sticker?.reservados), normalizeDuplicates(sticker?.repetidos));
     }
 
     function availableDuplicates(sticker) {
@@ -4847,15 +4723,13 @@
         nome: String(item.nome || item.name || item.jogador || item.player || "").trim(),
         tenho: normalizeOwned(item.tenho ?? item.owned ?? item.obtido ?? item.have),
         repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount),
-        reservados: normalizeReserved(item.reservados ?? item.suspensos ?? item.guardados ?? item.reserved ?? item.held ?? item.inativos),
-        reservas: normalizeReservations(item.reservas ?? item.reservations ?? item.reservedFor ?? item.reservasJson)
+        reservados: normalizeReserved(item.reservados ?? item.suspensos ?? item.guardados ?? item.reserved ?? item.held ?? item.inativos)
       };
 
       if (!sticker.codigo) sticker.codigo = `${sticker.pais}-${Math.random().toString(36).slice(2, 7)}`;
       if (!sticker.nome) sticker.nome = "Sem nome definido";
 
       sticker.id = makeId(sticker);
-      syncStickerReservations(sticker);
       return sticker;
     }
 
@@ -4935,9 +4809,7 @@
           if (typeof savedSticker === "object") {
             sticker.tenho = Boolean(savedSticker.tenho);
             sticker.repetidos = normalizeDuplicates(savedSticker.repetidos);
-            sticker.reservas = normalizeReservations(savedSticker.reservas);
-            sticker.reservados = Array.isArray(savedSticker.reservas) ? reservationTotal(sticker) : Math.min(normalizeReserved(savedSticker.reservados), sticker.repetidos);
-            syncStickerReservations(sticker);
+            sticker.reservados = Math.min(normalizeReserved(savedSticker.reservados), sticker.repetidos);
           } else {
             sticker.tenho = savedSticker;
           }
@@ -4947,15 +4819,14 @@
     }
 
     function stickersToCSV() {
-      const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas";
+      const header = "pa\u00eds";
       const rows = stickers.map(s => [
         s.pais,
         s.codigo,
         s.nome,
         s.tenho ? "sim" : "nao",
         s.repetidos || 0,
-        reservedDuplicates(s),
-        JSON.stringify(normalizeReservations(s.reservas))
+        reservedDuplicates(s)
       ].map(v => `"${String(v).replaceAll('"', '""')}"`).join(","));
 
       return [header, ...rows].join("\n");
@@ -5021,8 +4892,7 @@
         state[sticker.id] = {
           tenho: sticker.tenho,
           repetidos: sticker.repetidos || 0,
-          reservados: reservedDuplicates(sticker),
-          reservas: normalizeReservations(sticker.reservas)
+          reservados: reservedDuplicates(sticker)
         };
       });
       try {
@@ -9035,7 +8905,7 @@
       countryModal.classList.remove("hidden");
       countryModal.setAttribute("aria-hidden", "false");
       countryModalBody.innerHTML = `
-        <div class="country-modal-inner ${modalView === "duplicates" ? "is-duplicate-modal" : ""}" style="${sectionStyle(country)}">
+        <div class="country-modal-inner" style="${sectionStyle(country)}">
           <header class="country-modal-head">
             <div class="country-modal-title-row">
               <div>
@@ -9208,144 +9078,33 @@
       `;
     }
 
-    function groupedReservationsByPerson(album = currentAlbumStickers()) {
-      const groups = new Map();
-      album.forEach(sticker => {
-        normalizeReservations(sticker.reservas).forEach(reservation => {
-          const person = normalizeReservationPerson(reservation.person);
-          if (!groups.has(person)) groups.set(person, []);
-          groups.get(person).push({ sticker, count: reservation.count, person });
-        });
-      });
-      return [...groups.entries()].map(([person, entries]) => ({
-        person,
-        entries: entries.sort((a, b) => albumCountries().indexOf(a.sticker.pais) - albumCountries().indexOf(b.sticker.pais) || stickerNumber(a.sticker) - stickerNumber(b.sticker)),
-        total: entries.reduce((sum, entry) => sum + entry.count, 0)
-      })).sort((a, b) => a.person.localeCompare(b.person, "pt-PT", { sensitivity: "base" }));
-    }
-
-    function renderReservationForm() {
-      return `
-        <section class="duplicate-reserve-box">
-          <div class="duplicate-section-title"><span>Reservar cromos</span><small>lista</small></div>
-          <div class="reserve-form-grid">
-            <input id="reservePersonInput" class="live-input" type="text" maxlength="40" placeholder="Nome da pessoa" />
-            <textarea id="reserveListInput" class="list-compare-input reserve-list-input" spellcheck="false" placeholder="Cola a lista a reservar, ex.:\nPOR: 3, 8\nCOL: 16"></textarea>
-          </div>
-          <div class="list-compare-actions">
-            <button type="button" onclick="reserveDuplicateList()">Reservar cromos</button>
-            <button class="secondary" type="button" onclick="clearReserveForm()">Limpar</button>
-          </div>
-          <div id="reserveListResult" class="list-compare-result"></div>
-        </section>
-      `;
-    }
-
-    function renderReservedGroups(album = currentAlbumStickers()) {
-      const groups = groupedReservationsByPerson(album);
-      if (!groups.length) return `<div class="comparison-empty">Nao tens cromos guardados.</div>`;
-      return `<div class="reserved-person-grid">${groups.map(group => `
-        <article class="reserved-person-card">
-          <div class="reserved-person-head">
-            <strong>Guardado para: ${escapeHTML(group.person)}</strong>
-            <span>${group.total} cromos</span>
-          </div>
-          <div class="reserved-person-list">${renderGroupedEntries(group.entries, "Sem cromos", entry => formatCountedSticker({ sticker: entry.sticker, count: entry.count }, entry.count))}</div>
-          <div class="reserved-person-actions">
-            <button type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'completed')">Trocada</button>
-            <button class="secondary" type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'rejected')">Recusada</button>
-          </div>
-        </article>
-      `).join("")}</div>`;
-    }
-
-    function clearReserveForm() {
-      const person = document.getElementById("reservePersonInput");
-      const list = document.getElementById("reserveListInput");
-      const result = document.getElementById("reserveListResult");
-      if (person) person.value = "";
-      if (list) list.value = "";
-      if (result) result.innerHTML = "";
-      person?.focus();
-    }
-
-    function reserveDuplicateList() {
-      if (isFriendView()) return setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
-      if (!requireLiveLogin()) return;
-      const personInput = document.getElementById("reservePersonInput");
-      const listInput = document.getElementById("reserveListInput");
-      const result = document.getElementById("reserveListResult");
-      const person = normalizeReservationPerson(personInput?.value);
-      const parsed = parsePastedStickerList(listInput?.value || "");
-      let reservedCount = 0;
-      const reservedEntries = [];
-      parsed.entries.forEach(entry => {
-        const sticker = stickers.find(item => item.id === entry.sticker.id);
-        if (!sticker || !sticker.tenho) return;
-        syncStickerReservations(sticker);
-        const amount = Math.min(Math.max(1, entry.count || 1), availableDuplicates(sticker));
-        if (!amount) return;
-        sticker.reservas = normalizeReservations(sticker.reservas);
-        const existing = sticker.reservas.find(item => normalizeReservationPerson(item.person) === person);
-        if (existing) existing.count += amount;
-        else sticker.reservas.push({ person, count: amount, createdAt: new Date().toISOString() });
-        syncStickerReservations(sticker);
-        reservedCount += amount;
-        reservedEntries.push({ sticker, count: amount });
-      });
-      if (!reservedCount) {
-        if (result) result.innerHTML = `<article class="list-compare-card"><h2>Nada reservado</h2><small>Confirma se esses cromos existem e ainda estao livres nos repetidos.</small></article>`;
-        return;
-      }
-      saveState();
-      recordHistory(`Reserva criada para ${person}: ${reservedCount} cromos`, { type: "sticker", action: "duplicates_reserved_for", partner: person, stickers: reservedEntries.map(entry => entry.sticker) });
-      setSaveStatus(`${reservedCount} cromos reservados para ${person}`);
-      if (result) result.innerHTML = `<article class="list-compare-card"><h2>Reservado para ${escapeHTML(person)}</h2>${renderGroupedEntries(reservedEntries, "", entry => formatCountedSticker(entry, entry.count))}</article>`;
-      render();
-    }
-
-    function finishReservedTrade(personName, status) {
-      if (isFriendView()) return setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
-      if (!requireLiveLogin()) return;
-      const person = normalizeReservationPerson(personName);
-      const affected = [];
-      let total = 0;
-      stickers.forEach(sticker => {
-        const reservations = normalizeReservations(sticker.reservas);
-        const kept = [];
-        reservations.forEach(item => {
-          if (normalizeReservationPerson(item.person) !== person) return kept.push(item);
-          total += item.count;
-          affected.push({ sticker, count: item.count });
-          if (status === "completed") sticker.repetidos = Math.max(0, normalizeDuplicates(sticker.repetidos) - item.count);
-        });
-        sticker.reservas = kept;
-        syncStickerReservations(sticker);
-      });
-      if (!total) return;
-      saveState();
-      const done = status === "completed";
-      recordHistory(`${done ? "Troca guardada concluida" : "Troca guardada recusada"} com ${person}: ${total} cromos`, { type: "sticker", action: done ? "reserved_trade_completed" : "reserved_trade_rejected", partner: person, stickers: affected.map(entry => entry.sticker) });
-      setSaveStatus(done ? `Troca com ${person} concluida` : `Reserva de ${person} cancelada`);
-      render();
-    }
-
     function renderDuplicateStickerResults(list) {
       const album = currentAlbumStickers();
-      const countries = albumCountries();
-      const availableCountries = countries.filter(country => album.some(sticker => sticker.pais === country && sticker.tenho && availableDuplicates(sticker) > 0));
-      const reservedCount = album.reduce((sum, sticker) => sum + reservedDuplicates(sticker), 0);
+      const countryOrder = new Map(albumCountries().map((country, index) => [country, index]));
+      const sortDuplicateStickers = (items) => items.slice().sort((a, b) => {
+        const countryRank = (countryOrder.get(a.pais) ?? 999) - (countryOrder.get(b.pais) ?? 999);
+        return countryRank || stickerNumber(a) - stickerNumber(b);
+      });
+      const availableList = sortDuplicateStickers(album.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0));
+      const reservedList = sortDuplicateStickers(album.filter(sticker => sticker.tenho && reservedDuplicates(sticker) > 0));
+      const section = (title, count, items, emptyText, modeClass) => `
+        <section class="duplicate-section duplicate-sticker-section ${modeClass}">
+          <div class="duplicate-section-title"><span>${escapeHTML(title)}</span><small>${count}</small></div>
+          ${items.length ? `<div class="sticker-grid">${items.map(sticker => renderStickerCard(sticker, { duplicatePalette: true })).join("")}</div>` : `<div class="comparison-empty">${escapeHTML(emptyText)}</div>`}
+        </section>
+      `;
       return `
         <section class="search-results duplicate-results" aria-label="Cromos repetidos">
-          ${renderReservationForm()}
-          ${renderDuplicateCountrySection("Cromos Repetidos", "Nao tens repetidos livres.", availableCountries, album, "available")}
-          <section class="duplicate-section duplicate-reserved-section">
-            <div class="duplicate-section-title"><span>Cromos Guardados</span><small>${reservedCount}</small></div>
-            ${renderReservedGroups(album)}
-          </section>
+          <div class="country-modal-tabs duplicate-page-tabs" aria-hidden="true">
+            <button type="button" class="active">Cromos Repetidos (${availableList.length})</button>
+            <button type="button">Cromos Guardados (${reservedList.length})</button>
+          </div>
+          ${section("Cromos Repetidos", availableList.length, availableList, "Nao tens repetidos livres.", "is-available")}
+          ${section("Cromos Guardados", reservedList.length, reservedList, "Nao tens cromos guardados.", "is-reserved")}
         </section>
       `;
     }
+
     function render() {
       const album = currentAlbumStickers();
       updateStats();

@@ -21,10 +21,10 @@ REGISTER_PIN=usa-um-pin-secreto-e-longo
 ONLINE_REQUIRED=true
 NODE_ENV=production
 NODE_VERSION=22
-SESSION_IDLE_MINUTES=30
+SESSION_IDLE_MINUTES=43200
 ```
 
-`SESSION_IDLE_MINUTES=30` faz logout automatico apos 30 minutos sem atividade.
+`SESSION_IDLE_MINUTES=43200` faz logout automatico apos 30 dias de inatividade.
 
 ## MongoDB Atlas
 

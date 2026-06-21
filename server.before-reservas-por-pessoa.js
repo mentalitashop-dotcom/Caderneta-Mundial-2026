@@ -1,4 +1,4 @@
-const fs = require("fs");
+﻿const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const crypto = require("crypto");
@@ -17,7 +17,7 @@ const APP_ICON_512_FILE = path.join(ROOT, "app-icon-512.png");
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
 const COOKIE_NAME = "caderneta_session";
-const SESSION_IDLE_MINUTES = Number(process.env.SESSION_IDLE_MINUTES || 43200);
+const SESSION_IDLE_MINUTES = Number(process.env.SESSION_IDLE_MINUTES || 30);
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MAX_TRADE_STICKERS_PER_SIDE = 50;
@@ -437,7 +437,7 @@ function parseTextFile(text) {
 
   const lines = trimmed.split(/\r?\n/).filter(Boolean);
   const firstLine = parseCSVLine(lines[0]);
-  const knownHeaders = ["pais", "country", "codigo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson"];
+  const knownHeaders = ["pais", "country", "codigo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos"];
   const hasHeader = firstLine.some(header => knownHeaders.includes(header.trim().toLowerCase()));
 
   let headers = ["pais", "codigo", "nome", "tenho", "repetidos"];
@@ -461,7 +461,7 @@ function csvEscape(value) {
 }
 
 function stickersToCSV(stickers) {
-  const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas";
+  const header = "pais,codigo,nome,tenho,repetidos,reservados";
   const rows = stickers.map(sticker => [
     sticker.pais,
     sticker.codigo,
@@ -498,8 +498,7 @@ function baseDocToSticker(doc) {
 function userProgressDoc(user, sticker, now, source = "base") {
   const owned = Boolean(sticker.tenho);
   const duplicates = normalizeDuplicates(sticker.repetidos);
-  const reservations = normalizeReservations(sticker.reservas ?? sticker.reservations);
-  const reserved = Math.min(reservations.length ? reservationTotal({ ...sticker, reservas: reservations }) : normalizeReserved(sticker.reservados), duplicates);
+  const reserved = Math.min(normalizeReserved(sticker.reservados), duplicates);
   return {
     _id: `${user.id}:${sticker.id}`,
     userId: user.id,
@@ -513,8 +512,7 @@ function userProgressDoc(user, sticker, now, source = "base") {
     missing: !owned,
     duplicates,
     reserved,
-    reservations,
-        status: owned ? "obtido" : "em_falta",
+    status: owned ? "obtido" : "em_falta",
     source,
     createdAt: now,
     updatedAt: now
@@ -883,7 +881,6 @@ async function getUserStickerState(db, user) {
       tenho: Boolean(progress?.owned),
       repetidos: normalizeDuplicates(progress?.duplicates),
       reservados: Math.min(normalizeReserved(progress?.reserved), normalizeDuplicates(progress?.duplicates)),
-      reservas: normalizeReservations(progress?.reservations),
       albumOrder: sticker.albumOrder
     };
   });
@@ -923,13 +920,11 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
         tenho: Boolean(incomingSticker.tenho),
         repetidos: normalizeDuplicates(incomingSticker.repetidos),
         reservados: normalizeReserved(incomingSticker.reservados),
-        reservas: normalizeReservations(incomingSticker.reservas),
         albumOrder: baseSticker.albumOrder ?? index
       };
       const owned = Boolean(sticker.tenho);
       const duplicates = normalizeDuplicates(sticker.repetidos);
-      const reservations = normalizeReservations(sticker.reservas ?? sticker.reservations);
-  const reserved = Math.min(reservations.length ? reservationTotal({ ...sticker, reservas: reservations }) : normalizeReserved(sticker.reservados), duplicates);
+      const reserved = Math.min(normalizeReserved(sticker.reservados), duplicates);
 
       return {
         updateOne: {
@@ -945,8 +940,7 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
               missing: !owned,
               duplicates,
               reserved,
-    reservations,
-                  status: owned ? "obtido" : "em_falta",
+              status: owned ? "obtido" : "em_falta",
               source: "online_app",
               updatedAt: now
             },
