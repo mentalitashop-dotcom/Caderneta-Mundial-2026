@@ -5276,166 +5276,211 @@
         min-height: 66px;
       }
     }
-  
-    /* album-dashboard-and-reserved-tabs-v1 */
+    /* album-dashboard-balanced-v2 */
     .album-dashboard-shell.hidden { display: none !important; }
 
     .album-dashboard-shell {
       display: grid;
-      grid-template-columns: minmax(142px, 190px) minmax(0, 1fr) minmax(142px, 178px);
-      align-items: start;
       gap: 12px;
       margin-bottom: 14px;
     }
 
-    .dashboard-left-stack,
-    .dashboard-main-stack,
-    .dashboard-right-stack {
-      min-width: 0;
-      display: grid;
-      gap: 10px;
+    .album-dashboard-shell .collection-progress,
+    .album-dashboard-shell .stats,
+    .album-dashboard-shell .toolbar {
+      margin: 0;
     }
 
     .album-dashboard-shell .stats {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 9px;
-      margin: 0;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
     }
 
     .album-dashboard-shell .stat {
-      min-height: 60px;
+      min-height: 76px;
+      height: 100%;
+      display: grid;
+      align-content: space-between;
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+
+    .album-dashboard-shell .toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    body.duplicates-view #collectionProgress,
+    body.duplicates-view #albumStats {
+      display: none !important;
+    }
+
+    body.duplicates-view #albumDashboard {
+      gap: 0;
+      margin-bottom: 12px;
+    }
+
+    body.duplicates-view #albumToolbar {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.duplicates-view #albumToolbar .toolbar-actions {
+      display: none !important;
+    }
+
+    .reserved-person-section {
+      display: grid;
+      gap: 10px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .reserved-person-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 34px;
+      padding: 8px 13px;
+      border: 1px solid color-mix(in srgb, var(--main) 34%, var(--line));
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--main) 15%, var(--card));
+      color: var(--main);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .reserved-person-bar span {
+      font-size: 12px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      letter-spacing: .01em;
+    }
+
+    .reserved-person-bar strong {
+      color: var(--text);
+      font-weight: 1000;
+    }
+
+    .reserved-person-bar small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .reserved-person-body {
+      display: grid;
+      gap: 10px;
+      padding: 0 2px 6px;
+    }
+
+    .reserved-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+      gap: 10px;
+    }
+
+    .reserved-mini-card {
+      min-height: 78px;
+      padding: 10px;
       border-radius: 10px;
     }
 
-    @media (min-width: 761px) {
-      .album-dashboard-shell .stat[data-view="duplicates"] {
-        display: none;
-      }
-      .album-dashboard-shell .collection-progress,
-      .album-dashboard-shell .toolbar {
-        margin: 0;
-      }
+    .reserved-mini-card strong,
+    .reserved-mini-card span,
+    .reserved-mini-card small {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .dashboard-side-card {
-      pointer-events: auto;
-      cursor: pointer;
-      min-height: 58px;
-      display: grid;
-      align-content: center;
-      justify-items: end;
-      gap: 2px;
-      padding: 9px 12px;
-      border: 3px solid color-mix(in srgb, var(--text) 76%, transparent);
-      border-radius: 12px;
-      background: color-mix(in srgb, var(--card) 82%, transparent);
-      color: var(--text);
-      text-transform: uppercase;
-      box-shadow: 0 10px 26px rgba(15, 23, 42, .08);
+    .reserved-person-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin: 0;
     }
 
-    .dashboard-side-card:hover,
-    .dashboard-side-card:focus-visible {
-      border-color: var(--main);
-      transform: translateY(-1px);
+    .reserved-person-actions button {
+      width: auto;
+      min-height: 34px;
+      padding-inline: 14px;
     }
 
-    .dashboard-side-card span {
-      max-width: 100%;
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 1000;
-      line-height: 1.05;
-      text-align: right;
+    body[data-theme-mode="dark"] .reserved-person-bar {
+      background: color-mix(in srgb, var(--main) 24%, #101827);
+      border-color: color-mix(in srgb, var(--main) 56%, #ffffff22);
     }
 
-    .dashboard-side-card strong {
-      color: var(--text);
-      font-size: 18px;
-      font-weight: 1000;
-      line-height: .95;
-    }
-
-    body[data-theme-mode="dark"] .dashboard-side-card {
-      border-color: rgba(255,255,255,.86);
-      background: rgba(255,255,255,.035);
-    }
-
-    .reserved-person-title {
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 0;
-      background: transparent !important;
-      border: 0 !important;
-    }
-
-    .reserved-person-tab {
-      display: inline-flex;
-      align-items: center;
-      min-height: 30px;
-      padding: 7px 12px;
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--main) 18%, var(--card));
-      border: 1px solid color-mix(in srgb, var(--main) 42%, var(--line));
-      color: var(--main) !important;
-      font-size: 12px !important;
-      font-weight: 1000 !important;
-      letter-spacing: .02em;
-      text-transform: uppercase;
-    }
-
-    body[data-theme-mode="dark"] .reserved-person-tab {
-      background: color-mix(in srgb, var(--main) 28%, #101827);
-      border-color: color-mix(in srgb, var(--main) 66%, #ffffff22);
-      color: #f8fafc !important;
-    }
-
-    @media (max-width: 1050px) {
-      .album-dashboard-shell.hidden { display: none !important; }
-
-    .album-dashboard-shell {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .album-dashboard-shell .stats,
-      .dashboard-right-stack {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-      .album-dashboard-shell .stat[data-view="duplicates"] {
-        display: grid;
-      }
-    }
-
-    @media (max-width: 620px) {
-      .album-dashboard-shell.hidden { display: none !important; }
-
-    .album-dashboard-shell {
-        gap: 8px;
-      }
+    @media (max-width: 920px) {
       .album-dashboard-shell .stats {
         grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
       }
-      .dashboard-right-stack {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+      .album-dashboard-shell .stat {
+        min-height: 64px;
+        padding: 10px 9px;
+        border-radius: 12px;
+      }
+
+      .album-dashboard-shell .toolbar {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .album-dashboard-shell {
+        gap: 9px;
+        margin-bottom: 10px;
+      }
+
+      .album-dashboard-shell .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 6px;
       }
-      .dashboard-side-card {
-        min-height: 48px;
-        padding: 6px 7px;
-        border-width: 2px;
-        border-radius: 10px;
+
+      .album-dashboard-shell .stat {
+        min-height: 56px;
+        padding: 8px 7px;
       }
-      .dashboard-side-card span {
-        font-size: 7.4px;
+
+      .album-dashboard-shell .stat span {
+        font-size: 9px;
       }
-      .dashboard-side-card strong {
-        font-size: 13px;
+
+      .album-dashboard-shell .stat strong {
+        font-size: 16px;
       }
-      .reserved-person-tab {
-        width: 100%;
-        justify-content: center;
-        font-size: 10px !important;
+
+      .reserved-person-bar {
+        border-radius: 12px;
+        align-items: flex-start;
+      }
+
+      .reserved-person-bar span {
+        font-size: 10px;
+      }
+
+      .reserved-mini-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .reserved-person-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      body.duplicates-view #albumToolbar .search-shell {
+        min-height: 44px;
       }
     }
   </style>
@@ -5551,62 +5596,42 @@
   <main>
 
     <section id="albumDashboard" class="album-dashboard-shell" aria-label="Resumo da caderneta">
-      <div class="dashboard-left-stack">
-        <section id="albumStats" class="stats" aria-label="Resumo da caderneta">
-          <div class="stat" data-view="all"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
-          <div class="stat" data-view="owned"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
-          <div class="stat" data-view="missing"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
-          <div class="stat" data-view="duplicates"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
-        </section>
-      </div>
+      <section id="collectionProgress" class="collection-progress">
+        <div class="collection-progress-copy">
+          <span>Progresso da colecao</span>
+          <strong id="collectionProgressText">0/0 obtidos - 0%</strong>
+        </div>
+        <div class="collection-progress-track" aria-hidden="true">
+          <div id="collectionProgressBar" class="collection-progress-bar"></div>
+        </div>
+      </section>
 
-      <div class="dashboard-main-stack">
-        <section id="collectionProgress" class="collection-progress">
-          <div class="collection-progress-copy">
-            <span>Progresso da colecao</span>
-            <strong id="collectionProgressText">0/0 obtidos - 0%</strong>
-          </div>
-          <div class="collection-progress-track" aria-hidden="true">
-            <div id="collectionProgressBar" class="collection-progress-bar"></div>
-          </div>
-        </section>
+      <section id="albumStats" class="stats dashboard-counts" aria-label="Resumo da caderneta">
+        <div class="stat" data-view="all"><span>Cromos Todos</span><p></p><strong id="totalCount">0</strong></div>
+        <div class="stat" data-view="missing"><span>Cromos em Falta</span><p></p><strong id="missingCount">0</strong></div>
+        <div class="stat" data-view="owned"><span>Cromos Obtidos</span><p></p><strong id="ownedCount">0</strong></div>
+        <div class="stat" data-view="duplicates"><span>Cromos Repetidos</span><p></p><strong id="duplicatesCount">0</strong></div>
+      </section>
 
-        <section id="albumToolbar" class="toolbar">
-          <div class="search-shell">
-            <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
-            <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
+      <section id="albumToolbar" class="toolbar">
+        <div class="search-shell">
+          <input id="search" class="search" type="text" autocomplete="off" placeholder="Pesquisar por pais, codigo ou nome do cromo..." />
+          <button id="clearSearchButton" class="clear-search" type="button" onclick="clearSearch()" aria-label="Limpar pesquisa" title="Limpar pesquisa">x</button>
+        </div>
+        <div class="toolbar-actions">
+          <div class="collection-mode-row">
+            <span>Ver</span>
+            <select id="collectionModeSelect" class="collection-mode-select" onchange="setCollectionMode(this.value)">
+              <option value="all">Todas</option>
+              <option value="incomplete">Incompletas</option>
+              <option value="almost">Quase completas</option>
+              <option value="complete">Completas</option>
+            </select>
           </div>
-          <div class="toolbar-actions">
-            <div class="collection-mode-row">
-              <span>Ver</span>
-              <select id="collectionModeSelect" class="collection-mode-select" onchange="setCollectionMode(this.value)">
-                <option value="all">Todas</option>
-                <option value="incomplete">Incompletas</option>
-                <option value="almost">Quase completas</option>
-                <option value="complete">Completas</option>
-              </select>
-            </div>
-            <button id="exportListButton" class="export-list-btn" type="button" onclick="exportMissingAndDuplicates()"><span>Exportar lista</span><small id="exportSummary">0 faltam - 0 rep.</small></button>
-          </div>
-        </section>
-      </div>
-
-      <aside id="duplicateDashboard" class="dashboard-right-stack" aria-label="Resumo de repetidos">
-        <button class="dashboard-side-card" type="button" onclick="openDuplicatesView()">
-          <span>Cromos repetidos</span>
-          <strong id="sideDuplicatesTotal">0</strong>
-        </button>
-        <button class="dashboard-side-card" type="button" onclick="openDuplicatesView()">
-          <span>Cromos disponíveis</span>
-          <strong id="sideDuplicatesAvailable">0</strong>
-        </button>
-        <button class="dashboard-side-card" type="button" onclick="openDuplicatesView(); duplicateViewMode='reserved'; render()">
-          <span>Cromos guardados</span>
-          <strong id="sideReservedCount">0</strong>
-        </button>
-      </aside>
-    </section>
-    <section id="albumHomeTitle" class="album-home-title hidden">
+          <button id="exportListButton" class="export-list-btn" type="button" onclick="exportMissingAndDuplicates()"><span>Exportar lista</span><small id="exportSummary">0 faltam - 0 rep.</small></button>
+        </div>
+      </section>
+    </section>    <section id="albumHomeTitle" class="album-home-title hidden">
       <div>
         <strong id="albumHomeTitleMain">Selecoes</strong>
         <span id="albumHomeTitleSub">Escolhe uma selecao para abrir a caderneta.</span>
@@ -6150,9 +6175,6 @@
     const missingCount = document.getElementById("missingCount");
     const ownedCount = document.getElementById("ownedCount");
     const duplicatesCount = document.getElementById("duplicatesCount");
-    const sideDuplicatesTotal = document.getElementById("sideDuplicatesTotal");
-    const sideDuplicatesAvailable = document.getElementById("sideDuplicatesAvailable");
-    const sideReservedCount = document.getElementById("sideReservedCount");
 
     const demoStickers = [
       { pais: "Portugal", codigo: "POR1", nome: "Cromo exemplo 1", tenho: false },
@@ -6733,6 +6755,7 @@
         closeMobileToolsModal();
       }
       albumDashboard?.classList.toggle("hidden", !showAlbum);
+      document.body.classList.toggle("duplicates-view", showAlbum && activePage === "album" && currentView === "duplicates");
       albumStats?.classList.toggle("hidden", !showAlbum);
       collectionProgress?.classList.toggle("hidden", !showAlbum);
       albumHomeTitle?.classList.add("hidden");
@@ -10593,9 +10616,6 @@
         duplicatesCount.title = `${duplicates} repetidos livres, ${reserved} guardados`;
         duplicatesCount.setAttribute("aria-label", `${duplicates} repetidos livres e ${reserved} guardados`);
       }
-      if (sideDuplicatesTotal) sideDuplicatesTotal.textContent = `${duplicates + reserved}(${reserved})`;
-      if (sideDuplicatesAvailable) sideDuplicatesAvailable.textContent = `${duplicates}(${reserved})`;
-      if (sideReservedCount) sideReservedCount.textContent = reserved;
       const percent = total ? Math.round((owned / total) * 100) : 0;
       if (collectionProgressText) collectionProgressText.textContent = `${owned}/${total} obtidos - ${percent}%`;
       if (collectionProgressBar) collectionProgressBar.style.width = `${percent}%`;
@@ -11112,17 +11132,19 @@
       const groups = groupedReservationsByPerson(album);
       if (!groups.length) return `<div class="comparison-empty">Nao tens cromos guardados.</div>`;
       return groups.map(group => `
-        <section class="duplicate-section reserved-person-section">
-          <div class="duplicate-section-title">
-            <span>Reservado para: ${escapeHTML(group.person)}</span>
+        <section class="reserved-person-section">
+          <div class="reserved-person-bar">
+            <span>Reservado para: <strong>${escapeHTML(group.person)}</strong></span>
             <small>${group.total} cromos</small>
           </div>
-          <div class="reserved-mini-grid">
-            ${group.entries.map(renderReservedMiniCard).join("")}
-          </div>
-          <div class="reserved-person-actions">
-            <button type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'completed')">Trocada</button>
-            <button class="secondary" type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'rejected')">Recusada</button>
+          <div class="reserved-person-body">
+            <div class="reserved-mini-grid">
+              ${group.entries.map(renderReservedMiniCard).join("")}
+            </div>
+            <div class="reserved-person-actions">
+              <button type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'completed')">Trocada</button>
+              <button class="secondary" type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'rejected')">Recusada</button>
+            </div>
           </div>
         </section>
       `).join("");
