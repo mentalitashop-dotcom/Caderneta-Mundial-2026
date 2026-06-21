@@ -5398,6 +5398,9 @@
     const LIVE_REFRESH_MS = 15000;
     const IDLE_LOGOUT_MS = 30 * 60 * 1000;
     const AUTH_REQUEST_TIMEOUT_MS = 30000;
+    const STARTUP_REQUEST_TIMEOUT_MS = 8000;
+    const STARTUP_RETRY_DELAY_MS = 2200;
+    const STARTUP_MAX_ATTEMPTS = 45;
     const TRADE_HISTORY_PAGE_SIZE = 5;
     const TRADE_PICK_PAGE_SIZE = 50;
     const LIST_COMPARE_MODE_COPY = {
@@ -9789,16 +9792,49 @@
       showMyAlbum();
     }
 
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function fetchStartupStatus() {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), STARTUP_REQUEST_TIMEOUT_MS);
+      try {
+        const response = await fetch("/api/auth/status", {
+          cache: "no-store",
+          credentials: "same-origin",
+          signal: controller.signal
+        });
+        if (response.status >= 500) throw new Error("Servidor ainda a acordar");
+        if (!response.ok) throw new Error("Sem modo online");
+        return await response.json();
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    async function waitForStartupStatus() {
+      for (let attempt = 1; attempt <= STARTUP_MAX_ATTEMPTS; attempt += 1) {
+        try {
+          if (attempt === 1) setStartupMessage("A acordar o servidor...");
+          else if (attempt < 8) setStartupMessage("A ligar ao servidor...");
+          else if (attempt < 20) setStartupMessage("O Render ainda esta a acordar...");
+          else setStartupMessage("Quase pronto. Continuo a tentar ligar...");
+          return await fetchStartupStatus();
+        } catch (error) {
+          if (attempt >= STARTUP_MAX_ATTEMPTS) throw error;
+          await wait(STARTUP_RETRY_DELAY_MS);
+        }
+      }
+      throw new Error("Servidor indisponivel");
+    }
     async function initLiveMode() {
       if (!livePanel) return;
 
       inviteToken = readInviteToken();
 
       try {
-        setStartupMessage("A ligar ao servidor...");
-        const response = await fetch("/api/auth/status", { cache: "no-store" });
-        if (!response.ok) throw new Error("Sem modo online");
-        const data = await response.json();
+        const data = await waitForStartupStatus();
         liveEnabled = Boolean(data.enabled);
         setStartupMessage("A verificar a tua sessão...");
 
@@ -9854,16 +9890,9 @@
         updateLiveLoginUI();
         hideStartupScreen();
       } catch (error) {
-        console.error("N?o foi poss\u00edvel verificar a sess?o online.", error);
-        liveEnabled = true;
-        liveProfile = "";
-        inviteValid = false;
-        setAuthMode("login");
-        setAuthMessage("N?o foi poss\u00edvel verificar a sess?o. Podes tentar fazer login novamente.", "login");
-        liveStatusText.textContent = "N?o foi poss\u00edvel verificar a sess?o online.";
-        updateLiveLoginUI();
-        setSaveStatus("N?o foi poss\u00edvel verificar a sess?o");
-        hideStartupScreen();
+        console.error("Nao foi possivel acordar o servidor.", error);
+        setStartupMessage("O servidor ainda nao respondeu. A tentar novamente...");
+        setTimeout(() => initLiveMode().catch(() => {}), STARTUP_RETRY_DELAY_MS);
       }
     }
     function updateSearchControls() {
