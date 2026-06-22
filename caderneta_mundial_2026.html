@@ -5824,12 +5824,34 @@
       line-height: 1.55;
       overflow-wrap: anywhere;
     }
+    .duplicate-layout-tabs {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+    }
+    .duplicate-layout-tabs button {
+      min-height: 32px;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      box-shadow: none;
+      font-size: 11px;
+    }
+    .duplicate-layout-tabs button.active {
+      background: var(--main);
+      color: #fff;
+    }
 
     @media (min-width: 901px) {
       body.friend-view main { padding-right: 270px; }
       body.friend-view #livePanel {
         position: fixed;
-        top: 84px;
+        top: 114px;
         right: 14px;
         z-index: 70;
         width: 238px;
@@ -5854,6 +5876,39 @@
     @media (max-width: 900px) {
       .top-user-actions { display: none; }
       .history-filter-row { grid-template-columns: 1fr; }
+      .duplicate-results-toolbar { align-items: stretch; }
+      .duplicate-layout-tabs { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .duplicate-layout-tabs button { width: 100%; }
+      .country-tabs-wrap {
+        display: block !important;
+      }
+      .country-tabs-wrap .country-list-toolbar {
+        width: 100% !important;
+        margin-bottom: 8px !important;
+      }
+      .country-tabs-wrap .country-scroll-arrow {
+        display: none !important;
+      }
+      .country-tabs-wrap .country-tabs-viewport {
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+      }
+      .country-tabs-wrap .country-tabs {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        gap: 5px !important;
+        transform: none !important;
+      }
+      .country-tabs-wrap .country-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        min-height: 72px !important;
+        padding: 6px !important;
+      }
       .site-footer {
         margin-bottom: calc(84px + env(safe-area-inset-bottom));
         padding: 18px 14px;
@@ -5935,7 +5990,7 @@
         </div>
       </div>
       <div class="auth-view auth-denied">
-        <h1 class="auth-title denied">ESTA APP N?O FOI CRIADA PARA SI</h1>
+        <h1 class="auth-title denied">ESTA APP NAO FOI CRIADA PARA SI</h1>
       </div>
     </div>
   </section>
@@ -6358,7 +6413,7 @@
         { id: "windows", name: "Windows dark", accent: "#0078d4", countryMode: "theme", bg: "#0f0f10", card: "#1b1b1d", panel: "#242426", text: "#f5f5f5", muted: "#c7c7c7", line: "#3a3a3c", header: "rgba(31,31,33,.94)" },
         { id: "graphite", name: "Grafite verde", accent: "#2dd4bf", countryMode: "theme", bg: "#0b1010", card: "#151c1c", panel: "#1c2828", text: "#f0fdfa", muted: "#b7c9c7", line: "#2b3d3d", header: "rgba(21,28,28,.94)" },
         { id: "violet", name: "Noite violeta", accent: "#8b5cf6", countryMode: "theme", bg: "#100f16", card: "#1b1824", panel: "#252033", text: "#faf5ff", muted: "#cdc4d9", line: "#382f4c", header: "rgba(27,24,36,.94)" },
-        { id: "wine", name: "Carv?o vinho", accent: "#fb7185", countryMode: "theme", bg: "#120f12", card: "#1d181c", panel: "#2a2027", text: "#fff1f2", muted: "#d4bec5", line: "#44303a", header: "rgba(29,24,28,.94)" }
+        { id: "wine", name: "Carvao vinho", accent: "#fb7185", countryMode: "theme", bg: "#120f12", card: "#1d181c", panel: "#2a2027", text: "#fff1f2", muted: "#d4bec5", line: "#44303a", header: "rgba(29,24,28,.94)" }
       ]
     };
     const LIVE_REFRESH_MS = 8000;
@@ -6411,6 +6466,7 @@
     let mobileToolsModalOpen = false;
     let mobileToolsModalMode = "tools";
     let duplicateViewMode = "available";
+    let duplicateGroupingMode = localStorage.getItem("caderneta_duplicate_grouping") === "flat" ? "flat" : "groups";
     let tradeDetailId = "";
     let selectedTradeGiveIds = [];
     let selectedTradeReceiveIds = [];
@@ -7700,7 +7756,7 @@
       if (!liveEnabled || !liveProfile) return;
       const response = await apiFetch("/api/auth/settings", { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "N?o foi poss\u00edvel ler as defini??es");
+      if (!response.ok) throw new Error(data.error || "Nao foi poss\u00edvel ler as definicoes");
       applyUserSettings(data.settings || {});
     }
 
@@ -8122,7 +8178,7 @@
         return;
       }
       downloadExportText(exportText);
-      setSaveStatus("N?o foi poss\u00edvel copiar. Fiz download da lista.");
+      setSaveStatus("Nao foi poss\u00edvel copiar. Fiz download da lista.");
     }
 
 
@@ -9308,17 +9364,17 @@
     function resizeProfilePhoto(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onerror = () => reject(new Error("N?o foi poss\u00edvel ler a imagem."));
+        reader.onerror = () => reject(new Error("Nao foi poss\u00edvel ler a imagem."));
         reader.onload = () => {
           const image = new Image();
-          image.onerror = () => reject(new Error("O ficheiro escolhido n?o ? uma imagem v?lida."));
+          image.onerror = () => reject(new Error("O ficheiro escolhido nao e uma imagem valida."));
           image.onload = () => {
             const size = 256;
             const canvas = document.createElement("canvas");
             canvas.width = size;
             canvas.height = size;
             const context = canvas.getContext("2d");
-            if (!context) return reject(new Error("N?o foi poss\u00edvel preparar a imagem."));
+            if (!context) return reject(new Error("Nao foi poss\u00edvel preparar a imagem."));
 
             const cropSize = Math.min(image.naturalWidth, image.naturalHeight);
             const sourceX = Math.max(0, (image.naturalWidth - cropSize) / 2);
@@ -9338,7 +9394,7 @@
 
       try {
         if (!file.type.startsWith("image/")) throw new Error("Escolhe um ficheiro de imagem.");
-        if (file.size > 8 * 1024 * 1024) throw new Error("A imagem n?o pode ultrapassar 8 MB.");
+        if (file.size > 8 * 1024 * 1024) throw new Error("A imagem nao pode ultrapassar 8 MB.");
         const photo = await resizeProfilePhoto(file);
         onlineProfilePhoto = photo;
         localStorage.setItem(profilePhotoStorageKey(), photo);
@@ -9346,7 +9402,7 @@
         syncProfilePhotoUI();
         setSettingsMessage(settingsProfilePhotoMessage, "Foto guardada na tua conta.");
       } catch (error) {
-        setSettingsMessage(settingsProfilePhotoMessage, error.message || "N?o foi poss\u00edvel guardar a foto.", true);
+        setSettingsMessage(settingsProfilePhotoMessage, error.message || "Nao foi poss\u00edvel guardar a foto.", true);
       } finally {
         input.value = "";
       }
@@ -10046,10 +10102,10 @@
             </div>
           </div>
           <div class="trade-modal-actions">
-            <span class="trade-modal-balance">A proposta só pode ser enviada quando for 1 por 1, 2 por 2, 3 por 3...</span>
+            <span class="trade-modal-balance">A proposta so pode ser enviada quando for 1 por 1, 2 por 2, 3 por 3...</span>
             <button type="button" onclick="proposeTrade()" ${balanced ? "" : "disabled"}>Enviar proposta</button>
           </div>
-        ` : `<div class="comparison-empty">N?o h? cromos suficientes para montar uma troca equilibrada.</div>`}
+        ` : `<div class="comparison-empty">Nao ha cromos suficientes para montar uma troca equilibrada.</div>`}
       `;
       restoreTradePickScrollState(scrollState);
     }
@@ -10060,7 +10116,7 @@
       if (!hasSelectedFriend()) {
         tradeSuggestions.innerHTML = `
           <div class="comparison-empty">
-            Escolhe um amigo ou clica num cart?o acima para montar uma troca.
+            Escolhe um amigo ou clica num cartao acima para montar uma troca.
           </div>
         `;
         closeTradeModal();
@@ -10725,7 +10781,7 @@
           throw new Error("O servidor demorou demasiado a responder. Tenta novamente.");
         }
         if (error instanceof TypeError) {
-          throw new Error("N?o foi poss\u00edvel contactar o servidor. Tenta novamente.");
+          throw new Error("Nao foi poss\u00edvel contactar o servidor. Tenta novamente.");
         }
         throw error;
       } finally {
@@ -10968,7 +11024,7 @@
         setSaveStatus("Online ligado com sucesso");
       } catch (error) {
         console.error("Login concluido, mas a caderneta nao carregou.", error);
-        liveStatusText.textContent = "Sess?o iniciada. N?o foi poss\u00edvel carregar a caderneta.";
+        liveStatusText.textContent = "Sessao iniciada. Nao foi poss\u00edvel carregar a caderneta.";
         setSaveStatus("Login concluído, mas houve um erro ao carregar os cromos");
       }
 
@@ -11068,12 +11124,12 @@
       closeUserMenu();
       const expired = reason === "idle" || reason === "expired";
       liveStatusText.textContent = expired
-        ? "Sess?o expirada. Entra novamente."
-        : "Sess?o terminada. Entra para voltar ao modo online.";
+        ? "Sessao expirada. Entra novamente."
+        : "Sessao terminada. Entra para voltar ao modo online.";
       setAuthMode("login");
       updateLiveLoginUI();
-      setAuthMessage(expired ? "Sess?o expirada. Faz login novamente." : "", "login");
-      setSaveStatus(expired ? "Sess?o expirada" : "Sess?o terminada");
+      setAuthMessage(expired ? "Sessao expirada. Faz login novamente." : "", "login");
+      setSaveStatus(expired ? "Sessao expirada" : "Sessao terminada");
     }
 
     async function logoutLiveAccount(reason = "manual") {
@@ -11707,9 +11763,10 @@
           <div class="comparison-empty">${escapeHTML(emptyText)}</div>
         </section>
       `;
-      const orderedCountries = sortCountries(countries.slice());
+      const orderedCountries = sortedCountriesForList(countries.slice(), list);
       let previousGroup = "";
       const cards = orderedCountries.map(country => {
+        if (duplicateGroupingMode === "flat") return renderDuplicateCountryCard(country, list, mode);
         const group = officialGroupForCountry(country);
         const heading = group !== previousGroup ? `<div class="country-group-title">${escapeHTML(group)}</div>` : "";
         previousGroup = group;
@@ -11810,12 +11867,22 @@
       render();
     }
 
+    function setDuplicateGroupingMode(mode) {
+      duplicateGroupingMode = mode === "flat" ? "flat" : "groups";
+      localStorage.setItem("caderneta_duplicate_grouping", duplicateGroupingMode);
+      render();
+    }
+
     function renderDuplicateFilterToolbar(availableCount, reservedCount) {
       return `
         <div class="duplicate-results-toolbar">
           <div class="duplicate-filter-tabs" role="tablist" aria-label="Filtro de cromos repetidos">
             <button type="button" class="${duplicateViewMode === "available" ? "active" : ""}" onclick="setDuplicateViewMode('available')">Repetidos <small>${availableCount}</small></button>
             <button type="button" class="${duplicateViewMode === "reserved" ? "active" : ""}" onclick="setDuplicateViewMode('reserved')">Guardados <small>${reservedCount}</small></button>
+          </div>
+          <div class="duplicate-layout-tabs" role="group" aria-label="Organizacao dos repetidos">
+            <button type="button" class="${duplicateGroupingMode === "groups" ? "active" : ""}" onclick="setDuplicateGroupingMode('groups')">Agrupados</button>
+            <button type="button" class="${duplicateGroupingMode === "flat" ? "active" : ""}" onclick="setDuplicateGroupingMode('flat')">Sem grupos</button>
           </div>
           <button type="button" onclick="openReserveModal()">${duplicateViewMode === "reserved" ? "Editar guardados" : "Reservar cromos"}</button>
         </div>
