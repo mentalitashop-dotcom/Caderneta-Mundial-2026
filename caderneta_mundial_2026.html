@@ -6457,6 +6457,12 @@
     let tradeRequests = [];
     let liveHistoryLogs = [];
     let liveProfilesList = [];
+    let liveProfilesLoadedAt = 0;
+    const friendAlbumCache = new Map();
+    const friendAlbumRequests = new Map();
+    const FRIEND_CACHE_TTL_MS = 2 * 60 * 1000;
+    let friendLoadSequence = 0;
+    let tradeOverviewRefreshTimer = null;
     let onlineProfilePhoto = "";
     let undoState = null;
     let undoTimer = null;
@@ -6890,7 +6896,7 @@
     function syncStickerReservations(sticker) {
       if (!sticker) return sticker;
       const duplicates = normalizeDuplicates(sticker.repetidos);
-      if (Array.isArray(sticker.reservas)) {
+      if (Array.isArray(sticker.reservas) && sticker.reservas.length) {
         let remaining = duplicates;
         sticker.reservas = normalizeReservations(sticker.reservas).map(item => {
           const count = Math.min(item.count, remaining);
@@ -6906,7 +6912,7 @@
 
     function reservedDuplicates(sticker) {
       const detailed = reservationTotal(sticker);
-      const raw = Array.isArray(sticker?.reservas) ? detailed : normalizeReserved(sticker?.reservados);
+      const raw = detailed > 0 ? detailed : normalizeReserved(sticker?.reservados);
       return Math.min(raw, normalizeDuplicates(sticker?.repetidos));
     }
 
@@ -7020,7 +7026,9 @@
             sticker.tenho = Boolean(savedSticker.tenho);
             sticker.repetidos = normalizeDuplicates(savedSticker.repetidos);
             sticker.reservas = normalizeReservations(savedSticker.reservas);
-            sticker.reservados = Array.isArray(savedSticker.reservas) ? reservationTotal(sticker) : Math.min(normalizeReserved(savedSticker.reservados), sticker.repetidos);
+            sticker.reservados = Array.isArray(savedSticker.reservas) && savedSticker.reservas.length
+              ? reservationTotal(sticker)
+              : Math.min(normalizeReserved(savedSticker.reservados), sticker.repetidos);
             syncStickerReservations(sticker);
           } else {
             sticker.tenho = savedSticker;
@@ -8650,7 +8658,7 @@
         sticker.tenho = Boolean(saved.tenho);
         sticker.repetidos = normalizeDuplicates(saved.repetidos);
         sticker.reservas = normalizeReservations(saved.reservas);
-        sticker.reservados = Array.isArray(saved.reservas)
+        sticker.reservados = Array.isArray(saved.reservas) && saved.reservas.length
           ? reservationTotal(sticker)
           : Math.min(normalizeReserved(saved.reservados), sticker.repetidos);
         syncStickerReservations(sticker);
@@ -9460,8 +9468,7 @@
       renderFriendInsights(friendRankingItems.length ? friendRankingItems : [currentUserRankingItem()]);
       const profilesPromise = loadLiveProfiles();
       profilesPromise.then(() => refreshFriendInsights()).catch(() => renderFriendInsights([currentUserRankingItem()]));
-      profilesPromise.then(() => refreshTradeOverview()).catch(() => renderTradeOverview());
-      loadTradeRequests().catch(() => {});
+      profilesPromise.then(() => scheduleTradeOverviewRefresh()).catch(() => renderTradeOverview());
       renderTradePanel();
       if (liveComparison) liveComparison.innerHTML = "";
       render();
@@ -9505,6 +9512,7 @@
 
     async function loadFriendAlbum(profile, page = activePage) {
       const friend = String(profile || "").trim();
+      const loadSequence = ++friendLoadSequence;
       if (!friend) {
         friendProfile = "";
         friendStickers = [];
@@ -9522,17 +9530,28 @@
       }
 
       activePage = page;
+      friendProfile = friend;
       updatePageVisibility();
       syncFriendSelects(friend);
       if (liveComparison) liveComparison.innerHTML = "";
-      setSaveStatus(`A carregar ${friend}`);
+      const cached = getCachedFriendAlbum(friend);
+      if (cached) {
+        applyFriendAlbumData(friend, cached);
+        renderFriendInsights();
+        render();
+        renderTradePanel();
+        setSaveStatus(`A ver caderneta de ${friend}`);
+      } else {
+        friendStickers = [];
+        setSaveStatus(`A carregar ${friend}`);
+        renderFriendInsights();
+        render();
+      }
 
       try {
-        const data = await fetchLiveState(friend);
-        friendProfile = friend;
-        friendUpdatedAt = data.updatedAt || "";
-        friendUserColor = sanitizeUserColor(data.userColor || profileColors[friend] || DEFAULT_USER_COLOR);
-        friendStickers = data.exists && data.csv ? parseTextFile(data.csv) : [];
+        const data = await fetchFriendAlbumCached(friend);
+        if (loadSequence !== friendLoadSequence || friendProfile !== friend) return;
+        applyFriendAlbumData(friend, data);
         if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
         if (liveComparison) liveComparison.innerHTML = "";
         setSaveStatus(`A ver caderneta de ${friend}`);
@@ -9753,15 +9772,15 @@
       try {
         if (!liveProfilesList.length) await loadLiveProfiles();
         const profiles = liveProfilesList.filter(item => item.profile && item.profile !== liveProfile).slice(0, 40);
-        const results = await Promise.all(profiles.map(async item => {
+        const results = await mapWithConcurrency(profiles, 4, async item => {
           try {
-            const data = await fetchLiveState(item.profile);
-            const album = data.csv ? parseTextFile(data.csv) : [];
+            const data = await fetchFriendAlbumCached(item.profile);
+            const album = data.stickers || [];
             return tradeCompatibilityForAlbum(item.profile, album, item.userColor || profileColors[item.profile]);
           } catch {
             return null;
           }
-        }));
+        });
         tradeOverviewItems = results.filter(Boolean).sort((a, b) => b.friendCanGiveUnique - a.friendCanGiveUnique || b.balanced - a.balanced || a.profile.localeCompare(b.profile, "pt-PT"));
       } finally {
         tradeOverviewLoading = false;
@@ -10433,7 +10452,10 @@
         setSaveStatus(status === "accepted" ? "Troca aceite e cadernetas atualizadas" : "Troca atualizada");
         await loadTradeRequests();
         await refreshOwnAlbumState();
-        if (hasSelectedFriend()) await loadFriendAlbum(friendProfile, activePage);
+        if (hasSelectedFriend()) {
+          friendAlbumCache.delete(friendProfile);
+          await loadFriendAlbum(friendProfile, activePage);
+        }
         renderTradePanel();
         if (shouldCloseDetail) closeTradeModal();
         setSaveStatus(status === "accepted" ? "Troca aceite e cadernetas atualizadas" : "Troca atualizada");
@@ -10476,6 +10498,58 @@
         renderBulkAddPreview();
         setTimeout(() => bulkAddInput?.focus(), 0);
       }
+    }
+
+    async function mapWithConcurrency(items, limit, worker) {
+      const results = new Array(items.length);
+      let nextIndex = 0;
+      async function run() {
+        while (nextIndex < items.length) {
+          const index = nextIndex++;
+          results[index] = await worker(items[index], index);
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(limit, items.length) }, run));
+      return results;
+    }
+
+    function scheduleTradeOverviewRefresh() {
+      clearTimeout(tradeOverviewRefreshTimer);
+      tradeOverviewRefreshTimer = setTimeout(() => {
+        if (activePage === "friends" && !friendProfile) refreshTradeOverview().catch(() => renderTradeOverview());
+      }, 900);
+    }
+
+    function getCachedFriendAlbum(profile) {
+      const cached = friendAlbumCache.get(profile);
+      if (!cached || Date.now() - cached.cachedAt > FRIEND_CACHE_TTL_MS) return null;
+      return cached;
+    }
+
+    function applyFriendAlbumData(profile, data) {
+      friendProfile = profile;
+      friendUpdatedAt = data.updatedAt || "";
+      friendUserColor = sanitizeUserColor(data.userColor || profileColors[profile] || DEFAULT_USER_COLOR);
+      friendStickers = data.stickers || [];
+    }
+
+    async function fetchFriendAlbumCached(profile, force = false) {
+      if (!force) {
+        const cached = getCachedFriendAlbum(profile);
+        if (cached) return cached;
+        if (friendAlbumRequests.has(profile)) return friendAlbumRequests.get(profile);
+      }
+      const request = fetchLiveState(profile).then(data => {
+        const cached = {
+          ...data,
+          stickers: data.exists && data.csv ? parseTextFile(data.csv) : [],
+          cachedAt: Date.now()
+        };
+        friendAlbumCache.set(profile, cached);
+        return cached;
+      }).finally(() => friendAlbumRequests.delete(profile));
+      friendAlbumRequests.set(profile, request);
+      return request;
     }
     function openListComparePanel() {
       activeListTool = "compare";
@@ -10904,8 +10978,13 @@
       }
     }
 
-    async function loadLiveProfiles() {
+    async function loadLiveProfiles(force = false) {
       if (!liveEnabled || !liveProfile) return;
+
+      if (!force && liveProfilesList.length && Date.now() - liveProfilesLoadedAt < 60_000) {
+        if (activePage === "friends") renderFriendInsights(rankingItemsFromProfiles());
+        return;
+      }
 
       const selected = friendProfile || liveFriendSelect?.value || tradeFriendSelect?.value || "";
       const response = await apiFetch("/api/live/profiles", { cache: "no-store" });
@@ -10916,6 +10995,7 @@
         .map(item => typeof item === "string" ? { profile: item } : item)
         .filter(item => item && item.profile && item.profile !== liveProfile);
       liveProfilesList = profiles;
+      liveProfilesLoadedAt = Date.now();
 
       profileColors = {};
       profiles.forEach(item => {
@@ -11154,10 +11234,8 @@
       try {
         if (hasSelectedFriend() && activePage !== "album") {
           const activeFriend = friendProfile;
-          const data = await fetchLiveState(activeFriend);
-          friendUpdatedAt = data.updatedAt || friendUpdatedAt;
-          friendUserColor = sanitizeUserColor(data.userColor || profileColors[activeFriend] || friendUserColor);
-          friendStickers = data.exists && data.csv ? parseTextFile(data.csv) : [];
+          const data = await fetchFriendAlbumCached(activeFriend, true);
+          applyFriendAlbumData(activeFriend, data);
           if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
           render();
           renderTradePanel();
@@ -12002,6 +12080,7 @@
           if (status === "completed") sticker.repetidos = Math.max(0, normalizeDuplicates(sticker.repetidos) - item.count);
         });
         sticker.reservas = kept;
+        sticker.reservados = reservationTotal(sticker);
         syncStickerReservations(sticker);
       });
       if (!total) return;
@@ -12121,9 +12200,9 @@
                 const firstHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) <= 10);
                 const secondHalfStickers = regularStickers.filter(sticker => stickerNumber(sticker) >= 11);
                 return [
-                  teamStickers.length ? `<div class="sticker-section sticker-section-featured"><div class="sticker-grid">${teamStickers.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : "",
-                  firstHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHalfStickers.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : "",
-                  secondHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHalfStickers.map(sticker => renderStickerCard(sticker, options)).join("")}</div></div>` : ""
+                  teamStickers.length ? `<div class="sticker-section sticker-section-featured"><div class="sticker-grid">${teamStickers.map(sticker => renderStickerCard(sticker)).join("")}</div></div>` : "",
+                  firstHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${firstHalfStickers.map(sticker => renderStickerCard(sticker)).join("")}</div></div>` : "",
+                  secondHalfStickers.length ? `<div class="sticker-section"><div class="sticker-grid">${secondHalfStickers.map(sticker => renderStickerCard(sticker)).join("")}</div></div>` : ""
                 ].join("");
               })()}
             </div>

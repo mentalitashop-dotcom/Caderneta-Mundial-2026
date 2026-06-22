@@ -84,6 +84,7 @@ const COLLECTIONS = {
   history: "activity_logs",
   legacyCollections: "colecoes"
 };
+const SNAPSHOT_SCHEMA_VERSION = 2;
 
 const emptyAlbum = [
   "pais,codigo,nome,tenho,repetidos"
@@ -898,11 +899,18 @@ async function requireVerifiedUser(req, res) {
 }
 
 async function migrateLegacyCollectionIfNeeded(db, user) {
-  const existingCount = await db.collection(COLLECTIONS.userStickers).countDocuments({ userId: user.id }, { limit: 1 });
+  const existingCount = await db.collection(COLLECTIONS.userStickers).countDocuments(userProgressOwnerQuery(user), { limit: 1 });
   if (existingCount > 0) return;
 
   const legacy = await db.collection(COLLECTIONS.legacyCollections).findOne(
-    { _id: user.id },
+    {
+      $or: [
+        { _id: user.id },
+        { _id: user.username },
+        { profile: user.username },
+        { username: user.username }
+      ]
+    },
     { projection: { csv: 1, updatedAt: 1, profile: 1 } }
   );
 
@@ -928,14 +936,33 @@ async function migrateLegacyCollectionIfNeeded(db, user) {
   await db.collection(COLLECTIONS.userStickers).bulkWrite(operations, { ordered: false });
 }
 
+function userProgressOwnerQuery(user) {
+  return {
+    $or: [
+      { userId: user.id },
+      { userId: user.username },
+      { username: user.username }
+    ]
+  };
+}
+
 async function ensureUserStickerRows(db, user) {
   await migrateLegacyCollectionIfNeeded(db, user);
 
   const album = await getAlbumStickers(db);
   const existing = await db.collection(COLLECTIONS.userStickers)
-    .find({ userId: user.id }, { projection: { stickerId: 1 } })
+    .find(userProgressOwnerQuery(user), { projection: { stickerId: 1, countryCode: 1, pais: 1, code: 1, codigo: 1 } })
     .toArray();
-  const existingIds = new Set(existing.map(item => item.stickerId));
+  const existingIds = new Set();
+  existing.forEach(item => {
+    if (item.stickerId) existingIds.add(item.stickerId);
+    if ((item.countryCode || item.pais) && (item.code || item.codigo)) {
+      existingIds.add(makeStickerId({
+        pais: item.countryCode || item.pais,
+        codigo: item.code || item.codigo
+      }));
+    }
+  });
   const missing = album.filter(sticker => !existingIds.has(sticker.id));
 
   if (!missing.length) return;
@@ -960,18 +987,37 @@ async function getUserStickerState(db, user) {
 
   const album = await getAlbumStickers(db);
   const progressDocs = await db.collection(COLLECTIONS.userStickers)
-    .find({ userId: user.id })
+    .find(userProgressOwnerQuery(user))
+    .sort({ updatedAt: 1 })
     .toArray();
-  const progressByStickerId = new Map(progressDocs.map(doc => [doc.stickerId, doc]));
+  const progressByStickerId = new Map();
+  progressDocs.forEach(doc => {
+    if (doc.stickerId) progressByStickerId.set(doc.stickerId, doc);
+    if ((doc.countryCode || doc.pais) && (doc.code || doc.codigo)) {
+      progressByStickerId.set(makeStickerId({
+        pais: doc.countryCode || doc.pais,
+        codigo: doc.code || doc.codigo
+      }), doc);
+    }
+  });
 
   return album.map(sticker => {
     const progress = progressByStickerId.get(sticker.id);
+    const owned = normalizeOwned(progress?.owned ?? progress?.tenho ?? progress?.obtido ?? progress?.have);
+    const duplicates = normalizeDuplicates(progress?.duplicates ?? progress?.repetidos ?? progress?.duplicados ?? progress?.duplicatesCount);
+    const reservations = normalizeReservations(progress?.reservations ?? progress?.reservas ?? progress?.reservedFor);
+    const reserved = Math.min(
+      reservations.length
+        ? reservationTotal({ reservas: reservations })
+        : normalizeReserved(progress?.reserved ?? progress?.reservados ?? progress?.guardados),
+      duplicates
+    );
     return {
       ...sticker,
-      tenho: Boolean(progress?.owned),
-      repetidos: normalizeDuplicates(progress?.duplicates),
-      reservados: Math.min(normalizeReserved(progress?.reserved), normalizeDuplicates(progress?.duplicates)),
-      reservas: normalizeReservations(progress?.reservations),
+      tenho: owned,
+      repetidos: owned ? duplicates : 0,
+      reservados: owned ? reserved : 0,
+      reservas: owned ? capReservations(reservations, duplicates) : [],
       albumOrder: sticker.albumOrder
     };
   });
@@ -982,6 +1028,7 @@ async function saveSnapshot(db, user, stickers, updatedAt = new Date().toISOStri
     { _id: user.id },
     {
       $set: {
+        schemaVersion: SNAPSHOT_SCHEMA_VERSION,
         userId: user.id,
         profile: user.username,
         csv: stickersToCSV(stickers),
@@ -1906,12 +1953,23 @@ async function handleLiveRoute(req, res, url) {
         });
       }
 
-      const stickers = await getUserStickerState(db, profileUser);
       let snapshot = await db.collection(COLLECTIONS.snapshots).findOne({ _id: profileUser.id });
-      if (!snapshot) {
-        await saveSnapshot(db, profileUser, stickers);
-        snapshot = await db.collection(COLLECTIONS.snapshots).findOne({ _id: profileUser.id });
+      if (snapshot?.csv && snapshot.schemaVersion === SNAPSHOT_SCHEMA_VERSION) {
+        return sendJson(res, 200, {
+          enabled: true,
+          exists: true,
+          profile: profileUser.username,
+          userColor: profileUser.userColor || DEFAULT_USER_COLOR,
+          profilePhoto: profileUser.profilePhoto || "",
+          csv: snapshot.csv,
+          counts: snapshot.counts || null,
+          updatedAt: snapshot.updatedAt || ""
+        });
       }
+
+      const stickers = await getUserStickerState(db, profileUser);
+      await saveSnapshot(db, profileUser, stickers);
+      snapshot = await db.collection(COLLECTIONS.snapshots).findOne({ _id: profileUser.id });
 
       return sendJson(res, 200, {
         enabled: true,
