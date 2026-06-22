@@ -5623,11 +5623,6 @@
       border-radius: 999px;
       font-size: 12px;
     }
-
-    body.duplicates-view #albumDashboard {
-      display: none !important;
-    }
-
     .duplicate-group-block {
       display: grid;
       gap: 10px;
@@ -5716,6 +5711,158 @@
       body.friend-view .friends-ranking-panel { grid-template-columns: 1fr; }
       body.friend-view .friend-ranking-list { max-height: none; overflow: visible; }
     }
+    /* footer-notifications-friends-history-v2 */
+    html, body { min-height: 100%; }
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    body > header { flex: 0 0 auto; }
+    body > main { flex: 1 0 auto; width: 100%; }
+    body.auth-locked .site-footer { display: none; }
+
+    .top-user-actions {
+      grid-area: user;
+      position: relative;
+      justify-self: end;
+      align-self: center;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .top-user-actions .user-menu { grid-area: unset; justify-self: auto; }
+    .top-notification-button {
+      width: 40px;
+      min-width: 40px;
+      padding: 0;
+      box-shadow: none;
+    }
+    .top-notifications-popover {
+      position: absolute;
+      top: calc(100% + 9px);
+      right: 0;
+      z-index: 260;
+      width: min(360px, calc(100vw - 28px));
+      max-height: min(520px, calc(100vh - 90px));
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+      box-shadow: 0 18px 48px rgba(2, 6, 23, .22);
+    }
+    .top-notifications-head,
+    .top-notifications-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .top-notifications-head { padding: 4px 4px 10px; border-bottom: 1px solid var(--line); }
+    .top-notifications-footer { padding: 10px 4px 2px; border-top: 1px solid var(--line); }
+    .top-notifications-list { display: grid; gap: 7px; padding: 8px 0; }
+    .top-notification-item {
+      display: grid;
+      gap: 3px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+    }
+    .top-notification-item small { color: var(--muted); }
+
+    .site-footer {
+      flex: 0 0 auto;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 22px max(24px, calc((100vw - 1340px) / 2));
+      border: 0;
+      border-top: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .site-footer-main { display: grid; gap: 4px; }
+    .site-footer-main strong { color: var(--main); font-size: 15px; }
+    .site-footer-main span,
+    .site-footer-meta span { color: var(--muted); font-size: 12px; }
+    .site-footer-meta { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+
+    .history-filter-row { grid-template-columns: minmax(220px, 1fr) minmax(140px, 190px) minmax(140px, 190px); }
+    .history-line-body { min-width: 0; }
+    .history-line-body strong { font-weight: 800; overflow-wrap: anywhere; }
+    .inline-link-button {
+      display: inline;
+      width: auto;
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--main);
+      box-shadow: none;
+      font: inherit;
+      font-weight: 900;
+      text-decoration: underline;
+    }
+    .text-detail-modal-body {
+      max-height: min(62vh, 600px);
+      overflow-y: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    @media (min-width: 901px) {
+      body.friend-view main { padding-right: 270px; }
+      body.friend-view #livePanel {
+        position: fixed;
+        top: 84px;
+        right: 14px;
+        z-index: 70;
+        width: 238px;
+        max-height: calc(100vh - 104px);
+        overflow-y: auto;
+        margin: 0;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--card);
+        box-shadow: 0 14px 34px rgba(2, 6, 23, .14);
+      }
+      body.friend-view #livePanel .friends-ranking-head { display: none; }
+      body.friend-view #livePanel .friends-ranking-panel { display: block; }
+      body.friend-view #livePanel .friend-ranking-title strong { font-size: 13px; }
+      body.friend-view #livePanel .friend-ranking-list { max-height: none; overflow: visible; gap: 5px; }
+      body.friend-view #livePanel .friend-ranking-card { min-height: 48px; padding: 6px; gap: 6px; grid-template-columns: 24px minmax(0, 1fr); }
+      body.friend-view #livePanel .friend-ranking-trades { display: none; }
+      body.friend-view #livePanel #liveComparison { display: none; }
+    }
+
+    @media (max-width: 900px) {
+      .top-user-actions { display: none; }
+      .history-filter-row { grid-template-columns: 1fr; }
+      .site-footer {
+        margin-bottom: calc(84px + env(safe-area-inset-bottom));
+        padding: 18px 14px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .site-footer-meta { align-items: stretch; flex-direction: column; gap: 7px; }
+      .site-footer-meta button { width: 100%; }
+    }
   </style>
 </head>
 <body class="app-booting auth-locked auth-mode-login">
@@ -5802,8 +5949,10 @@
         <button type="button" data-page="friends" onclick="openFriendsPage()">Amigos</button>
         <button type="button" data-page="compare" onclick="openListComparePanel()">Listas</button>
       </nav>
-      <button id="topNotificationButton" class="top-notification-button" type="button" onclick="openNotificationsPanel()" aria-label="Notificacoes" title="Notificacoes">🔔<span id="topNotificationBadge" class="menu-badge hidden">0</span></button>
-      <div id="userMenu" class="user-menu">
+      <div class="top-user-actions">
+        <button id="topNotificationButton" class="top-notification-button" type="button" onclick="toggleTopNotifications(event)" aria-label="Notificacoes" title="Notificacoes" aria-haspopup="true" aria-expanded="false">🔔<span id="topNotificationBadge" class="menu-badge hidden">0</span></button>
+        <div id="topNotificationsPopover" class="top-notifications-popover hidden" aria-label="Notificacoes recentes"></div>
+        <div id="userMenu" class="user-menu">
         <button id="userMenuButton" class="user-menu-button" type="button" onclick="toggleUserMenu()" aria-haspopup="true" aria-expanded="false">
           <span id="userMenuInitial" class="user-avatar" aria-hidden="true">U</span>
           <span id="userMenuName">Conta</span>
@@ -5817,11 +5966,11 @@
           <div class="user-menu-section-title">Conta</div>
           <button type="button" role="menuitem" onclick="openAccountPanel()"><span>Conta</span></button>
           <button type="button" role="menuitem" onclick="openSettingsPanel()"><span>Definicoes</span></button>
-          <button type="button" role="menuitem" onclick="openNotificationsPanel()"><span>Notificacoes</span><span id="notificationMenuBadge" class="menu-badge hidden">0</span></button>
           <button type="button" role="menuitem" onclick="openHistoryPanel()"><span>Historico</span></button>
           <button type="button" role="menuitem" onclick="installPwaApp()"><span>Instalar app</span></button>
           <button class="danger" type="button" role="menuitem" onclick="logoutLiveAccount()"><span>Logout</span></button>
         </div>
+      </div>
       </div>
     </div>
   </header>
@@ -6004,6 +6153,12 @@
             <option value="sticker">Cromos</option>
             <option value="bulk_add">Listas adicionadas</option>
           </select>
+          <select id="historySortSelect" class="live-input" onchange="renderHistoryPanel()">
+            <option value="newest">Mais recentes</option>
+            <option value="oldest">Mais antigos</option>
+            <option value="action">Por acao</option>
+            <option value="country">Por selecao</option>
+          </select>
         </div>
       </div>
       <div id="historyResult" class="share-comparison" aria-live="polite"></div>
@@ -6153,9 +6308,16 @@
     </section>
   </main>
 
-  <footer id="appInstallFooter" class="app-install-footer">
-    <span>Instala a Caderneta Mundial 2026 como app no telemovel ou PC.</span>
-    <button type="button" onclick="installPwaApp()">Instalar app</button>
+  <footer id="appInstallFooter" class="app-install-footer site-footer">
+    <div class="site-footer-main">
+      <strong>Caderneta Mundial 2026</strong>
+      <span>Gestao online de cromos, repetidos, guardados, amigos, listas e trocas.</span>
+    </div>
+    <div class="site-footer-meta">
+      <span>Dados sincronizados online</span>
+      <span>Atualizacao automatica ativa</span>
+      <button type="button" onclick="installPwaApp()">Instalar app</button>
+    </div>
   </footer>
 
   <nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navegacao principal mobile">
@@ -6335,6 +6497,7 @@
     const historyResult = document.getElementById("historyResult");
     const historySearchInput = document.getElementById("historySearchInput");
     const historyTypeSelect = document.getElementById("historyTypeSelect");
+    const historySortSelect = document.getElementById("historySortSelect");
     const listComparePanel = document.getElementById("listComparePanel");
     const listCompareInput = document.getElementById("listCompareInput");
     const listCompareResult = document.getElementById("listCompareResult");
@@ -6391,7 +6554,9 @@
     const userMenuPanel = document.getElementById("userMenuPanel");
     const tradeMenuBadge = document.getElementById("tradeMenuBadge");
     const notificationMenuBadge = document.getElementById("notificationMenuBadge");
+    const topNotificationButton = document.getElementById("topNotificationButton");
     const topNotificationBadge = document.getElementById("topNotificationBadge");
+    const topNotificationsPopover = document.getElementById("topNotificationsPopover");
     const userMenuName = document.getElementById("userMenuName");
     const userMenuProfile = document.getElementById("userMenuProfile");
     const userMenuInitial = document.getElementById("userMenuInitial");
@@ -6713,6 +6878,11 @@
       if (!sticker.nome) sticker.nome = "Sem nome definido";
 
       sticker.id = makeId(sticker);
+      if (!sticker.tenho) {
+        sticker.repetidos = 0;
+        sticker.reservados = 0;
+        sticker.reservas = [];
+      }
       syncStickerReservations(sticker);
       return sticker;
     }
@@ -8243,10 +8413,15 @@
       const parsed = parsePastedStickerList(text);
       const matches = mode === "duplicates"
         ? parsed.entries.filter(entry => !entry.sticker.tenho)
-        : parsed.entries.filter(entry => entry.sticker.tenho && (entry.sticker.repetidos || 0) > 0);
+        : parsed.entries
+            .map(entry => ({
+              ...entry,
+              count: Math.min(Math.max(1, entry.count || 1), availableDuplicates(entry.sticker))
+            }))
+            .filter(entry => entry.sticker.tenho && entry.count > 0);
       const formatter = mode === "duplicates"
         ? entry => formatCountedSticker(entry, entry.count)
-        : entry => formatCountedSticker(entry, entry.sticker.repetidos || 0);
+        : entry => formatCountedSticker(entry, entry.count);
       const unknownList = parsed.unknown.slice(0, 10);
 
       listCompareResult.innerHTML = `
@@ -8620,6 +8795,8 @@
         given: item.given || [],
         received: item.received || [],
         source: item.source || source,
+        type: item.type || "",
+        action: item.action || "",
         tradeId: item.tradeId || ""
       };
     }
@@ -8633,6 +8810,72 @@
       return "";
     }
 
+
+    function historyActionText(item) {
+      const text = String(item.text || "");
+      const colon = text.indexOf(":");
+      if (colon > 0 && colon < 80) return text.slice(0, colon).trim();
+      if (item.action === "bulk_add") return "Lista adicionada";
+      if (item.action === "duplicate_add") return "Cromo repetido colocado";
+      if (item.action === "duplicate_remove") return "Cromo repetido retirado";
+      if (item.action === "sticker_owned") return "Cromo colado";
+      if (item.action === "sticker_removed") return "Cromo descolado";
+      return text || "Alteracao";
+    }
+
+    function historyMinuteKey(item) {
+      const date = new Date(item.at || 0);
+      if (!Number.isFinite(date.getTime())) return item.timeLabel || "sem-data";
+      date.setSeconds(0, 0);
+      return date.toISOString();
+    }
+
+    function historyCountryKey(item) {
+      const sticker = (item.stickers || item.received || item.given || [])[0] || {};
+      return exportGroupLabel(sticker.pais || "") || sticker.pais || "ZZZ";
+    }
+
+    function historyStickerSummary(items) {
+      const grouped = new Map();
+      items.flatMap(item => item.stickers || []).forEach(sticker => {
+        const country = exportGroupLabel(sticker.pais || "") || sticker.pais || "CROMO";
+        const number = stickerExportNumber(sticker);
+        if (!grouped.has(country)) grouped.set(country, []);
+        grouped.get(country).push(number);
+      });
+      return [...grouped.entries()].map(([country, nums]) => `${country}: ${[...new Set(nums)].join(", ")}`).join(" / ");
+    }
+
+    function sortHistoryItems(items) {
+      const sort = historySortSelect?.value || "newest";
+      const time = item => new Date(item.at || 0).getTime() || 0;
+      const sorted = items.slice();
+      if (sort === "oldest") return sorted.sort((a, b) => time(a) - time(b));
+      if (sort === "action") return sorted.sort((a, b) => historyActionText(a).localeCompare(historyActionText(b), "pt-PT") || time(b) - time(a));
+      if (sort === "country") return sorted.sort((a, b) => historyCountryKey(a).localeCompare(historyCountryKey(b), "pt-PT") || time(b) - time(a));
+      return sorted.sort((a, b) => time(b) - time(a));
+    }
+
+    function openTextDetailModal(title, text) {
+      if (!tradeModal || !tradeModalBody) return alert(text);
+      tradeModalOpen = true;
+      tradeModal.classList.remove("hidden");
+      tradeModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+      tradeModalBody.innerHTML = `
+        <div class="trade-modal-head">
+          <div><h2>${escapeHTML(title)}</h2><p>Detalhe completo</p></div>
+          <button class="trade-modal-close secondary" type="button" onclick="closeTradeModal()" aria-label="Fechar">x</button>
+        </div>
+        <article class="text-detail-modal-body">${escapeHTML(text).replace(/\n/g, "<br>")}</article>
+      `;
+    }
+
+    function compactNotificationText(text, title = "Notificacao") {
+      const value = String(text || "");
+      if (value.length <= 120) return escapeHTML(value);
+      return `${escapeHTML(value.slice(0, 120))}... <button class="inline-link-button" type="button" onclick="openTextDetailModal('${escapeJS(title)}', '${escapeJS(value)}')">Ver tudo</button>`;
+    }
     function mergedHistoryItems() {
       const byKey = new Map();
       const add = item => {
@@ -8661,16 +8904,24 @@
       const detail = historyStickerDetail(item);
       return "<article class=\"history-line\">" +
         "<time>" + escapeHTML(historyItemTime(item)) + "</time>" +
-        "<div class=\"history-line-body\"><strong>" + escapeHTML(item.text) + "</strong>" +
+        "<div class=\"history-line-body\"><strong>" + compactNotificationText(item.text, "Historico") + "</strong>" +
         (detail ? "<small>" + detail + "</small>" : "") +
         "</div></article>";
+    }
+
+    function renderHistoryLogGroup(items) {
+      if (items.length === 1) return renderHistoryItem(items[0]);
+      const first = items[0];
+      const summary = historyStickerSummary(items);
+      const text = summary ? `${historyActionText(first)}: ${summary}` : `${historyActionText(first)} (${items.length})`;
+      return renderHistoryItem({ ...first, text, stickers: items.flatMap(item => item.stickers || []) });
     }
 
     function renderHistoryPanel(message = "") {
       if (!historyResult) return;
       const query = normalizeSearch(historySearchInput?.value || "");
       const type = historyTypeSelect?.value || "all";
-      const items = mergedHistoryItems().filter(item => {
+      const items = sortHistoryItems(mergedHistoryItems().filter(item => {
         const action = item.action || item.type || "";
         if (type !== "all") {
           if (type === "bulk_add" && action !== "bulk_add") return false;
@@ -8686,7 +8937,7 @@
           ...(item.received || []).map(sticker => `${sticker.pais || ""} ${sticker.codigo || ""} ${sticker.nome || ""}`)
         ].join(" "));
         return haystack.includes(query);
-      });
+      }));
 
       if (!items.length) {
         historyResult.innerHTML = "<div class=\"comparison-empty\">" + escapeHTML(message || "Ainda nao ha logs de cromos.") + "</div>";
@@ -8694,17 +8945,22 @@
       }
 
       const grouped = new Map();
-      items.slice(0, 120).forEach(item => {
+      items.slice(0, 160).forEach(item => {
         const day = item.timeLabel && !item.at ? "Notas" : historyDayLabel(item.at);
-        if (!grouped.has(day)) grouped.set(day, []);
-        grouped.get(day).push(item);
+        const minute = historyMinuteKey(item);
+        const action = historyActionText(item);
+        const key = `${day}|${minute}|${action}`;
+        if (!grouped.has(day)) grouped.set(day, new Map());
+        const dayMap = grouped.get(day);
+        if (!dayMap.has(key)) dayMap.set(key, []);
+        dayMap.get(key).push(item);
       });
 
       historyResult.innerHTML =
         (message ? "<div class=\"comparison-empty\">" + escapeHTML(message) + "</div>" : "") +
         "<div class=\"history-log\">" +
-        [...grouped.entries()].map(([day, dayItems]) =>
-          "<section class=\"history-day\"><h3>" + escapeHTML(day) + "</h3>" + dayItems.map(renderHistoryItem).join("") + "</section>"
+        [...grouped.entries()].map(([day, dayGroups]) =>
+          "<section class=\"history-day\"><h3>" + escapeHTML(day) + "</h3>" + [...dayGroups.values()].map(renderHistoryLogGroup).join("") + "</section>"
         ).join("") +
         "</div>";
     }
@@ -8730,6 +8986,52 @@
 
     function outgoingPendingTrades() {
       return tradeRequests.filter(trade => trade.status === "pending" && trade.direction !== "incoming");
+    }
+
+    function renderTopNotificationsPopover() {
+      if (!topNotificationsPopover) return;
+      const incoming = incomingPendingTrades().slice(0, 3);
+      const activity = mergedHistoryItems().slice(0, 4);
+      const items = [
+        ...incoming.map(trade => ({
+          title: `${tradePartnerName(trade)} propos uma troca`,
+          detail: tradeReceivedPreview(trade),
+          onclick: `openTradeDetail('${escapeJS(trade.id)}')`
+        })),
+        ...activity.map(item => ({
+          title: item.text,
+          detail: historyTimeLabel(item.at),
+          onclick: `openTextDetailModal('Atividade', '${escapeJS(item.text)}')`
+        }))
+      ];
+      topNotificationsPopover.innerHTML = `
+        <div class="top-notifications-head"><strong>Notificacoes</strong><small>${items.length}</small></div>
+        <div class="top-notifications-list">
+          ${items.length ? items.map(item => `
+            <button class="top-notification-item" type="button" onclick="${item.onclick}; closeTopNotifications()">
+              <strong>${escapeHTML(item.title.length > 110 ? `${item.title.slice(0, 110)}...` : item.title)}</strong>
+              <small>${escapeHTML(item.detail || "")}</small>
+            </button>
+          `).join("") : `<div class="comparison-empty">Nao tens notificacoes recentes.</div>`}
+        </div>
+        <div class="top-notifications-footer"><small>Atividade recente</small><button type="button" onclick="openNotificationsPanel(); closeTopNotifications()">Ver todas</button></div>
+      `;
+    }
+
+    function closeTopNotifications() {
+      topNotificationsPopover?.classList.add("hidden");
+      topNotificationButton?.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleTopNotifications(event) {
+      event?.stopPropagation();
+      if (!topNotificationsPopover) return openNotificationsPanel();
+      const willOpen = topNotificationsPopover.classList.contains("hidden");
+      closeUserMenu();
+      if (!willOpen) return closeTopNotifications();
+      renderTopNotificationsPopover();
+      topNotificationsPopover.classList.remove("hidden");
+      topNotificationButton?.setAttribute("aria-expanded", "true");
     }
 
     function updateTradeBadges() {
@@ -8775,7 +9077,7 @@
           </article>
           <article class="insight-card">
             <div class="insight-card-head"><strong>Atividade recente</strong><small>${history.length}</small></div>
-            ${history.length ? history.map(item => `<small>${escapeHTML(historyTimeLabel(item.at))} - ${escapeHTML(item.text)}</small>`).join("") : `<small>Sem atividade recente.</small>`}
+            ${history.length ? history.map(item => `<small>${escapeHTML(historyTimeLabel(item.at))} - ${compactNotificationText(item.text, "Atividade recente")}</small>`).join("") : `<small>Sem atividade recente.</small>`}
           </article>
         </div>
       `;
@@ -8823,6 +9125,29 @@
     function currentUserRankingItem() {
       return compatibilityWithFriend(liveProfile || "Tu", stickers, currentUserColor || DEFAULT_USER_COLOR);
     }
+
+    function rankingItemFromProfile(item) {
+      const counts = item?.counts || {};
+      const total = Number(counts.total || 0);
+      const owned = Number(counts.owned || 0);
+      const missing = Number(counts.missing || Math.max(0, total - owned));
+      const duplicates = Number(counts.duplicates || 0);
+      const percent = total ? Math.round((owned / total) * 100) : 0;
+      return {
+        profile: item.profile,
+        userColor: sanitizeUserColor(item.userColor || profileColors[item.profile] || DEFAULT_USER_COLOR),
+        canGive: [],
+        canReceive: [],
+        tradeSize: 0,
+        stats: { total, owned, missing, duplicates, percent },
+        updatedAt: item.updatedAt || ""
+      };
+    }
+
+    function rankingItemsFromProfiles() {
+      return (liveProfilesList || []).filter(item => item?.profile).map(rankingItemFromProfile);
+    }
+
 
     function renderFriendInsights(items = null) {
       if (!friendInsights) return;
@@ -8890,10 +9215,14 @@
         renderFriendInsights([]);
         return;
       }
-      renderFriendInsights(friendRankingItems.length ? friendRankingItems : [currentUserRankingItem()]);
+      renderFriendInsights(friendRankingItems.length ? friendRankingItems : rankingItemsFromProfiles());
       if (!liveProfilesList.length) await loadLiveProfiles();
-      const profiles = liveProfilesList.slice(0, 30);
-      const results = await Promise.all(profiles.map(async item => {
+      const instantItems = rankingItemsFromProfiles();
+      renderFriendInsights(instantItems);
+
+      const profilesWithoutCounts = liveProfilesList.filter(item => !item.counts).slice(0, 8);
+      if (!profilesWithoutCounts.length) return;
+      const results = await Promise.all(profilesWithoutCounts.map(async item => {
         try {
           const data = await fetchLiveState(item.profile);
           const album = data.csv ? parseTextFile(data.csv) : [];
@@ -8902,8 +9231,9 @@
           return null;
         }
       }));
-      const ordered = results.filter(Boolean);
-      renderFriendInsights(ordered);
+      const merged = new Map(instantItems.map(item => [item.profile, item]));
+      results.filter(Boolean).forEach(item => merged.set(item.profile, item));
+      renderFriendInsights([...merged.values()]);
     }
     async function openTradesForFriend(profile) {
       switchAppPage("friends", { clearFilters: false });
@@ -10126,10 +10456,14 @@
 
     document.addEventListener("click", event => {
       if (userMenu && !userMenu.contains(event.target)) closeUserMenu();
+      if (topNotificationsPopover && !topNotificationsPopover.contains(event.target) && !topNotificationButton?.contains(event.target)) closeTopNotifications();
     });
 
     document.addEventListener("keydown", event => {
-      if (event.key === "Escape") closeUserMenu();
+      if (event.key === "Escape") {
+        closeUserMenu();
+        closeTopNotifications();
+      }
     });
 
 
@@ -10540,6 +10874,7 @@
       if (liveFriendSelect) liveFriendSelect.innerHTML = options;
       if (tradeFriendSelect) tradeFriendSelect.innerHTML = options;
       if (profiles.some(item => item.profile === selected)) syncFriendSelects(selected);
+      if (activePage === "friends") renderFriendInsights(rankingItemsFromProfiles());
     }
 
     async function writeLiveStateNow() {
@@ -11003,6 +11338,7 @@
       if (!checked) {
         sticker.repetidos = 0;
         sticker.reservados = 0;
+        sticker.reservas = [];
       }
       showStickerToast(sticker, checked ? "owned" : "removed");
       saveState();
@@ -11020,7 +11356,8 @@
       if (!sticker || !sticker.tenho) return;
 
       const currentDuplicates = normalizeDuplicates(sticker.repetidos);
-      const nextDuplicates = normalizeDuplicates(value);
+      const minimumDuplicates = reservedDuplicates(sticker);
+      const nextDuplicates = Math.max(minimumDuplicates, normalizeDuplicates(value));
       if (nextDuplicates === currentDuplicates) return;
       pushUndoState(`Repetidos alterados em ${stickerShortLabel(sticker)}`);
       sticker.repetidos = nextDuplicates;
@@ -11042,7 +11379,12 @@
       if (!sticker || !sticker.tenho) return;
 
       const currentDuplicates = normalizeDuplicates(sticker.repetidos);
+      const reserved = reservedDuplicates(sticker);
       if (delta < 0 && currentDuplicates <= 0) return;
+      if (delta < 0 && currentDuplicates <= reserved) {
+        setSaveStatus(`Este repetido esta guardado. Edita primeiro os guardados de ${stickerShortLabel(sticker)}.`);
+        return;
+      }
       if (delta < 0 && currentDuplicates === 1 && !confirm(`Confirmas que queres remover o ultimo repetido do cromo ${sticker.codigo}?`)) {
         return;
       }
@@ -11639,9 +11981,7 @@
       if (album.length) {
         if (showDuplicateCardsOnly) {
           updateResultSummary(list);
-          content.innerHTML = list.length
-            ? renderDuplicateStickerResults(list)
-            : renderEmptyState(emptyViewMessage());
+          content.innerHTML = renderDuplicateStickerResults(list);
           return;
         }
         const visibleCountryCards = countryTabs?.querySelectorAll(".country-card").length || 0;

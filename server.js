@@ -432,6 +432,15 @@ function reservationTotal(sticker) {
   return normalizeReservations(sticker?.reservas ?? sticker?.reservations).reduce((sum, item) => sum + item.count, 0);
 }
 
+function capReservations(reservations, duplicateCount) {
+  let remaining = normalizeDuplicates(duplicateCount);
+  return normalizeReservations(reservations).map(item => {
+    const count = Math.min(item.count, remaining);
+    remaining -= count;
+    return { ...item, count };
+  }).filter(item => item.count > 0);
+}
+
 function reservedDuplicates(sticker) {
   const reservations = normalizeReservations(sticker?.reservas ?? sticker?.reservations);
   const raw = reservations.length ? reservationTotal({ reservas: reservations }) : normalizeReserved(sticker?.reservados ?? sticker?.reserved);
@@ -486,6 +495,17 @@ function cleanSticker(item, albumOrder = 0) {
 
   if (!sticker.codigo) sticker.codigo = `${sticker.pais}-${albumOrder + 1}`;
   if (!sticker.nome) sticker.nome = "Sem nome definido";
+
+  if (!sticker.tenho) {
+    sticker.repetidos = 0;
+    sticker.reservados = 0;
+    sticker.reservas = [];
+  } else {
+    sticker.reservas = capReservations(sticker.reservas, sticker.repetidos);
+    sticker.reservados = sticker.reservas.length
+      ? reservationTotal({ reservas: sticker.reservas })
+      : Math.min(sticker.reservados, sticker.repetidos);
+  }
 
   sticker.id = makeStickerId(sticker);
   return sticker;
@@ -565,7 +585,7 @@ function baseDocToSticker(doc) {
 function userProgressDoc(user, sticker, now, source = "base") {
   const owned = Boolean(sticker.tenho);
   const duplicates = normalizeDuplicates(sticker.repetidos);
-  const reservations = normalizeReservations(sticker.reservas ?? sticker.reservations);
+  const reservations = capReservations(sticker.reservas ?? sticker.reservations, duplicates);
   const reserved = Math.min(reservations.length ? reservationTotal({ ...sticker, reservas: reservations }) : normalizeReserved(sticker.reservados), duplicates);
   return {
     _id: `${user.id}:${sticker.id}`,
@@ -1790,17 +1810,31 @@ async function handleLiveRoute(req, res, url) {
     const users = await db.collection(COLLECTIONS.users)
       .find(
         { role: "verificado", verified: true },
-        { projection: { _id: 0, username: 1, userColor: 1, themeColor: 1, profilePhoto: 1 } }
+        { projection: { _id: 1, id: 1, username: 1, userColor: 1, themeColor: 1, profilePhoto: 1 } }
       )
       .sort({ usernameLower: 1 })
       .limit(100)
       .toArray();
+
+    const snapshotIds = users.map(item => item._id || item.id).filter(Boolean);
+    const snapshots = snapshotIds.length
+      ? await db.collection(COLLECTIONS.snapshots)
+          .find({ _id: { $in: snapshotIds } }, { projection: { _id: 1, counts: 1, updatedAt: 1 } })
+          .toArray()
+      : [];
+    const snapshotsById = new Map(snapshots.map(snapshot => [String(snapshot._id), snapshot]));
+
     return sendJson(res, 200, {
-      profiles: users.map(item => ({
-        profile: item.username || item.profile,
-        userColor: cleanUserColor(item.userColor || item.themeColor),
-        profilePhoto: cleanProfilePhoto(item.profilePhoto)
-      }))
+      profiles: users.map(item => {
+        const snapshot = snapshotsById.get(String(item._id || item.id)) || {};
+        return {
+          profile: item.username || item.profile,
+          userColor: cleanUserColor(item.userColor || item.themeColor),
+          profilePhoto: cleanProfilePhoto(item.profilePhoto),
+          counts: snapshot.counts || null,
+          updatedAt: snapshot.updatedAt || ""
+        };
+      })
     });
   }
 
