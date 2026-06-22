@@ -14,6 +14,8 @@ const ICON_FILE = path.join(ROOT, "icon.svg");
 const APP_ICON_FILE = path.join(ROOT, "app-icon.png");
 const APP_ICON_192_FILE = path.join(ROOT, "app-icon-192.png");
 const APP_ICON_512_FILE = path.join(ROOT, "app-icon-512.png");
+const PACKAGE_FILE = path.join(ROOT, "package.json");
+const APP_BUILD_ID = buildAppVersion();
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
 const COOKIE_NAME = "caderneta_session";
@@ -127,6 +129,36 @@ function readBaseAlbum() {
   return emptyAlbum.join("\n") + "\n";
 }
 
+function fileMtimeMs(filePath) {
+  try {
+    return fs.existsSync(filePath) ? Math.round(fs.statSync(filePath).mtimeMs) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function buildAppVersion() {
+  let packageVersion = "0.0.0";
+  try {
+    packageVersion = JSON.parse(fs.readFileSync(PACKAGE_FILE, "utf8")).version || packageVersion;
+  } catch {}
+
+  const newestAsset = Math.max(
+    fileMtimeMs(HTML_FILE),
+    fileMtimeMs(SERVICE_WORKER_FILE),
+    fileMtimeMs(MANIFEST_FILE),
+    fileMtimeMs(APP_ICON_FILE),
+    fileMtimeMs(APP_ICON_192_FILE),
+    fileMtimeMs(APP_ICON_512_FILE),
+    fileMtimeMs(ICON_FILE)
+  );
+  return `${packageVersion}-${newestAsset || Date.now()}`;
+}
+
+function serviceWorkerBody() {
+  const body = fs.existsSync(SERVICE_WORKER_FILE) ? fs.readFileSync(SERVICE_WORKER_FILE, "utf8") : "";
+  return body.replace(/__APP_BUILD__/g, APP_BUILD_ID);
+}
 function send(res, status, body, type = "text/plain; charset=utf-8", extraHeaders = {}) {
   res.writeHead(status, {
     "Content-Type": type,
@@ -1892,6 +1924,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, {
         ok: true,
         service: "caderneta-mundial-2026",
+        appVersion: APP_BUILD_ID,
         onlineConfigured: config.ok,
         onlineRequired: config.onlineRequired,
         missingConfig: config.missing,
@@ -1947,8 +1980,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (url.pathname === "/sw.js") {
-      const body = fs.existsSync(SERVICE_WORKER_FILE) ? fs.readFileSync(SERVICE_WORKER_FILE, "utf8") : "";
-      return send(res, 200, body, "application/javascript; charset=utf-8", { "Cache-Control": "no-cache" });
+      const body = serviceWorkerBody();
+      return send(res, 200, body, "application/javascript; charset=utf-8", { "Cache-Control": "no-cache, no-store, must-revalidate" });
     }
 
     if (["/app-icon.png", "/app-icon-192.png", "/app-icon-512.png"].includes(url.pathname)) {
