@@ -2,7 +2,7 @@ services:
   - type: web
     name: caderneta-mundial-2026
     runtime: node
-    buildCommand: npm install
+    buildCommand: npm ci --omit=dev
     startCommand: npm start
     healthCheckPath: /api/ready
     autoDeploy: true

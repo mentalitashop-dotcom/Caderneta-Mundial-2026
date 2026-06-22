@@ -2,11 +2,14 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const crypto = require("crypto");
+const zlib = require("zlib");
 
 const ROOT = __dirname;
 loadLocalEnv(path.join(ROOT, ".env"));
 const PORT = Number(process.env.PORT || 1312);
 const HTML_FILE = path.join(ROOT, "caderneta_mundial_2026.html");
+const STYLES_FILE = path.join(ROOT, "styles.css");
+const APP_JS_FILE = path.join(ROOT, "app.js");
 const BASE_FILE = path.join(ROOT, "cromos_base.txt");
 const MANIFEST_FILE = path.join(ROOT, "manifest.webmanifest");
 const SERVICE_WORKER_FILE = path.join(ROOT, "sw.js");
@@ -20,6 +23,7 @@ const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
 const COOKIE_NAME = "caderneta_session";
 const SESSION_IDLE_MINUTES = Number(process.env.SESSION_IDLE_MINUTES || 43200);
+const SESSION_TOUCH_INTERVAL_MS = 5 * 60 * 1000;
 const REGISTER_PIN = String(process.env.REGISTER_PIN || "").trim();
 const MAX_BODY_BYTES = 5_000_000;
 const MAX_TRADE_STICKERS_PER_SIDE = 50;
@@ -146,6 +150,8 @@ function buildAppVersion() {
 
   const newestAsset = Math.max(
     fileMtimeMs(HTML_FILE),
+    fileMtimeMs(STYLES_FILE),
+    fileMtimeMs(APP_JS_FILE),
     fileMtimeMs(SERVICE_WORKER_FILE),
     fileMtimeMs(MANIFEST_FILE),
     fileMtimeMs(APP_ICON_FILE),
@@ -161,13 +167,18 @@ function serviceWorkerBody() {
   return body.replace(/__APP_BUILD__/g, APP_BUILD_ID);
 }
 function send(res, status, body, type = "text/plain; charset=utf-8", extraHeaders = {}) {
+  const rawBody = Buffer.isBuffer(body) ? body : Buffer.from(String(body ?? ""));
+  const shouldCompress = Boolean(res._acceptsGzip) && rawBody.length >= 1024 && /^(text\/|application\/(json|javascript|manifest\+json)|image\/svg\+xml)/i.test(type);
+  const responseBody = shouldCompress ? zlib.gzipSync(rawBody, { level: zlib.constants.Z_BEST_SPEED }) : rawBody;
   res.writeHead(status, {
     "Content-Type": type,
     "Cache-Control": "no-store",
+    "Content-Length": responseBody.length,
+    ...(shouldCompress ? { "Content-Encoding": "gzip", "Vary": "Accept-Encoding" } : {}),
     ...SECURITY_HEADERS,
     ...extraHeaders
   });
-  res.end(body);
+  res.end(responseBody);
 }
 
 function sendJson(res, status, payload, extraHeaders = {}) {
@@ -860,11 +871,14 @@ async function getAuthUser(req, res) {
     return null;
   }
 
-  const expiresAt = new Date(now.getTime() + SESSION_IDLE_MINUTES * 60 * 1000);
-  await db.collection(COLLECTIONS.sessions).updateOne(
-    { _id: session._id },
-    { $set: { lastSeenAt: now, expiresAt } }
-  );
+  const lastSeenAt = new Date(session.lastSeenAt || session.createdAt || 0);
+  if (!Number.isFinite(lastSeenAt.getTime()) || now - lastSeenAt >= SESSION_TOUCH_INTERVAL_MS) {
+    const expiresAt = new Date(now.getTime() + SESSION_IDLE_MINUTES * 60 * 1000);
+    await db.collection(COLLECTIONS.sessions).updateOne(
+      { _id: session._id },
+      { $set: { lastSeenAt: now, expiresAt } }
+    );
+  }
 
   if (res) res.setHeader("Set-Cookie", sessionCookie(token));
 
@@ -1102,6 +1116,93 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
   const stickers = await getUserStickerState(db, user);
   await saveSnapshot(db, user, stickers, updatedAt);
   return { stickers, updatedAt };
+}
+
+async function updateUserStickerChanges(db, user, rawChanges) {
+  const changes = Array.isArray(rawChanges) ? rawChanges.slice(0, 1000) : [];
+  if (!changes.length) throw new HttpError(400, "Sem cromos para atualizar.");
+
+  await ensureUserStickerRows(db, user);
+  const album = await getAlbumStickers(db);
+  const albumById = new Map(album.map(sticker => [sticker.id, sticker]));
+  const byId = new Map();
+
+  changes.forEach(change => {
+    const id = String(change?.id || change?.stickerId || "").trim();
+    const base = albumById.get(id);
+    if (!base) return;
+    const sticker = cleanSticker({
+      ...base,
+      tenho: change.tenho ?? change.owned,
+      repetidos: change.repetidos ?? change.duplicates,
+      reservados: change.reservados ?? change.reserved,
+      reservas: change.reservas ?? change.reservations
+    }, base.albumOrder);
+    byId.set(id, sticker);
+  });
+
+  const normalized = [...byId.values()];
+  if (!normalized.length) throw new HttpError(400, "Nenhum cromo valido para atualizar.");
+
+  const now = new Date();
+  const updatedAt = now.toISOString();
+  await db.collection(COLLECTIONS.userStickers).bulkWrite(normalized.map(sticker => ({
+    updateOne: {
+      filter: { userId: user.id, stickerId: sticker.id },
+      update: {
+        $set: {
+          username: user.username,
+          countryCode: sticker.pais,
+          code: sticker.codigo,
+          name: sticker.nome,
+          albumOrder: sticker.albumOrder,
+          owned: Boolean(sticker.tenho),
+          missing: !sticker.tenho,
+          duplicates: normalizeDuplicates(sticker.repetidos),
+          reserved: reservedDuplicates(sticker),
+          reservations: capReservations(sticker.reservas, sticker.repetidos),
+          status: sticker.tenho ? "obtido" : "em_falta",
+          source: "online_app_incremental",
+          updatedAt: now
+        },
+        $setOnInsert: {
+          _id: `${user.id}:${sticker.id}`,
+          userId: user.id,
+          stickerId: sticker.id,
+          createdAt: now
+        }
+      },
+      upsert: true
+    }
+  })), { ordered: false });
+
+  let snapshot = await db.collection(COLLECTIONS.snapshots).findOne({ _id: user.id });
+  let current = snapshot?.csv && snapshot.schemaVersion === SNAPSHOT_SCHEMA_VERSION
+    ? parseTextFile(snapshot.csv)
+    : await getUserStickerState(db, user);
+  const changedById = new Map(normalized.map(sticker => [sticker.id, sticker]));
+  current = current.map(sticker => changedById.get(sticker.id) || sticker);
+  await saveSnapshot(db, user, current, updatedAt);
+
+  return { stickers: current, changed: normalized.length, updatedAt };
+}
+
+function compatibilitySummary(profile, userColor, mine, friend) {
+  const mineById = new Map(mine.map(sticker => [sticker.id, sticker]));
+  const friendById = new Map(friend.map(sticker => [sticker.id, sticker]));
+  const myDuplicates = mine.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0);
+  const friendDuplicates = friend.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0);
+  const iCanGiveUnique = myDuplicates.filter(sticker => friendById.get(sticker.id) && !friendById.get(sticker.id).tenho).length;
+  const friendCanGiveUnique = friendDuplicates.filter(sticker => mineById.get(sticker.id) && !mineById.get(sticker.id).tenho).length;
+  return {
+    profile,
+    userColor: cleanUserColor(userColor),
+    friendDuplicateCopies: friendDuplicates.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0),
+    friendDuplicateUnique: friendDuplicates.length,
+    iCanGiveUnique,
+    friendCanGiveUnique,
+    balanced: Math.min(iCanGiveUnique, friendCanGiveUnique)
+  };
 }
 
 function cleanStickerIdList(value) {
@@ -1936,6 +2037,59 @@ async function handleLiveRoute(req, res, url) {
     return methodNotAllowed(res, ["GET", "POST"]);
   }
 
+  if (url.pathname === "/api/live/stickers") {
+    if (req.method !== "PATCH" && req.method !== "POST") return methodNotAllowed(res, ["PATCH", "POST"]);
+    const payload = await readJson(req);
+    const result = await updateUserStickerChanges(db, user, payload.changes);
+    return sendJson(res, 200, {
+      ok: true,
+      changed: result.changed,
+      counts: countStickerState(result.stickers),
+      updatedAt: result.updatedAt
+    });
+  }
+
+  if (url.pathname === "/api/live/compatibility") {
+    if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
+
+    let ownSnapshot = await db.collection(COLLECTIONS.snapshots).findOne({ _id: user.id });
+    let mine;
+    if (ownSnapshot?.csv && ownSnapshot.schemaVersion === SNAPSHOT_SCHEMA_VERSION) {
+      mine = parseTextFile(ownSnapshot.csv);
+    } else {
+      mine = await getUserStickerState(db, user);
+      await saveSnapshot(db, user, mine);
+      ownSnapshot = await db.collection(COLLECTIONS.snapshots).findOne({ _id: user.id });
+    }
+
+    const users = await db.collection(COLLECTIONS.users)
+      .find(
+        { role: "verificado", verified: true, _id: { $ne: user.id } },
+        { projection: { _id: 1, username: 1, userColor: 1, themeColor: 1 } }
+      )
+      .limit(100)
+      .toArray();
+    const ids = users.map(item => item._id).filter(Boolean);
+    const snapshots = ids.length
+      ? await db.collection(COLLECTIONS.snapshots)
+          .find({ _id: { $in: ids } }, { projection: { _id: 1, csv: 1 } })
+          .toArray()
+      : [];
+    const snapshotsById = new Map(snapshots.map(snapshot => [String(snapshot._id), snapshot]));
+    const summaries = users.map(friendUser => {
+      const snapshot = snapshotsById.get(String(friendUser._id));
+      if (!snapshot?.csv) return null;
+      return compatibilitySummary(
+        friendUser.username,
+        friendUser.userColor || friendUser.themeColor,
+        mine,
+        parseTextFile(snapshot.csv)
+      );
+    }).filter(Boolean);
+
+    return sendJson(res, 200, { summaries, updatedAt: ownSnapshot?.updatedAt || "" });
+  }
+
   if (url.pathname === "/api/live/state") {
     if (req.method === "GET") {
       const requestedProfile = cleanUsername(url.searchParams.get("profile")) || user.username;
@@ -2008,6 +2162,7 @@ async function handleLiveRoute(req, res, url) {
 
 const server = http.createServer(async (req, res) => {
   try {
+    res._acceptsGzip = /(?:^|,)\s*gzip\s*(?:,|$)/i.test(String(req.headers["accept-encoding"] || ""));
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
 
     if (url.pathname === "/api/health" || url.pathname === "/healthz") {
@@ -2087,8 +2242,19 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, body, "image/svg+xml; charset=utf-8", { "Cache-Control": "public, max-age=86400" });
     }
 
+    if (url.pathname === "/styles.css") {
+      const body = fs.existsSync(STYLES_FILE) ? fs.readFileSync(STYLES_FILE, "utf8") : "";
+      return send(res, 200, body, "text/css; charset=utf-8", { "Cache-Control": "public, max-age=31536000, immutable" });
+    }
+
+    if (url.pathname === "/app.js") {
+      const body = fs.existsSync(APP_JS_FILE) ? fs.readFileSync(APP_JS_FILE, "utf8") : "";
+      return send(res, 200, body, "application/javascript; charset=utf-8", { "Cache-Control": "public, max-age=31536000, immutable" });
+    }
+
     if (url.pathname === "/" || url.pathname === "/caderneta_mundial_2026.html") {
-      return send(res, 200, fs.readFileSync(HTML_FILE, "utf8"), "text/html; charset=utf-8");
+      const body = fs.readFileSync(HTML_FILE, "utf8").replace(/__APP_BUILD__/g, APP_BUILD_ID);
+      return send(res, 200, body, "text/html; charset=utf-8");
     }
 
     if (url.pathname === "/api/base-cromos") {
