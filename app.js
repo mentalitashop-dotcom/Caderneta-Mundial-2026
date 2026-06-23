@@ -142,6 +142,10 @@
     const collectionModeSelect = document.getElementById("collectionModeSelect");
     const friendModeBanner = document.getElementById("friendModeBanner");
     const friendBannerName = document.getElementById("friendBannerName");
+    const friendViewAvatar = document.getElementById("friendViewAvatar");
+    const friendViewAllButton = document.getElementById("friendViewAllButton");
+    const friendViewDuplicatesButton = document.getElementById("friendViewDuplicatesButton");
+    const friendDuplicateCount = document.getElementById("friendDuplicateCount");
     const friendTradePrompt = document.getElementById("friendTradePrompt");
     const countryModal = document.getElementById("countryModal");
     const countryModalPanel = document.getElementById("countryModalPanel");
@@ -846,7 +850,7 @@
         closeMobileToolsModal();
       }
       albumDashboard?.classList.toggle("hidden", !showAlbum);
-      document.body.classList.toggle("duplicates-view", showAlbum && activePage === "album" && currentView === "duplicates");
+      document.body.classList.toggle("duplicates-view", showAlbum && currentView === "duplicates");
       albumStats?.classList.toggle("hidden", !showAlbum);
       collectionProgress?.classList.toggle("hidden", !showAlbum);
       albumHomeTitle?.classList.add("hidden");
@@ -861,6 +865,7 @@
       friendTradePrompt?.classList.toggle("hidden", !isFriendView());
       renderFriendTradePrompt();
       if (friendBannerName) friendBannerName.textContent = friendProfile ? `Caderneta de ${friendProfile}` : "Caderneta do amigo";
+      updateFriendAlbumHeader();
       document.body.classList.toggle("friend-view", isFriendView());
       applyFriendColor(isFriendView() ? friendUserColor : DEFAULT_USER_COLOR);
       resultSummary?.classList.toggle("hidden", !showAlbum);
@@ -878,6 +883,39 @@
       updateMobileBottomNav();
       updateDesktopNav();
       updateViewTitle();
+    }
+
+    function updateFriendAlbumHeader() {
+      if (!isFriendView()) return;
+      const duplicateCopies = friendStickers.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
+      if (friendViewAvatar) {
+        friendViewAvatar.textContent = String(friendProfile || "?").trim().charAt(0).toUpperCase();
+        friendViewAvatar.style.background = friendUserColor || DEFAULT_USER_COLOR;
+      }
+      if (friendDuplicateCount) friendDuplicateCount.textContent = duplicateCopies;
+      if (friendViewAllButton) {
+        const active = currentView !== "duplicates";
+        friendViewAllButton.classList.toggle("active", active);
+        friendViewAllButton.setAttribute("aria-selected", String(active));
+      }
+      if (friendViewDuplicatesButton) {
+        const active = currentView === "duplicates";
+        friendViewDuplicatesButton.classList.toggle("active", active);
+        friendViewDuplicatesButton.setAttribute("aria-selected", String(active));
+      }
+    }
+
+    function setFriendAlbumView(view) {
+      if (!isFriendView()) return;
+      currentView = view === "duplicates" ? "duplicates" : "all";
+      modalView = currentView;
+      selectedCountry = "all";
+      countryModalOpen = false;
+      countryModalDuplicateOnly = false;
+      if (search) search.value = "";
+      document.body.classList.remove("modal-open");
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function clearAlbumFilters() {
@@ -2295,7 +2333,7 @@
           : Math.min(normalizeReserved(saved.reservados), sticker.repetidos);
         syncStickerReservations(sticker);
       });
-      saveState(reservedEntries.map(entry => entry.sticker.id));
+      saveState();
       render();
     }
     function hideUndoBar() {
@@ -5757,7 +5795,7 @@
         if (result) result.innerHTML = `<article class="list-compare-card"><h2>Nada reservado</h2><small>Confirma se esses cromos existem e ainda estao livres nos repetidos.</small></article>`;
         return;
       }
-      saveState(affected.map(entry => entry.sticker.id));
+      saveState(reservedEntries.map(entry => entry.sticker.id));
       try {
         await persistStateNow();
       } catch (error) {
@@ -5789,7 +5827,7 @@
         syncStickerReservations(sticker);
       });
       if (!total) return;
-      saveState();
+      saveState(affected.map(entry => entry.sticker.id));
       const done = status === "completed";
       recordHistory(`${done ? "Troca guardada concluida" : "Troca guardada recusada"} com ${person}: ${total} cromos`, { type: "sticker", action: done ? "reserved_trade_completed" : "reserved_trade_rejected", partner: person, stickers: affected.map(entry => entry.sticker) });
       setSaveStatus(done ? `Troca com ${person} concluida` : `Reserva de ${person} cancelada`);
@@ -5812,6 +5850,34 @@
         </section>
       `;
     }
+
+    function renderFriendDuplicateResults() {
+      const album = currentAlbumStickers();
+      const countries = allCountriesForAlbum(album);
+      const availableCountries = countries.filter(country =>
+        album.some(sticker => sticker.pais === country && sticker.tenho && availableDuplicates(sticker) > 0)
+      );
+      const availableCount = album.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
+      return `
+        <section class="search-results duplicate-results friend-duplicate-results" aria-label="Repetidos de ${escapeHTML(friendProfile)}">
+          <div class="friend-duplicate-summary">
+            <div>
+              <span>Repetidos de ${escapeHTML(friendProfile)}</span>
+              <strong>${availableCount}</strong>
+            </div>
+            <small>${availableCountries.length} selecoes com repetidos</small>
+          </div>
+          ${renderDuplicateCountrySection(
+            "Cromos Repetidos",
+            `${friendProfile} nao tem repetidos disponiveis.`,
+            availableCountries,
+            album,
+            "available"
+          )}
+        </section>
+      `;
+    }
+
     function render() {
       const album = currentAlbumStickers();
       updateStats();
@@ -5832,7 +5898,7 @@
       if (album.length) {
         if (showDuplicateCardsOnly) {
           updateResultSummary(list);
-          content.innerHTML = renderDuplicateStickerResults(list);
+          content.innerHTML = isFriendView() ? renderFriendDuplicateResults() : renderDuplicateStickerResults(list);
           return;
         }
         const visibleCountryCards = countryTabs?.querySelectorAll(".country-card").length || 0;

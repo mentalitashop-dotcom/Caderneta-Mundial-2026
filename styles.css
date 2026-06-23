@@ -5980,3 +5980,183 @@
 
       .site-footer { margin-bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
     }
+
+    /* Friend album identity and view switch. */
+    body.friend-view main {
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.friend-view #friendModeBanner { order: 1; }
+    body.friend-view #albumDashboard { order: 2; }
+    body.friend-view #friendTradePrompt { order: 3; }
+    body.friend-view #tradePanel { order: 4; }
+    body.friend-view #livePanel { order: 5; }
+    body.friend-view #albumHomeTitle { order: 6; }
+    body.friend-view #resultSummary { order: 7; }
+    body.friend-view #countryTabsWrap { order: 8; }
+    body.friend-view #content { order: 9; }
+
+    .friend-mode-banner {
+      position: relative;
+      overflow: hidden;
+      min-height: 76px;
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      border: 1px solid color-mix(in srgb, var(--friend-color) 52%, var(--line));
+      border-radius: 14px;
+      background:
+        linear-gradient(110deg, color-mix(in srgb, var(--friend-color) 16%, var(--card)), var(--card) 58%);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+    }
+
+    .friend-mode-banner::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      background: var(--friend-color);
+    }
+
+    .friend-view-identity {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .friend-view-avatar {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 3px solid color-mix(in srgb, #fff 76%, transparent);
+      border-radius: 50%;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .16);
+      font-size: 18px;
+      font-weight: 1000;
+    }
+
+    .friend-view-identity strong {
+      min-width: 0;
+      color: var(--text);
+      font-size: clamp(18px, 2.2vw, 25px);
+      font-weight: 1000;
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+
+    .friend-view-tabs {
+      position: relative;
+      z-index: 1;
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 3px;
+      min-width: 220px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--card) 88%, transparent);
+    }
+
+    .friend-view-tabs button {
+      min-height: 36px;
+      padding: 0 13px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      box-shadow: none;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .friend-view-tabs button.active {
+      background: var(--friend-color);
+      color: #fff;
+    }
+
+    .friend-view-tabs small {
+      display: inline-grid;
+      place-items: center;
+      min-width: 20px;
+      min-height: 20px;
+      margin-left: 4px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: color-mix(in srgb, currentColor 16%, transparent);
+      color: inherit;
+      font-size: 9px;
+    }
+
+    .friend-duplicate-results {
+      border-top-color: var(--friend-color);
+    }
+
+    .friend-duplicate-summary {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 12px 14px;
+      border: 1px solid color-mix(in srgb, var(--friend-color) 38%, var(--line));
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--friend-color) 9%, var(--card));
+    }
+
+    .friend-duplicate-summary div {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+    }
+
+    .friend-duplicate-summary span,
+    .friend-duplicate-summary small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .friend-duplicate-summary strong {
+      color: var(--friend-color);
+      font-size: 24px;
+      font-weight: 1000;
+    }
+
+    body.friend-view.duplicates-view #albumToolbar,
+    body.friend-view.duplicates-view #countryTabsWrap {
+      display: none !important;
+    }
+
+    @media (max-width: 760px) {
+      .friend-mode-banner {
+        min-height: 0;
+        padding: 11px;
+        border-radius: 12px;
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .friend-view-avatar {
+        flex-basis: 38px;
+        width: 38px;
+        height: 38px;
+        font-size: 15px;
+      }
+
+      .friend-view-identity strong { font-size: 18px; }
+      .friend-view-tabs { width: 100%; min-width: 0; }
+      .friend-view-tabs button { min-height: 38px; padding: 0 8px; }
+
+      .friend-duplicate-summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+        padding: 10px;
+      }
+    }

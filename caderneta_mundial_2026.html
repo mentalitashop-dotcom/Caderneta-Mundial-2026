@@ -131,6 +131,19 @@
 
   <main>
 
+    <section id="friendModeBanner" class="friend-mode-banner hidden">
+      <div class="friend-view-identity">
+        <span id="friendViewAvatar" class="friend-view-avatar" aria-hidden="true"></span>
+        <strong id="friendBannerName">Caderneta do amigo</strong>
+      </div>
+      <div class="friend-view-tabs" role="tablist" aria-label="Vista da caderneta do amigo">
+        <button id="friendViewAllButton" type="button" role="tab" onclick="setFriendAlbumView('all')">Caderneta</button>
+        <button id="friendViewDuplicatesButton" type="button" role="tab" onclick="setFriendAlbumView('duplicates')">
+          Repetidos <small id="friendDuplicateCount">0</small>
+        </button>
+      </div>
+    </section>
+
     <section id="albumDashboard" class="album-dashboard-shell" aria-label="Resumo da caderneta">
       <section id="collectionProgress" class="collection-progress">
         <div class="collection-progress-copy">
@@ -172,15 +185,6 @@
         <strong id="albumHomeTitleMain">Selecoes</strong>
         <span id="albumHomeTitleSub">Escolhe uma selecao para abrir a caderneta.</span>
       </div>
-    </section>
-
-    <section id="friendModeBanner" class="friend-mode-banner hidden">
-      <div class="friend-mode-copy">
-        <span class="friend-mode-pill">AMIGO</span>
-        <strong id="friendBannerName">Caderneta do amigo</strong>
-        <small>So leitura. Os teus cromos nao sao alterados aqui.</small>
-      </div>
-
     </section>
 
     <section id="friendTradePrompt" class="friend-trade-prompt hidden" aria-live="polite"></section>
