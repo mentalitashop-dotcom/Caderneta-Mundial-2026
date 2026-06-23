@@ -90,7 +90,7 @@ const COLLECTIONS = {
   history: "activity_logs",
   legacyCollections: "colecoes"
 };
-const SNAPSHOT_SCHEMA_VERSION = 3;
+const SNAPSHOT_SCHEMA_VERSION = 4;
 
 const emptyAlbum = [
   "pais,codigo,nome,tenho,repetidos"
@@ -447,6 +447,12 @@ function normalizePendingPerson(value) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, 80);
 }
 
+function normalizePendingDuplicate(value) {
+  if (typeof value === "boolean") return value;
+  const normalized = String(value || "").trim().toLowerCase();
+  return ["sim", "yes", "true", "1", "repetido", "duplicate"].includes(normalized);
+}
+
 function normalizeReservationPerson(value) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, 80) || "Sem nome";
 }
@@ -534,6 +540,7 @@ function cleanSticker(item, albumOrder = 0) {
     pendenteDe: normalizePendingPerson(item.pendenteDe ?? item.pendentede ?? item.incomingFrom ?? item.incomingfrom ?? item.aReceberDe ?? item.areceberde),
     pendenteDesde: String(item.pendenteDesde ?? item.pendentedesde ?? item.incomingSince ?? item.incomingsince ?? "").slice(0, 40),
     pendenteTrocaId: String(item.pendenteTrocaId ?? item.pendentetrocaid ?? item.incomingTradeId ?? item.incomingtradeid ?? "").trim().slice(0, 80),
+    pendenteComoRepetido: normalizePendingDuplicate(item.pendenteComoRepetido ?? item.pendentecomorepetido ?? item.incomingAsDuplicate ?? item.incomingasduplicate),
     albumOrder
   };
 
@@ -545,10 +552,6 @@ function cleanSticker(item, albumOrder = 0) {
     sticker.reservados = 0;
     sticker.reservas = [];
   } else {
-    sticker.pendenteReceber = false;
-    sticker.pendenteDe = "";
-    sticker.pendenteDesde = "";
-    sticker.pendenteTrocaId = "";
     sticker.reservas = capReservations(sticker.reservas, sticker.repetidos);
     sticker.reservados = sticker.reservas.length
       ? reservationTotal({ reservas: sticker.reservas })
@@ -571,7 +574,7 @@ function parseTextFile(text) {
 
   const lines = trimmed.split(/\r?\n/).filter(Boolean);
   const firstLine = parseCSVLine(lines[0]);
-  const knownHeaders = ["pais", "country", "codigo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson", "pendentereceber", "incomingpending", "areceber", "pendentede", "incomingfrom", "areceberde", "pendentedesde", "incomingsince", "pendentetrocaid", "incomingtradeid"];
+  const knownHeaders = ["pais", "country", "codigo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson", "pendentereceber", "incomingpending", "areceber", "pendentede", "incomingfrom", "areceberde", "pendentedesde", "incomingsince", "pendentetrocaid", "incomingtradeid", "pendentecomorepetido", "incomingasduplicate"];
   const hasHeader = firstLine.some(header => knownHeaders.includes(header.trim().toLowerCase()));
 
   let headers = ["pais", "codigo", "nome", "tenho", "repetidos"];
@@ -595,7 +598,7 @@ function csvEscape(value) {
 }
 
 function stickersToCSV(stickers) {
-  const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas,pendenteReceber,pendenteDe,pendenteDesde,pendenteTrocaId";
+  const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas,pendenteReceber,pendenteDe,pendenteDesde,pendenteTrocaId,pendenteComoRepetido";
   const rows = stickers.map(sticker => [
     sticker.pais,
     sticker.codigo,
@@ -604,10 +607,11 @@ function stickersToCSV(stickers) {
     sticker.repetidos || 0,
     reservedDuplicates(sticker),
     JSON.stringify(normalizeReservations(sticker.reservas ?? sticker.reservations)),
-    !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? "sim" : "nao",
+    normalizePendingIncoming(sticker.pendenteReceber) ? "sim" : "nao",
     normalizePendingPerson(sticker.pendenteDe),
-    !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteDesde || "") : "",
-    !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteTrocaId || "") : ""
+    normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteDesde || "") : "",
+    normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteTrocaId || "") : "",
+    normalizePendingIncoming(sticker.pendenteReceber) && normalizePendingDuplicate(sticker.pendenteComoRepetido) ? "sim" : "nao"
   ].map(csvEscape).join(","));
 
   return [header, ...rows].join("\n");
@@ -640,7 +644,7 @@ function userProgressDoc(user, sticker, now, source = "base") {
   const duplicates = normalizeDuplicates(sticker.repetidos);
   const reservations = capReservations(sticker.reservas ?? sticker.reservations, duplicates);
   const reserved = Math.min(reservations.length ? reservationTotal({ ...sticker, reservas: reservations }) : normalizeReserved(sticker.reservados), duplicates);
-  const pendingIncoming = !owned && normalizePendingIncoming(sticker.pendenteReceber);
+  const pendingIncoming = normalizePendingIncoming(sticker.pendenteReceber);
   return {
     _id: `${user.id}:${sticker.id}`,
     userId: user.id,
@@ -659,6 +663,7 @@ function userProgressDoc(user, sticker, now, source = "base") {
     incomingFrom: pendingIncoming ? normalizePendingPerson(sticker.pendenteDe) : "",
     incomingSince: pendingIncoming ? String(sticker.pendenteDesde || "").slice(0, 40) : "",
     incomingTradeId: pendingIncoming ? String(sticker.pendenteTrocaId || "").slice(0, 80) : "",
+    incomingAsDuplicate: pendingIncoming && normalizePendingDuplicate(sticker.pendenteComoRepetido),
     status: owned ? "obtido" : pendingIncoming ? "a_receber" : "em_falta",
     source,
     createdAt: now,
@@ -1066,7 +1071,7 @@ async function getUserStickerState(db, user) {
     const owned = normalizeOwned(progress?.owned ?? progress?.tenho ?? progress?.obtido ?? progress?.have);
     const duplicates = normalizeDuplicates(progress?.duplicates ?? progress?.repetidos ?? progress?.duplicados ?? progress?.duplicatesCount);
     const reservations = normalizeReservations(progress?.reservations ?? progress?.reservas ?? progress?.reservedFor);
-    const pendingIncoming = !owned && normalizePendingIncoming(progress?.incomingPending ?? progress?.pendenteReceber ?? progress?.aReceber);
+    const pendingIncoming = normalizePendingIncoming(progress?.incomingPending ?? progress?.pendenteReceber ?? progress?.aReceber);
     const reserved = Math.min(
       reservations.length
         ? reservationTotal({ reservas: reservations })
@@ -1083,6 +1088,7 @@ async function getUserStickerState(db, user) {
       pendenteDe: pendingIncoming ? normalizePendingPerson(progress?.incomingFrom ?? progress?.pendenteDe ?? progress?.aReceberDe) : "",
       pendenteDesde: pendingIncoming ? String(progress?.incomingSince ?? progress?.pendenteDesde ?? "").slice(0, 40) : "",
       pendenteTrocaId: pendingIncoming ? String(progress?.incomingTradeId ?? progress?.pendenteTrocaId ?? "").slice(0, 80) : "",
+      pendenteComoRepetido: pendingIncoming && normalizePendingDuplicate(progress?.incomingAsDuplicate ?? progress?.pendenteComoRepetido),
       albumOrder: sticker.albumOrder
     };
   });
@@ -1128,13 +1134,14 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
         pendenteDe: normalizePendingPerson(incomingSticker.pendenteDe),
         pendenteDesde: String(incomingSticker.pendenteDesde || "").slice(0, 40),
         pendenteTrocaId: String(incomingSticker.pendenteTrocaId || "").slice(0, 80),
+        pendenteComoRepetido: normalizePendingDuplicate(incomingSticker.pendenteComoRepetido),
         albumOrder: baseSticker.albumOrder ?? index
       };
       const owned = Boolean(sticker.tenho);
       const duplicates = normalizeDuplicates(sticker.repetidos);
       const reservations = normalizeReservations(sticker.reservas ?? sticker.reservations);
       const reserved = Math.min(reservations.length ? reservationTotal({ ...sticker, reservas: reservations }) : normalizeReserved(sticker.reservados), duplicates);
-      const pendingIncoming = !owned && normalizePendingIncoming(sticker.pendenteReceber);
+      const pendingIncoming = normalizePendingIncoming(sticker.pendenteReceber);
 
       return {
         updateOne: {
@@ -1155,6 +1162,7 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
               incomingFrom: pendingIncoming ? normalizePendingPerson(sticker.pendenteDe) : "",
               incomingSince: pendingIncoming ? String(sticker.pendenteDesde || "").slice(0, 40) : "",
               incomingTradeId: pendingIncoming ? String(sticker.pendenteTrocaId || "").slice(0, 80) : "",
+              incomingAsDuplicate: pendingIncoming && normalizePendingDuplicate(sticker.pendenteComoRepetido),
               status: owned ? "obtido" : pendingIncoming ? "a_receber" : "em_falta",
               source: "online_app",
               updatedAt: now
@@ -1200,7 +1208,8 @@ async function updateUserStickerChanges(db, user, rawChanges) {
       pendenteReceber: change.pendenteReceber ?? change.incomingPending,
       pendenteDe: change.pendenteDe ?? change.incomingFrom,
       pendenteDesde: change.pendenteDesde ?? change.incomingSince,
-      pendenteTrocaId: change.pendenteTrocaId ?? change.incomingTradeId
+      pendenteTrocaId: change.pendenteTrocaId ?? change.incomingTradeId,
+      pendenteComoRepetido: change.pendenteComoRepetido ?? change.incomingAsDuplicate
     }, base.albumOrder);
     byId.set(id, sticker);
   });
@@ -1225,10 +1234,11 @@ async function updateUserStickerChanges(db, user, rawChanges) {
           duplicates: normalizeDuplicates(sticker.repetidos),
           reserved: reservedDuplicates(sticker),
           reservations: capReservations(sticker.reservas, sticker.repetidos),
-          incomingPending: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber),
-          incomingFrom: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? normalizePendingPerson(sticker.pendenteDe) : "",
-          incomingSince: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteDesde || "").slice(0, 40) : "",
-          incomingTradeId: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteTrocaId || "").slice(0, 80) : "",
+          incomingPending: normalizePendingIncoming(sticker.pendenteReceber),
+          incomingFrom: normalizePendingIncoming(sticker.pendenteReceber) ? normalizePendingPerson(sticker.pendenteDe) : "",
+          incomingSince: normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteDesde || "").slice(0, 40) : "",
+          incomingTradeId: normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteTrocaId || "").slice(0, 80) : "",
+          incomingAsDuplicate: normalizePendingIncoming(sticker.pendenteReceber) && normalizePendingDuplicate(sticker.pendenteComoRepetido),
           status: sticker.tenho ? "obtido" : normalizePendingIncoming(sticker.pendenteReceber) ? "a_receber" : "em_falta",
           source: "online_app_incremental",
           updatedAt: now
@@ -1986,10 +1996,11 @@ async function createUserBackup(db, user) {
       reservados: reservedDuplicates(sticker),
       reservas: normalizeReservations(sticker.reservas ?? sticker.reservations),
       disponiveis: availableDuplicates(sticker),
-      pendenteReceber: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber),
+      pendenteReceber: normalizePendingIncoming(sticker.pendenteReceber),
       pendenteDe: normalizePendingPerson(sticker.pendenteDe),
       pendenteDesde: String(sticker.pendenteDesde || ""),
-      pendenteTrocaId: String(sticker.pendenteTrocaId || "")
+      pendenteTrocaId: String(sticker.pendenteTrocaId || ""),
+      pendenteComoRepetido: normalizePendingDuplicate(sticker.pendenteComoRepetido)
     })),
     csv: stickersToCSV(stickers),
     history: history.map(publicHistoryLog),

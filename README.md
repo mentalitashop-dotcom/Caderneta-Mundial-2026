@@ -4,7 +4,7 @@ Site online para gerir a caderneta do Mundial 2026 com login, MongoDB Atlas e de
 
 A versao apresentada no footer vem sempre do campo `appVersion` do `package.json`.
 
-As `Trocas reservadas` permitem registar pessoa, data, cromos a dar e a receber. Os cromos a receber continuam em falta, mas ficam automaticamente fora das listas copiadas enquanto a troca estiver pendente.
+As `Trocas reservadas` permitem registar pessoa, data pelo calendario, cromos a dar e a receber. Os cromos novos ficam automaticamente fora das listas copiadas enquanto a troca estiver pendente; os cromos que ja tens aparecem separados e somam `+1` aos repetidos quando concluis a troca.
 
 ## Ficheiros principais
 

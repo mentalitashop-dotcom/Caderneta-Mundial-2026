@@ -3927,6 +3927,19 @@
       gap: 6px;
     }
 
+    .reserve-date-field {
+      cursor: pointer;
+    }
+
+    .reserve-date-field input {
+      cursor: pointer;
+    }
+
+    .reserve-date-field > small {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
     .reserve-date-field > span,
     .reserve-exchange-grid label > strong,
     .reserved-trade-side > strong {
@@ -3949,6 +3962,18 @@
 
     .reserved-mini-card-receive {
       border-style: dashed;
+    }
+
+    .reserved-mini-card-receive-duplicate {
+      border-style: double;
+      border-width: 3px;
+    }
+
+    .reserved-trade-subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
     }
 
     .sticker.is-pending-incoming {

@@ -67,9 +67,10 @@ Na area de repetidos existe a vista `Trocas reservadas`. Cada troca tem um ident
 
 - Os cromos a dar deixam de contar como repetidos livres.
 - Os cromos a receber continuam oficialmente em falta.
+- Se um cromo a receber ja estiver obtido, aparece separado como repetido a receber.
 - Os cromos a receber ficam excluidos da lista copiada/exportada.
 - `Editar` abre o formulario preenchido e substitui apenas a troca selecionada.
-- `Concluir troca` retira os repetidos entregues e marca os recebidos como obtidos.
+- `Concluir troca` retira os repetidos entregues, marca os cromos novos como obtidos e soma `+1` aos repetidos recebidos.
 - `Cancelar troca` liberta ambos os lados sem alterar os cromos obtidos.
 
 ## API
