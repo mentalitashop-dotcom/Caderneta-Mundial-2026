@@ -68,6 +68,8 @@ Na area de repetidos existe a vista `Trocas reservadas`. Cada troca tem um ident
 - Os cromos a dar deixam de contar como repetidos livres.
 - Os cromos a receber continuam oficialmente em falta.
 - Se um cromo a receber ja estiver obtido, aparece separado como repetido a receber.
+- Ao colar a lista, a app mostra imediatamente quais sao `Para colar` e quais sao `Como repetidos`, consultando o estado atual da caderneta.
+- O mesmo cromo pode estar pendente em mais de uma troca; cada rececao fica associada ao ID da respetiva troca.
 - Os cromos a receber ficam excluidos da lista copiada/exportada.
 - `Editar` abre o formulario preenchido e substitui apenas a troca selecionada.
 - `Concluir troca` retira os repetidos entregues, marca os cromos novos como obtidos e soma `+1` aos repetidos recebidos.

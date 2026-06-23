@@ -506,8 +506,84 @@
       return ["sim", "yes", "true", "1", "repetido", "duplicate"].includes(normalized);
     }
 
+    function normalizeIncomingReservations(value, legacy = {}) {
+      let raw = value;
+      const hasExplicitValue = raw !== undefined && raw !== null && !(typeof raw === "string" && !raw.trim());
+      if (typeof raw === "string") {
+        const trimmed = raw.trim();
+        if (!trimmed) raw = [];
+        else {
+          try { raw = JSON.parse(trimmed); } catch { raw = []; }
+        }
+      }
+      const list = Array.isArray(raw) ? raw : [];
+      const normalized = list.map(item => ({
+        tradeId: String(item?.tradeId || item?.trocaId || "").trim().slice(0, 80),
+        person: normalizePendingPerson(item?.person || item?.pessoa || item?.from || item?.de),
+        agreedDate: String(item?.agreedDate || item?.date || item?.createdAt || "").slice(0, 40),
+        asDuplicate: normalizePendingDuplicate(item?.asDuplicate ?? item?.comoRepetido),
+        count: Math.max(1, normalizeDuplicates(item?.count ?? item?.quantidade ?? 1))
+      })).filter(item => item.tradeId);
+
+      if (!hasExplicitValue && !normalized.length && normalizePendingIncoming(legacy.pendenteReceber)) {
+        const person = normalizePendingPerson(legacy.pendenteDe) || "Sem nome";
+        const agreedDate = String(legacy.pendenteDesde || "").slice(0, 40) || "sem-data";
+        normalized.push({
+          tradeId: String(legacy.pendenteTrocaId || `legacy:${person}:${agreedDate}`).trim().slice(0, 80),
+          person,
+          agreedDate,
+          asDuplicate: normalizePendingDuplicate(legacy.pendenteComoRepetido),
+          count: 1
+        });
+      }
+      return normalized.filter(item => item.tradeId);
+    }
+
+    function incomingReservations(sticker) {
+      return normalizeIncomingReservations(sticker?.rececoesPendentes, sticker || {});
+    }
+
+    function syncIncomingReservationLegacy(sticker) {
+      const first = incomingReservations(sticker)[0];
+      sticker.rececoesPendentes = incomingReservations(sticker);
+      sticker.pendenteReceber = Boolean(first);
+      sticker.pendenteDe = first?.person || "";
+      sticker.pendenteDesde = first?.agreedDate || "";
+      sticker.pendenteTrocaId = first?.tradeId || "";
+      sticker.pendenteComoRepetido = Boolean(first?.asDuplicate);
+      return sticker;
+    }
+
     function isPendingIncoming(sticker) {
-      return normalizePendingIncoming(sticker?.pendenteReceber);
+      return incomingReservations(sticker).length > 0;
+    }
+
+    function applyCompletedIncomingReceipt(sticker, receipt) {
+      const count = Math.max(1, normalizeDuplicates(receipt?.count ?? 1));
+      if (sticker.tenho || normalizePendingDuplicate(receipt?.asDuplicate)) {
+        sticker.tenho = true;
+        sticker.repetidos = normalizeDuplicates(sticker.repetidos) + count;
+      } else {
+        sticker.tenho = true;
+        sticker.repetidos = normalizeDuplicates(sticker.repetidos) + Math.max(0, count - 1);
+      }
+      return sticker;
+    }
+
+    function splitIncomingEntries(entries) {
+      const toCollect = [];
+      const asDuplicates = [];
+      (entries || []).forEach(entry => {
+        const count = Math.max(1, normalizeDuplicates(entry?.count ?? 1));
+        const alreadyOwned = Boolean(entry?.sticker?.tenho) || normalizePendingDuplicate(entry?.asDuplicate);
+        if (alreadyOwned) {
+          asDuplicates.push({ ...entry, count });
+          return;
+        }
+        toCollect.push({ ...entry, count: 1 });
+        if (count > 1) asDuplicates.push({ ...entry, count: count - 1, asDuplicate: true });
+      });
+      return { toCollect, asDuplicates };
     }
 
     function normalizeReservationPerson(value) {
@@ -580,7 +656,8 @@
         pendenteDe: normalizePendingPerson(item.pendenteDe ?? item.pendentede ?? item.incomingFrom ?? item.incomingfrom ?? item.aReceberDe ?? item.areceberde),
         pendenteDesde: String(item.pendenteDesde ?? item.pendentedesde ?? item.incomingSince ?? item.incomingsince ?? "").slice(0, 40),
         pendenteTrocaId: String(item.pendenteTrocaId ?? item.pendentetrocaid ?? item.incomingTradeId ?? item.incomingtradeid ?? "").trim().slice(0, 80),
-        pendenteComoRepetido: normalizePendingDuplicate(item.pendenteComoRepetido ?? item.pendentecomorepetido ?? item.incomingAsDuplicate ?? item.incomingasduplicate)
+        pendenteComoRepetido: normalizePendingDuplicate(item.pendenteComoRepetido ?? item.pendentecomorepetido ?? item.incomingAsDuplicate ?? item.incomingasduplicate),
+        rececoesPendentes: normalizeIncomingReservations(item.rececoesPendentes ?? item.rececoespendentes ?? item.incomingReservations ?? item.incomingreservations, item)
       };
 
       if (!sticker.codigo) sticker.codigo = `${sticker.pais}-${Math.random().toString(36).slice(2, 7)}`;
@@ -592,6 +669,7 @@
         sticker.reservados = 0;
         sticker.reservas = [];
       }
+      syncIncomingReservationLegacy(sticker);
       syncStickerReservations(sticker);
       return sticker;
     }
@@ -635,7 +713,7 @@
 
       const lines = trimmed.split(/\r?\n/).filter(Boolean);
       const firstLine = parseCSVLine(lines[0]);
-      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson", "pendentereceber", "incomingpending", "areceber", "pendentede", "incomingfrom", "areceberde", "pendentedesde", "incomingsince", "pendentetrocaid", "incomingtradeid", "pendentecomorepetido", "incomingasduplicate"].includes(h.trim().toLowerCase()));
+      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson", "pendentereceber", "incomingpending", "areceber", "pendentede", "incomingfrom", "areceberde", "pendentedesde", "incomingsince", "pendentetrocaid", "incomingtradeid", "pendentecomorepetido", "incomingasduplicate", "rececoespendentes", "incomingreservations"].includes(h.trim().toLowerCase()));
 
       let headers = ["pais", "codigo", "nome", "tenho"];
       let start = 0;
@@ -678,6 +756,8 @@
             sticker.pendenteDesde = String(savedSticker.pendenteDesde || "").slice(0, 40);
             sticker.pendenteTrocaId = String(savedSticker.pendenteTrocaId || "").trim().slice(0, 80);
             sticker.pendenteComoRepetido = normalizePendingDuplicate(savedSticker.pendenteComoRepetido);
+            sticker.rececoesPendentes = normalizeIncomingReservations(savedSticker.rececoesPendentes, savedSticker);
+            syncIncomingReservationLegacy(sticker);
             sticker.reservados = Array.isArray(savedSticker.reservas) && savedSticker.reservas.length
               ? reservationTotal(sticker)
               : Math.min(normalizeReserved(savedSticker.reservados), sticker.repetidos);
@@ -691,7 +771,7 @@
     }
 
     function stickersToCSV() {
-      const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas,pendenteReceber,pendenteDe,pendenteDesde,pendenteTrocaId,pendenteComoRepetido";
+      const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas,pendenteReceber,pendenteDe,pendenteDesde,pendenteTrocaId,pendenteComoRepetido,rececoesPendentes";
       const rows = stickers.map(s => [
         s.pais,
         s.codigo,
@@ -704,7 +784,8 @@
         normalizePendingPerson(s.pendenteDe),
         isPendingIncoming(s) ? String(s.pendenteDesde || "") : "",
         isPendingIncoming(s) ? String(s.pendenteTrocaId || "") : "",
-        isPendingIncoming(s) && normalizePendingDuplicate(s.pendenteComoRepetido) ? "sim" : "nao"
+        isPendingIncoming(s) && normalizePendingDuplicate(s.pendenteComoRepetido) ? "sim" : "nao",
+        JSON.stringify(incomingReservations(s))
       ].map(v => `"${String(v).replaceAll('"', '""')}"`).join(","));
 
       return [header, ...rows].join("\n");
@@ -794,7 +875,8 @@
             pendenteDe: normalizePendingPerson(sticker.pendenteDe),
             pendenteDesde: isPendingIncoming(sticker) ? String(sticker.pendenteDesde || "") : "",
             pendenteTrocaId: isPendingIncoming(sticker) ? String(sticker.pendenteTrocaId || "") : "",
-            pendenteComoRepetido: isPendingIncoming(sticker) && normalizePendingDuplicate(sticker.pendenteComoRepetido)
+            pendenteComoRepetido: isPendingIncoming(sticker) && normalizePendingDuplicate(sticker.pendenteComoRepetido),
+            rececoesPendentes: incomingReservations(sticker)
           };
         });
         try {
@@ -2313,11 +2395,8 @@
         const currentDuplicates = normalizeDuplicates(sticker.repetidos);
         if (!sticker.tenho) {
           sticker.tenho = true;
-          sticker.pendenteReceber = false;
-          sticker.pendenteDe = "";
-          sticker.pendenteDesde = "";
-          sticker.pendenteTrocaId = "";
-          sticker.pendenteComoRepetido = false;
+          sticker.rececoesPendentes = incomingReservations(sticker).map(item => ({ ...item, asDuplicate: true }));
+          syncIncomingReservationLegacy(sticker);
           sticker.repetidos = currentDuplicates + Math.max(0, count - 1);
         } else {
           sticker.repetidos = currentDuplicates + count;
@@ -2372,7 +2451,8 @@
         pendenteDe: normalizePendingPerson(sticker.pendenteDe),
         pendenteDesde: isPendingIncoming(sticker) ? String(sticker.pendenteDesde || "") : "",
         pendenteTrocaId: isPendingIncoming(sticker) ? String(sticker.pendenteTrocaId || "") : "",
-        pendenteComoRepetido: isPendingIncoming(sticker) && normalizePendingDuplicate(sticker.pendenteComoRepetido)
+        pendenteComoRepetido: isPendingIncoming(sticker) && normalizePendingDuplicate(sticker.pendenteComoRepetido),
+        rececoesPendentes: incomingReservations(sticker)
       }));
     }
 
@@ -2389,6 +2469,8 @@
         sticker.pendenteDesde = String(saved.pendenteDesde || "").slice(0, 40);
         sticker.pendenteTrocaId = String(saved.pendenteTrocaId || "").trim().slice(0, 80);
         sticker.pendenteComoRepetido = normalizePendingDuplicate(saved.pendenteComoRepetido);
+        sticker.rececoesPendentes = normalizeIncomingReservations(saved.rececoesPendentes, saved);
+        syncIncomingReservationLegacy(sticker);
         sticker.reservados = Array.isArray(saved.reservas) && saved.reservas.length
           ? reservationTotal(sticker)
           : Math.min(normalizeReserved(saved.reservados), sticker.repetidos);
@@ -4783,7 +4865,8 @@
         pendenteDe: normalizePendingPerson(sticker.pendenteDe),
         pendenteDesde: isPendingIncoming(sticker) ? String(sticker.pendenteDesde || "") : "",
         pendenteTrocaId: isPendingIncoming(sticker) ? String(sticker.pendenteTrocaId || "") : "",
-        pendenteComoRepetido: isPendingIncoming(sticker) && normalizePendingDuplicate(sticker.pendenteComoRepetido)
+        pendenteComoRepetido: isPendingIncoming(sticker) && normalizePendingDuplicate(sticker.pendenteComoRepetido),
+        rececoesPendentes: incomingReservations(sticker)
       }));
       if (!changes.length) return;
       const response = await apiFetch("/api/live/stickers", {
@@ -5266,16 +5349,14 @@
       pushUndoState(checked ? `Colaste ${stickerShortLabel(sticker)}` : `Removeste ${stickerShortLabel(sticker)}`);
       sticker.tenho = checked;
       if (checked) {
-        sticker.pendenteReceber = false;
-        sticker.pendenteDe = "";
-        sticker.pendenteDesde = "";
-        sticker.pendenteTrocaId = "";
-        sticker.pendenteComoRepetido = false;
+        sticker.rececoesPendentes = incomingReservations(sticker).map(item => ({ ...item, asDuplicate: true }));
+        syncIncomingReservationLegacy(sticker);
       } else {
         sticker.repetidos = 0;
         sticker.reservados = 0;
         sticker.reservas = [];
-        if (isPendingIncoming(sticker)) sticker.pendenteComoRepetido = false;
+        sticker.rececoesPendentes = incomingReservations(sticker).map(item => ({ ...item, asDuplicate: false }));
+        syncIncomingReservationLegacy(sticker);
       }
       showStickerToast(sticker, checked ? "owned" : "removed");
       saveState([sticker.id]);
@@ -5533,7 +5614,10 @@
 
     function renderDuplicatePanel(sticker, stickerId, readonly) {
       const available = availableDuplicates(sticker);
-      if (!available) return "";
+      const total = normalizeDuplicates(sticker.repetidos);
+      const reserved = reservedDuplicates(sticker);
+      const visibleUnits = modalView === "reserved" ? reserved : available;
+      if (!visibleUnits) return "";
       const controls = readonly ? "" : `
         <span class="duplicate-buttons" style="${duplicateInputStyle(sticker.pais)}">
           <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido">-</button>
@@ -5541,7 +5625,10 @@
         </span>`;
       return `
         <div class="duplicate-row duplicate-row-compact" onclick="event.stopPropagation()">
-          <span class="duplicate-summary">Repetidos: <span class="duplicate-summary-count">${available}</span></span>
+          <span class="duplicate-summary">
+            Unidades: <span class="duplicate-summary-count">${total}</span>
+            <small>${available} livres${reserved ? ` · ${reserved} reservadas` : ""}</small>
+          </span>
           ${controls}
         </div>
       `;
@@ -5551,7 +5638,7 @@
       const total = normalizeDuplicates(sticker.repetidos);
       return `
         <div class="duplicate-row owned-duplicate-row" onclick="event.stopPropagation()">
-          <span class="duplicate-summary">Repetidos: <span class="duplicate-summary-count">${total}</span></span>
+          <span class="duplicate-summary">Unidades repetidas: <span class="duplicate-summary-count">${total}</span></span>
           <span class="duplicate-buttons" style="${duplicateInputStyle(sticker.pais)}">
             <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido" ${total ? "" : "disabled"}>-</button>
             <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', 1)" title="Adicionar repetido">+</button>
@@ -5563,23 +5650,29 @@
       const stickerId = escapeJS(sticker.id);
       const readonly = isFriendView();
       const pendingIncoming = !readonly && isPendingIncoming(sticker);
+      const pendingReceipts = pendingIncoming ? incomingReservations(sticker) : [];
+      const duplicateUnits = normalizeDuplicates(sticker.repetidos);
+      const pendingLabel = pendingReceipts.length > 1
+        ? `${pendingReceipts.length} trocas pendentes`
+        : `${normalizePendingDuplicate(pendingReceipts[0]?.asDuplicate) ? "Repetido a receber" : "A receber"} de ${normalizePendingPerson(pendingReceipts[0]?.person) || "alguem"}`;
       const cardStyle = `${checkboxStyle(sticker.pais)}${options.duplicatePalette ? `;${duplicateStickerStyle(sticker.pais)}` : ""}`;
       const lockToggle = readonly || options.noToggle;
       return `
         <div
-          class="sticker ${sticker.tenho ? "is-owned" : ""} ${pendingIncoming ? "is-pending-incoming" : ""} ${lockToggle ? "is-readonly" : ""}"
+          class="sticker ${sticker.tenho ? "is-owned" : ""} ${duplicateUnits > 0 ? "has-duplicate-units" : ""} ${pendingIncoming ? "is-pending-incoming" : ""} ${lockToggle ? "is-readonly" : ""}"
           style="${cardStyle}"
           role="${lockToggle ? "group" : "checkbox"}"
           ${lockToggle ? `aria-label="${readonly ? `Cromo de ${escapeHTML(friendProfile)}` : "Cromo repetido"}"` : `aria-checked="${sticker.tenho ? "true" : "false"}" tabindex="0" onclick="toggleStickerOwned('${stickerId}')" onkeydown="handleStickerCardKey(event, '${stickerId}')"`}
           title="${lockToggle ? "Ajusta os repetidos nos botoes" : (sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido")}"
         >
           <div class="sticker-state" aria-hidden="true"></div>
+          ${sticker.tenho && duplicateUnits > 0 ? `<span class="duplicate-unit-badge" aria-label="${duplicateUnits} unidades repetidas">&times;${duplicateUnits}</span>` : ""}
           <div class="sticker-info">
             <div class="code">
               ${escapeHTML((currentView === "duplicates" || options.duplicatePalette) ? `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}` : sticker.codigo)}
             </div>
             <div class="name">${escapeHTML(sticker.nome)}</div>
-            ${pendingIncoming ? `<div class="pending-incoming-badge">${normalizePendingDuplicate(sticker.pendenteComoRepetido) ? "Repetido a receber" : "A receber"} de ${escapeHTML(normalizePendingPerson(sticker.pendenteDe) || "alguem")}</div>` : ""}
+            ${pendingIncoming ? `<div class="pending-incoming-badge">${escapeHTML(pendingLabel)}</div>` : ""}
             ${sticker.tenho && options.duplicatePalette ? renderDuplicatePanel(sticker, stickerId, readonly) : renderOwnedDuplicateControls(sticker, stickerId, readonly)}
           </div>
         </div>
@@ -5623,7 +5716,10 @@
         .filter(sticker => mode === "reserved" ? reservedDuplicates(sticker) > 0 : availableDuplicates(sticker) > 0)
         .slice()
         .sort((a, b) => stickerNumber(a) - stickerNumber(b));
-      const preview = previewSource.slice(0, 8).map(sticker => stickerExportNumber(sticker));
+      const preview = previewSource.slice(0, 8).map(sticker => {
+        const count = mode === "reserved" ? reservedDuplicates(sticker) : availableDuplicates(sticker);
+        return `${stickerExportNumber(sticker)} \u00d7${count}`;
+      });
       return { total, available, reserved, unique: previewSource.length, preview };
     }
 
@@ -5718,19 +5814,19 @@
           if (!groups.has(tradeId)) groups.set(tradeId, { id: tradeId, person, date, give: [], receive: [] });
           groups.get(tradeId).give.push({ sticker, count: reservation.count, person, createdAt: date });
         });
-        if (isPendingIncoming(sticker)) {
-          const person = normalizeReservationPerson(sticker.pendenteDe);
-          const date = reservationDateKey(sticker.pendenteDesde);
-          const tradeId = sticker.pendenteTrocaId || legacyReservedTradeId(person, date);
+        incomingReservations(sticker).forEach(receipt => {
+          const person = normalizeReservationPerson(receipt.person);
+          const date = reservationDateKey(receipt.agreedDate);
+          const tradeId = receipt.tradeId;
           if (!groups.has(tradeId)) groups.set(tradeId, { id: tradeId, person, date, give: [], receive: [] });
           groups.get(tradeId).receive.push({
             sticker,
-            count: 1,
+            count: receipt.count,
             person,
             createdAt: date,
-            asDuplicate: normalizePendingDuplicate(sticker.pendenteComoRepetido)
+            asDuplicate: normalizePendingDuplicate(receipt.asDuplicate)
           });
-        }
+        });
       });
       return [...groups.values()].map(group => ({
         ...group,
@@ -5760,8 +5856,9 @@
             </label>
             <label>
               <strong>Cromos que vais receber</strong>
-              <small>Continuam em falta, mas deixam de sair na lista copiada.</small>
-              <textarea id="reserveReceiveListInput" class="list-compare-input reserve-list-input" spellcheck="false" placeholder="Ex.:\nARG: 4, 12\nESP: 7"></textarea>
+              <small>A app separa automaticamente os novos dos que entram como repetidos.</small>
+              <textarea id="reserveReceiveListInput" class="list-compare-input reserve-list-input" spellcheck="false" oninput="renderReservedReceivePreview()" placeholder="Ex.:\nARG: 4, 12\nESP: 7"></textarea>
+              <div id="reserveReceivePreview" class="reserve-receive-preview"></div>
             </label>
           </div>
           <div class="list-compare-actions">
@@ -5780,6 +5877,40 @@
       if (typeof input.showPicker === "function") {
         try { input.showPicker(); } catch {}
       }
+    }
+
+    function renderReservedReceivePreview() {
+      const input = document.getElementById("reserveReceiveListInput");
+      const preview = document.getElementById("reserveReceivePreview");
+      if (!preview) return;
+      const raw = input?.value || "";
+      if (!raw.trim()) {
+        preview.innerHTML = "";
+        return;
+      }
+
+      const parsed = parsePastedStickerList(raw);
+      const { toCollect, asDuplicates } = splitIncomingEntries(parsed.entries);
+      const total = entries => entries.reduce((sum, entry) => sum + Math.max(1, entry.count || 1), 0);
+      const lines = entries => groupedListFromEntries(entries, entry => formatCountedSticker(entry, entry.count));
+
+      preview.innerHTML = `
+        <div class="reserve-receive-preview-head">
+          <strong>Leitura automática da tua caderneta</strong>
+          <small>${total(parsed.entries)} cromos reconhecidos</small>
+        </div>
+        <div class="reserve-receive-preview-grid">
+          <article>
+            <strong>Para colar: ${total(toCollect)}</strong>
+            ${toCollect.length ? `<div class="comparison-lines">${lines(toCollect).map(escapeHTML).join("<br>")}</div>` : `<small>Nenhum cromo novo.</small>`}
+          </article>
+          <article>
+            <strong>Como repetidos: ${total(asDuplicates)}</strong>
+            ${asDuplicates.length ? `<div class="comparison-lines">${lines(asDuplicates).map(escapeHTML).join("<br>")}</div>` : `<small>Nenhum repetido.</small>`}
+          </article>
+        </div>
+        ${parsed.unknown.length ? `<small class="reserve-receive-warning">Não reconhecidos: ${escapeHTML(parsed.unknown.slice(0, 10).join(", "))}</small>` : ""}
+      `;
     }
 
     function reservedTradeListText(entries) {
@@ -5802,6 +5933,7 @@
       if (date) date.value = trade.date;
       if (give) give.value = reservedTradeListText(trade.give);
       if (receive) receive.value = reservedTradeListText(trade.receive);
+      renderReservedReceivePreview();
     }
 
     function openReserveModal(tradeId = "") {
@@ -5874,11 +6006,16 @@
     }
     function renderReservedMiniCard(entry, direction) {
       const sticker = entry.sticker;
+      const action = direction === "give"
+        ? "Vais dar"
+        : direction === "receive-duplicate"
+          ? "Como repetido"
+          : "Vais receber";
       return `
         <article class="reserved-mini-card reserved-mini-card-${direction}" style="${duplicateStickerStyle(sticker.pais)};${checkboxStyle(sticker.pais)}">
           <strong>${escapeHTML(stickerShortLabel(sticker))}</strong>
           <span>${escapeHTML(sticker.nome)}</span>
-          <small>${entry.count > 1 ? `${entry.count}x` : direction === "give" ? "Vais dar" : "Vais receber"}</small>
+          <small class="reserved-unit-count">&times;${entry.count} · ${action}</small>
         </article>
       `;
     }
@@ -5887,8 +6024,7 @@
       const groups = groupedReservedTrades(album);
       if (!groups.length) return `<div class="comparison-empty">Nao tens trocas reservadas.</div>`;
       return groups.map(group => {
-        const newStickers = group.receive.filter(entry => !entry.asDuplicate);
-        const duplicateStickers = group.receive.filter(entry => entry.asDuplicate);
+        const { toCollect: newStickers, asDuplicates: duplicateStickers } = splitIncomingEntries(group.receive);
         const receiveTotal = group.receive.reduce((sum, entry) => sum + entry.count, 0);
         return `
         <section class="reserved-person-section">
@@ -5904,9 +6040,9 @@
               </div>
               <div class="reserved-trade-side reserved-trade-receive-side">
                 <strong>Vais receber: ${receiveTotal}</strong>
-                <span class="reserved-trade-subtitle">Para colar: ${newStickers.length}</span>
+                <span class="reserved-trade-subtitle">Para colar: ${newStickers.reduce((sum, entry) => sum + entry.count, 0)}</span>
                 <div class="reserved-mini-grid">${newStickers.length ? newStickers.map(entry => renderReservedMiniCard(entry, "receive")).join("") : `<small class="reserved-trade-empty">Sem cromos novos.</small>`}</div>
-                <span class="reserved-trade-subtitle">Como repetidos: ${duplicateStickers.length} (+1 cada)</span>
+                <span class="reserved-trade-subtitle">Como repetidos: ${duplicateStickers.reduce((sum, entry) => sum + entry.count, 0)}</span>
                 <div class="reserved-mini-grid">${duplicateStickers.length ? duplicateStickers.map(entry => renderReservedMiniCard(entry, "receive-duplicate")).join("") : `<small class="reserved-trade-empty">Sem repetidos a receber.</small>`}</div>
               </div>
             </div>
@@ -5931,6 +6067,7 @@
       if (giveList) giveList.value = "";
       if (receiveList) receiveList.value = "";
       if (result) result.innerHTML = "";
+      renderReservedReceivePreview();
       person?.focus();
     }
 
@@ -5975,15 +6112,15 @@
       });
       parsedReceive.entries.forEach(entry => {
         const sticker = stickers.find(item => item.id === entry.sticker.id);
-        const pendingTradeId = sticker?.pendenteTrocaId || (isPendingIncoming(sticker) ? legacyReservedTradeId(sticker.pendenteDe, sticker.pendenteDesde) : "");
-        if (!sticker || (isPendingIncoming(sticker) && pendingTradeId !== tradeId)) return;
-        const asDuplicate = pendingTradeId === tradeId
-          ? normalizePendingDuplicate(sticker.pendenteComoRepetido)
+        if (!sticker) return;
+        const existingReceipt = incomingReservations(sticker).find(item => item.tradeId === tradeId);
+        const asDuplicate = existingReceipt
+          ? normalizePendingDuplicate(existingReceipt.asDuplicate)
           : Boolean(sticker.tenho);
-        receiveEntries.push({ sticker, count: 1, asDuplicate });
+        receiveEntries.push({ sticker, count: Math.max(1, entry.count || 1), asDuplicate });
       });
       if (!giveEntries.length || !receiveEntries.length) {
-        if (result) result.innerHTML = `<article class="list-compare-card"><h2>Nao foi possivel criar a troca</h2><small>Os cromos a dar precisam de estar nos repetidos livres e os cromos a receber precisam de estar em falta e sem outra troca pendente.</small></article>`;
+        if (result) result.innerHTML = `<article class="list-compare-card"><h2>Nao foi possivel criar a troca</h2><small>Confirma se os cromos a dar estao nos repetidos livres e se as duas listas foram reconhecidas.</small></article>`;
         return;
       }
 
@@ -5992,20 +6129,15 @@
           const hadReservation = normalizeReservations(sticker.reservas).some(item =>
             (item.tradeId || legacyReservedTradeId(item.person, item.createdAt)) === tradeId
           );
-          const previousPendingTradeId = sticker.pendenteTrocaId || (isPendingIncoming(sticker) ? legacyReservedTradeId(sticker.pendenteDe, sticker.pendenteDesde) : "");
-          if (hadReservation || previousPendingTradeId === tradeId) previouslyAffectedIds.add(sticker.id);
+          const hadIncoming = incomingReservations(sticker).some(item => item.tradeId === tradeId);
+          if (hadReservation || hadIncoming) previouslyAffectedIds.add(sticker.id);
           sticker.reservas = normalizeReservations(sticker.reservas).filter(item =>
             (item.tradeId || legacyReservedTradeId(item.person, item.createdAt)) !== tradeId
           );
           sticker.reservados = reservationTotal(sticker);
           syncStickerReservations(sticker);
-          if (previousPendingTradeId === tradeId) {
-            sticker.pendenteReceber = false;
-            sticker.pendenteDe = "";
-            sticker.pendenteDesde = "";
-            sticker.pendenteTrocaId = "";
-            sticker.pendenteComoRepetido = false;
-          }
+          sticker.rececoesPendentes = incomingReservations(sticker).filter(item => item.tradeId !== tradeId);
+          syncIncomingReservationLegacy(sticker);
         });
       }
 
@@ -6015,11 +6147,15 @@
         syncStickerReservations(entry.sticker);
       });
       receiveEntries.forEach(entry => {
-        entry.sticker.pendenteReceber = true;
-        entry.sticker.pendenteDe = person;
-        entry.sticker.pendenteDesde = agreedDate;
-        entry.sticker.pendenteTrocaId = tradeId;
-        entry.sticker.pendenteComoRepetido = entry.asDuplicate;
+        entry.sticker.rececoesPendentes = incomingReservations(entry.sticker).filter(item => item.tradeId !== tradeId);
+        entry.sticker.rececoesPendentes.push({
+          tradeId,
+          person,
+          agreedDate,
+          asDuplicate: entry.asDuplicate,
+          count: entry.count
+        });
+        syncIncomingReservationLegacy(entry.sticker);
       });
 
       const affected = [...giveEntries, ...receiveEntries].map(entry => entry.sticker);
@@ -6029,7 +6165,9 @@
       } catch (error) {
         console.error(error);
       }
-      recordHistory(`${editingReservedTradeId ? "Troca reservada editada" : "Troca reservada criada"} com ${person}: ${giveEntries.length} a dar e ${receiveEntries.length} a receber`, { type: "trade", action: editingReservedTradeId ? "reserved_trade_edited" : "reserved_trade_created", partner: person, given: giveEntries.map(entry => entry.sticker), received: receiveEntries.map(entry => entry.sticker) });
+      const giveTotal = giveEntries.reduce((sum, entry) => sum + entry.count, 0);
+      const receiveTotal = receiveEntries.reduce((sum, entry) => sum + entry.count, 0);
+      recordHistory(`${editingReservedTradeId ? "Troca reservada editada" : "Troca reservada criada"} com ${person}: ${giveTotal} a dar e ${receiveTotal} a receber`, { type: "trade", action: editingReservedTradeId ? "reserved_trade_edited" : "reserved_trade_created", partner: person, given: giveEntries.map(entry => entry.sticker), received: receiveEntries.map(entry => entry.sticker) });
       setSaveStatus(`Troca com ${person} guardada`);
       duplicateViewMode = "reserved";
       closeReserveModal();
@@ -6059,23 +6197,15 @@
         sticker.reservados = reservationTotal(sticker);
         syncStickerReservations(sticker);
 
-        const pendingTradeId = sticker.pendenteTrocaId || (isPendingIncoming(sticker) ? legacyReservedTradeId(sticker.pendenteDe, sticker.pendenteDesde) : "");
-        if (isPendingIncoming(sticker) && pendingTradeId === tradeId) {
+        const receipt = incomingReservations(sticker).find(item => item.tradeId === tradeId);
+        if (receipt) {
           affected.push(sticker);
           received.push(sticker);
           if (status === "completed") {
-            if (sticker.tenho || normalizePendingDuplicate(sticker.pendenteComoRepetido)) {
-              sticker.tenho = true;
-              sticker.repetidos = normalizeDuplicates(sticker.repetidos) + 1;
-            } else {
-              sticker.tenho = true;
-            }
+            applyCompletedIncomingReceipt(sticker, receipt);
           }
-          sticker.pendenteReceber = false;
-          sticker.pendenteDe = "";
-          sticker.pendenteDesde = "";
-          sticker.pendenteTrocaId = "";
-          sticker.pendenteComoRepetido = false;
+          sticker.rececoesPendentes = incomingReservations(sticker).filter(item => item.tradeId !== tradeId);
+          syncIncomingReservationLegacy(sticker);
         }
       });
       if (!affected.length) return;
