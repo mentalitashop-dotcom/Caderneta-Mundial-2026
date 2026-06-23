@@ -3913,6 +3913,60 @@
       align-items: stretch;
     }
 
+    .reserve-identity-grid,
+    .reserve-exchange-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .reserve-date-field,
+    .reserve-exchange-grid > label,
+    .reserved-trade-side {
+      display: grid;
+      gap: 6px;
+    }
+
+    .reserve-date-field > span,
+    .reserve-exchange-grid label > strong,
+    .reserved-trade-side > strong {
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .reserve-exchange-grid label > small,
+    .reserved-trade-empty {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .reserved-trade-sides {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .reserved-mini-card-receive {
+      border-style: dashed;
+    }
+
+    .sticker.is-pending-incoming {
+      border-style: dashed;
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--main) 35%, transparent);
+    }
+
+    .pending-incoming-badge {
+      width: fit-content;
+      margin-top: 5px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--main) 14%, var(--panel));
+      color: var(--main);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
     .reserve-list-input {
       min-height: 84px;
       margin: 0;
@@ -3971,7 +4025,10 @@
     }
 
     @media (max-width: 640px) {
-      .reserve-form-grid { grid-template-columns: 1fr; }
+      .reserve-form-grid,
+      .reserve-identity-grid,
+      .reserve-exchange-grid,
+      .reserved-trade-sides { grid-template-columns: 1fr; }
       .duplicate-results-toolbar {
       display: flex;
       align-items: center;
@@ -5768,7 +5825,7 @@
       background: var(--card);
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       gap: 24px;
     }
     .site-footer-main { display: grid; gap: 4px; }
@@ -5776,6 +5833,16 @@
     .site-footer-main span,
     .site-footer-meta span { color: var(--muted); font-size: 12px; }
     .site-footer-meta { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+    .site-footer-version {
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--main) !important;
+      font-weight: 800;
+      white-space: nowrap;
+      width: fit-content;
+    }
 
     .history-filter-row { grid-template-columns: minmax(220px, 1fr) minmax(140px, 190px) minmax(140px, 190px); }
     .history-line-body { min-width: 0; }

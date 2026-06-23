@@ -84,6 +84,7 @@
     let tradeHistoryPage = 1;
     let tradeModalOpen = false;
     let reserveModalOpen = false;
+    let editingReservedTradeId = "";
     let mobileToolsModalOpen = false;
     let mobileToolsModalMode = "tools";
     let duplicateViewMode = "available";
@@ -489,6 +490,20 @@
       return normalizeDuplicates(value);
     }
 
+    function normalizePendingIncoming(value) {
+      if (typeof value === "boolean") return value;
+      const normalized = String(value || "").trim().toLowerCase();
+      return ["sim", "yes", "true", "1", "pendente", "a_receber"].includes(normalized);
+    }
+
+    function normalizePendingPerson(value) {
+      return String(value || "").trim().replace(/\s+/g, " ").slice(0, 40);
+    }
+
+    function isPendingIncoming(sticker) {
+      return !sticker?.tenho && normalizePendingIncoming(sticker?.pendenteReceber);
+    }
+
     function normalizeReservationPerson(value) {
       return String(value || "").trim().replace(/\s+/g, " ").slice(0, 40) || "Sem nome";
     }
@@ -504,7 +519,8 @@
       return raw.map(item => ({
         person: normalizeReservationPerson(item.person || item.pessoa || item.name || item.nome),
         count: normalizeDuplicates(item.count ?? item.quantidade ?? item.qtd ?? 1),
-        createdAt: item.createdAt || new Date().toISOString()
+        createdAt: item.createdAt || item.agreedDate || new Date().toISOString(),
+        tradeId: String(item.tradeId || item.trocaId || "").trim().slice(0, 80)
       })).filter(item => item.count > 0);
     }
 
@@ -553,7 +569,11 @@
         tenho: normalizeOwned(item.tenho ?? item.owned ?? item.obtido ?? item.have),
         repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount),
         reservados: normalizeReserved(item.reservados ?? item.suspensos ?? item.guardados ?? item.reserved ?? item.held ?? item.inativos),
-        reservas: normalizeReservations(item.reservas ?? item.reservations ?? item.reservedFor ?? item.reservasJson)
+        reservas: normalizeReservations(item.reservas ?? item.reservations ?? item.reservedFor ?? item.reservasJson),
+        pendenteReceber: normalizePendingIncoming(item.pendenteReceber ?? item.pendentereceber ?? item.incomingPending ?? item.incomingpending ?? item.aReceber ?? item.areceber),
+        pendenteDe: normalizePendingPerson(item.pendenteDe ?? item.pendentede ?? item.incomingFrom ?? item.incomingfrom ?? item.aReceberDe ?? item.areceberde),
+        pendenteDesde: String(item.pendenteDesde ?? item.pendentedesde ?? item.incomingSince ?? item.incomingsince ?? "").slice(0, 40),
+        pendenteTrocaId: String(item.pendenteTrocaId ?? item.pendentetrocaid ?? item.incomingTradeId ?? item.incomingtradeid ?? "").trim().slice(0, 80)
       };
 
       if (!sticker.codigo) sticker.codigo = `${sticker.pais}-${Math.random().toString(36).slice(2, 7)}`;
@@ -564,6 +584,11 @@
         sticker.repetidos = 0;
         sticker.reservados = 0;
         sticker.reservas = [];
+      } else {
+        sticker.pendenteReceber = false;
+        sticker.pendenteDe = "";
+        sticker.pendenteDesde = "";
+        sticker.pendenteTrocaId = "";
       }
       syncStickerReservations(sticker);
       return sticker;
@@ -608,7 +633,7 @@
 
       const lines = trimmed.split(/\r?\n/).filter(Boolean);
       const firstLine = parseCSVLine(lines[0]);
-      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson"].includes(h.trim().toLowerCase()));
+      const hasHeader = firstLine.some(h => ["pais", "país", "country", "codigo", "código", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson", "pendentereceber", "incomingpending", "areceber", "pendentede", "incomingfrom", "areceberde", "pendentedesde", "incomingsince", "pendentetrocaid", "incomingtradeid"].includes(h.trim().toLowerCase()));
 
       let headers = ["pais", "codigo", "nome", "tenho"];
       let start = 0;
@@ -646,6 +671,10 @@
             sticker.tenho = Boolean(savedSticker.tenho);
             sticker.repetidos = normalizeDuplicates(savedSticker.repetidos);
             sticker.reservas = normalizeReservations(savedSticker.reservas);
+            sticker.pendenteReceber = normalizePendingIncoming(savedSticker.pendenteReceber);
+            sticker.pendenteDe = normalizePendingPerson(savedSticker.pendenteDe);
+            sticker.pendenteDesde = String(savedSticker.pendenteDesde || "").slice(0, 40);
+            sticker.pendenteTrocaId = String(savedSticker.pendenteTrocaId || "").trim().slice(0, 80);
             sticker.reservados = Array.isArray(savedSticker.reservas) && savedSticker.reservas.length
               ? reservationTotal(sticker)
               : Math.min(normalizeReserved(savedSticker.reservados), sticker.repetidos);
@@ -659,7 +688,7 @@
     }
 
     function stickersToCSV() {
-      const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas";
+      const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas,pendenteReceber,pendenteDe,pendenteDesde,pendenteTrocaId";
       const rows = stickers.map(s => [
         s.pais,
         s.codigo,
@@ -667,7 +696,11 @@
         s.tenho ? "sim" : "nao",
         s.repetidos || 0,
         reservedDuplicates(s),
-        JSON.stringify(normalizeReservations(s.reservas))
+        JSON.stringify(normalizeReservations(s.reservas)),
+        isPendingIncoming(s) ? "sim" : "nao",
+        normalizePendingPerson(s.pendenteDe),
+        isPendingIncoming(s) ? String(s.pendenteDesde || "") : "",
+        isPendingIncoming(s) ? String(s.pendenteTrocaId || "") : ""
       ].map(v => `"${String(v).replaceAll('"', '""')}"`).join(","));
 
       return [header, ...rows].join("\n");
@@ -752,7 +785,11 @@
             tenho: sticker.tenho,
             repetidos: sticker.repetidos || 0,
             reservados: reservedDuplicates(sticker),
-            reservas: normalizeReservations(sticker.reservas)
+            reservas: normalizeReservations(sticker.reservas),
+            pendenteReceber: isPendingIncoming(sticker),
+            pendenteDe: normalizePendingPerson(sticker.pendenteDe),
+            pendenteDesde: isPendingIncoming(sticker) ? String(sticker.pendenteDesde || "") : "",
+            pendenteTrocaId: isPendingIncoming(sticker) ? String(sticker.pendenteTrocaId || "") : ""
           };
         });
         try {
@@ -792,7 +829,7 @@
         missing: "Cromos em Falta",
         owned: "Cromos Obtidos",
         duplicates: "Cromos Repetidos",
-        reserved: "Cromos Guardados"
+        reserved: "Trocas reservadas"
       }[view] || "Cromos Todos";
     }
 
@@ -1830,7 +1867,8 @@
         return;
       }
 
-      const missing = album.filter(sticker => !sticker.tenho);
+      const pendingMissing = album.filter(sticker => isPendingIncoming(sticker));
+      const missing = album.filter(sticker => !sticker.tenho && !isPendingIncoming(sticker));
       const duplicates = album.filter(sticker => sticker.tenho && availableDuplicates(sticker) > 0);
       const duplicateTotal = duplicates.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
       const missingLines = exportGroupedLines(missing, sticker => stickerExportNumber(sticker));
@@ -1848,6 +1886,9 @@
         lines.push(`Cromos Repetidos (${duplicateTotal}):`, "", ...duplicateLines);
       }
       if (!lines.length) lines.push("Sem cromos em falta ou repetidos");
+      if (pendingMissing.length) {
+        lines.push("", `${pendingMissing.length} cromo${pendingMissing.length === 1 ? "" : "s"} a receber foram excluidos desta lista.`);
+      }
 
       const exportText = `${lines.join("\r\n")}\r\n`;
       const copied = await copyTextToClipboard(exportText);
@@ -2267,6 +2308,10 @@
         const currentDuplicates = normalizeDuplicates(sticker.repetidos);
         if (!sticker.tenho) {
           sticker.tenho = true;
+          sticker.pendenteReceber = false;
+          sticker.pendenteDe = "";
+          sticker.pendenteDesde = "";
+          sticker.pendenteTrocaId = "";
           sticker.repetidos = currentDuplicates + Math.max(0, count - 1);
         } else {
           sticker.repetidos = currentDuplicates + count;
@@ -2316,7 +2361,11 @@
         tenho: Boolean(sticker.tenho),
         repetidos: normalizeDuplicates(sticker.repetidos),
         reservados: reservedDuplicates(sticker),
-        reservas: normalizeReservations(sticker.reservas)
+        reservas: normalizeReservations(sticker.reservas),
+        pendenteReceber: isPendingIncoming(sticker),
+        pendenteDe: normalizePendingPerson(sticker.pendenteDe),
+        pendenteDesde: isPendingIncoming(sticker) ? String(sticker.pendenteDesde || "") : "",
+        pendenteTrocaId: isPendingIncoming(sticker) ? String(sticker.pendenteTrocaId || "") : ""
       }));
     }
 
@@ -2328,6 +2377,10 @@
         sticker.tenho = Boolean(saved.tenho);
         sticker.repetidos = normalizeDuplicates(saved.repetidos);
         sticker.reservas = normalizeReservations(saved.reservas);
+        sticker.pendenteReceber = normalizePendingIncoming(saved.pendenteReceber);
+        sticker.pendenteDe = normalizePendingPerson(saved.pendenteDe);
+        sticker.pendenteDesde = String(saved.pendenteDesde || "").slice(0, 40);
+        sticker.pendenteTrocaId = String(saved.pendenteTrocaId || "").trim().slice(0, 80);
         sticker.reservados = Array.isArray(saved.reservas) && saved.reservas.length
           ? reservationTotal(sticker)
           : Math.min(normalizeReserved(saved.reservados), sticker.repetidos);
@@ -4717,7 +4770,11 @@
         tenho: Boolean(sticker.tenho),
         repetidos: normalizeDuplicates(sticker.repetidos),
         reservados: reservedDuplicates(sticker),
-        reservas: normalizeReservations(sticker.reservas)
+        reservas: normalizeReservations(sticker.reservas),
+        pendenteReceber: isPendingIncoming(sticker),
+        pendenteDe: normalizePendingPerson(sticker.pendenteDe),
+        pendenteDesde: isPendingIncoming(sticker) ? String(sticker.pendenteDesde || "") : "",
+        pendenteTrocaId: isPendingIncoming(sticker) ? String(sticker.pendenteTrocaId || "") : ""
       }));
       if (!changes.length) return;
       const response = await apiFetch("/api/live/stickers", {
@@ -5109,10 +5166,16 @@
 
     function updateExportSummary() {
       const album = currentAlbumStickers();
-      const missing = album.filter(sticker => !sticker.tenho).length;
+      const pendingIncoming = album.filter(sticker => isPendingIncoming(sticker)).length;
+      const missing = album.filter(sticker => !sticker.tenho && !isPendingIncoming(sticker)).length;
       const duplicates = album.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
       const reserved = album.reduce((sum, sticker) => sum + reservedDuplicates(sticker), 0);
-      if (exportSummary) exportSummary.textContent = reserved ? `${missing} faltam - ${duplicates} rep. (${reserved} guard.)` : `${missing} faltam - ${duplicates} rep.`;
+      if (exportSummary) {
+        const parts = [`${missing} faltam`, `${duplicates} rep.`];
+        if (pendingIncoming) parts.push(`${pendingIncoming} a receber`);
+        if (reserved) parts.push(`${reserved} reserv.`);
+        exportSummary.textContent = parts.join(" - ");
+      }
       if (exportListButton) exportListButton.disabled = !album.length;
     }
 
@@ -5193,7 +5256,12 @@
 
       pushUndoState(checked ? `Colaste ${stickerShortLabel(sticker)}` : `Removeste ${stickerShortLabel(sticker)}`);
       sticker.tenho = checked;
-      if (!checked) {
+      if (checked) {
+        sticker.pendenteReceber = false;
+        sticker.pendenteDe = "";
+        sticker.pendenteDesde = "";
+        sticker.pendenteTrocaId = "";
+      } else {
         sticker.repetidos = 0;
         sticker.reservados = 0;
         sticker.reservas = [];
@@ -5483,11 +5551,12 @@
     function renderStickerCard(sticker, options = {}) {
       const stickerId = escapeJS(sticker.id);
       const readonly = isFriendView();
+      const pendingIncoming = !readonly && isPendingIncoming(sticker);
       const cardStyle = `${checkboxStyle(sticker.pais)}${options.duplicatePalette ? `;${duplicateStickerStyle(sticker.pais)}` : ""}`;
       const lockToggle = readonly || options.noToggle;
       return `
         <div
-          class="sticker ${sticker.tenho ? "is-owned" : ""} ${lockToggle ? "is-readonly" : ""}"
+          class="sticker ${sticker.tenho ? "is-owned" : ""} ${pendingIncoming ? "is-pending-incoming" : ""} ${lockToggle ? "is-readonly" : ""}"
           style="${cardStyle}"
           role="${lockToggle ? "group" : "checkbox"}"
           ${lockToggle ? `aria-label="${readonly ? `Cromo de ${escapeHTML(friendProfile)}` : "Cromo repetido"}"` : `aria-checked="${sticker.tenho ? "true" : "false"}" tabindex="0" onclick="toggleStickerOwned('${stickerId}')" onkeydown="handleStickerCardKey(event, '${stickerId}')"`}
@@ -5499,6 +5568,7 @@
               ${escapeHTML((currentView === "duplicates" || options.duplicatePalette) ? `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}` : sticker.codigo)}
             </div>
             <div class="name">${escapeHTML(sticker.nome)}</div>
+            ${pendingIncoming ? `<div class="pending-incoming-badge">A receber de ${escapeHTML(normalizePendingPerson(sticker.pendenteDe) || "alguem")}</div>` : ""}
             ${sticker.tenho && options.duplicatePalette ? renderDuplicatePanel(sticker, stickerId, readonly) : renderOwnedDuplicateControls(sticker, stickerId, readonly)}
           </div>
         </div>
@@ -5608,35 +5678,69 @@
     function reservationDateLabel(value) {
       return historyTimeLabel(new Date(reservationDateValue(value)).toISOString());
     }
-    function groupedReservationsByPerson(album = currentAlbumStickers()) {
+    function reservationDateKey(value) {
+      const text = String(value || "").trim();
+      const match = text.match(/^(\d{4}-\d{2}-\d{2})/);
+      return match ? match[1] : new Date().toISOString().slice(0, 10);
+    }
+
+    function createReservedTradeId() {
+      if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+      return `troca-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    function legacyReservedTradeId(person, date) {
+      return `legacy:${normalizeReservationPerson(person)}:${reservationDateKey(date)}`;
+    }
+
+    function groupedReservedTrades(album = currentAlbumStickers()) {
       const groups = new Map();
       album.forEach(sticker => {
         normalizeReservations(sticker.reservas).forEach(reservation => {
           const person = normalizeReservationPerson(reservation.person);
-          if (!groups.has(person)) groups.set(person, []);
-          groups.get(person).push({ sticker, count: reservation.count, person, createdAt: reservation.createdAt || new Date().toISOString() });
+          const date = reservationDateKey(reservation.createdAt);
+          const tradeId = reservation.tradeId || legacyReservedTradeId(person, date);
+          if (!groups.has(tradeId)) groups.set(tradeId, { id: tradeId, person, date, give: [], receive: [] });
+          groups.get(tradeId).give.push({ sticker, count: reservation.count, person, createdAt: date });
         });
+        if (isPendingIncoming(sticker)) {
+          const person = normalizeReservationPerson(sticker.pendenteDe);
+          const date = reservationDateKey(sticker.pendenteDesde);
+          const tradeId = sticker.pendenteTrocaId || legacyReservedTradeId(person, date);
+          if (!groups.has(tradeId)) groups.set(tradeId, { id: tradeId, person, date, give: [], receive: [] });
+          groups.get(tradeId).receive.push({ sticker, count: 1, person, createdAt: date });
+        }
       });
-      return [...groups.entries()].map(([person, entries]) => {
-        const sortedEntries = entries.sort((a, b) => reservationDateValue(a.createdAt) - reservationDateValue(b.createdAt) || albumCountries().indexOf(a.sticker.pais) - albumCountries().indexOf(b.sticker.pais) || stickerNumber(a.sticker) - stickerNumber(b.sticker));
-        return {
-          person,
-          entries: sortedEntries,
-          total: sortedEntries.reduce((sum, entry) => sum + entry.count, 0),
-          createdAt: sortedEntries[0]?.createdAt || ""
-        };
-      }).sort((a, b) => reservationDateValue(a.createdAt) - reservationDateValue(b.createdAt) || a.person.localeCompare(b.person, "pt-PT", { sensitivity: "base" }));
+      return [...groups.values()].map(group => ({
+        ...group,
+        give: group.give.sort((a, b) => albumCountries().indexOf(a.sticker.pais) - albumCountries().indexOf(b.sticker.pais) || stickerNumber(a.sticker) - stickerNumber(b.sticker)),
+        receive: group.receive.sort((a, b) => albumCountries().indexOf(a.sticker.pais) - albumCountries().indexOf(b.sticker.pais) || stickerNumber(a.sticker) - stickerNumber(b.sticker))
+      })).sort((a, b) => reservationDateValue(a.date) - reservationDateValue(b.date) || a.person.localeCompare(b.person, "pt-PT", { sensitivity: "base" }));
     }
+
     function renderReservationForm() {
+      const today = new Date().toISOString().slice(0, 10);
       return `
         <section class="duplicate-reserve-box">
-          <div class="duplicate-section-title"><span>Reservar cromos</span><small>lista</small></div>
-          <div class="reserve-form-grid">
+          <div class="duplicate-section-title"><span>${editingReservedTradeId ? "Editar troca reservada" : "Nova troca reservada"}</span><small>pendente</small></div>
+          <div class="reserve-identity-grid">
             <input id="reservePersonInput" class="live-input" type="text" maxlength="40" placeholder="Nome da pessoa" />
-            <textarea id="reserveListInput" class="list-compare-input reserve-list-input" spellcheck="false" placeholder="Cola a lista a reservar, ex.:\nPOR: 3, 8\nCOL: 16"></textarea>
+            <label class="reserve-date-field"><span>Data em que combinaram</span><input id="reserveDateInput" class="live-input" type="date" value="${today}" /></label>
+          </div>
+          <div class="reserve-exchange-grid">
+            <label>
+              <strong>Cromos que vais dar</strong>
+              <small>Saem dos teus repetidos livres.</small>
+              <textarea id="reserveGiveListInput" class="list-compare-input reserve-list-input" spellcheck="false" placeholder="Ex.:\nPOR: 3, 8\nCOL: 16"></textarea>
+            </label>
+            <label>
+              <strong>Cromos que vais receber</strong>
+              <small>Continuam em falta, mas deixam de sair na lista copiada.</small>
+              <textarea id="reserveReceiveListInput" class="list-compare-input reserve-list-input" spellcheck="false" placeholder="Ex.:\nARG: 4, 12\nESP: 7"></textarea>
+            </label>
           </div>
           <div class="list-compare-actions">
-            <button type="button" onclick="reserveDuplicateList()">Reservar cromos</button>
+            <button type="button" onclick="reserveTrade()">${editingReservedTradeId ? "Guardar alterações" : "Guardar troca reservada"}</button>
             <button class="secondary" type="button" onclick="clearReserveForm()">Limpar</button>
           </div>
           <div id="reserveListResult" class="list-compare-result"></div>
@@ -5644,16 +5748,41 @@
       `;
     }
 
-    function openReserveModal() {
+    function reservedTradeListText(entries) {
+      const expanded = [];
+      (entries || []).forEach(entry => {
+        const count = Math.max(1, normalizeDuplicates(entry.count || 1));
+        for (let index = 0; index < count; index += 1) expanded.push(entry.sticker);
+      });
+      return exportGroupedLines(expanded, sticker => stickerExportNumber(sticker)).join("\n");
+    }
+
+    function populateReservedTradeForm(tradeId) {
+      const trade = groupedReservedTrades(stickers).find(item => item.id === tradeId);
+      if (!trade) return;
+      const person = document.getElementById("reservePersonInput");
+      const date = document.getElementById("reserveDateInput");
+      const give = document.getElementById("reserveGiveListInput");
+      const receive = document.getElementById("reserveReceiveListInput");
+      if (person) person.value = trade.person;
+      if (date) date.value = trade.date;
+      if (give) give.value = reservedTradeListText(trade.give);
+      if (receive) receive.value = reservedTradeListText(trade.receive);
+    }
+
+    function openReserveModal(tradeId = "") {
       if (isFriendView()) return setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
       if (!requireLiveLogin()) return;
+      editingReservedTradeId = String(tradeId || "").trim();
       reserveModalOpen = true;
       document.body.classList.add("modal-open");
       renderReserveModal();
+      if (editingReservedTradeId) populateReservedTradeForm(editingReservedTradeId);
     }
 
     function closeReserveModal() {
       reserveModalOpen = false;
+      editingReservedTradeId = "";
       reserveModal?.classList.add("hidden");
       reserveModal?.setAttribute("aria-hidden", "true");
       if (!countryModalOpen && !tradeModalOpen) document.body.classList.remove("modal-open");
@@ -5671,8 +5800,8 @@
       reserveModalBody.innerHTML = `
         <div class="trade-modal-head">
           <div>
-            <h2>Reservar cromos</h2>
-            <p>Cola a lista dos cromos que vais guardar para uma pessoa. Eles saem dos repetidos livres.</p>
+            <h2>Troca reservada</h2>
+            <p>Regista o que vais dar e receber sem marcar antecipadamente os cromos como obtidos.</p>
           </div>
           <button class="trade-modal-close secondary" type="button" onclick="closeReserveModal()" aria-label="Fechar">x</button>
         </div>
@@ -5699,48 +5828,51 @@
         <div class="duplicate-results-toolbar">
           <div class="duplicate-filter-tabs" role="tablist" aria-label="Filtro de cromos repetidos">
             <button type="button" class="${duplicateViewMode === "available" ? "active" : ""}" onclick="setDuplicateViewMode('available')">Repetidos <small>${availableCount}</small></button>
-            <button type="button" class="${duplicateViewMode === "reserved" ? "active" : ""}" onclick="setDuplicateViewMode('reserved')">Guardados <small>${reservedCount}</small></button>
+            <button type="button" class="${duplicateViewMode === "reserved" ? "active" : ""}" onclick="setDuplicateViewMode('reserved')">Trocas reservadas <small>${reservedCount}</small></button>
           </div>
           <div class="duplicate-layout-tabs" role="group" aria-label="Organizacao dos repetidos">
             <button type="button" class="${duplicateGroupingMode === "groups" ? "active" : ""}" onclick="setDuplicateGroupingMode('groups')">Agrupados</button>
             <button type="button" class="${duplicateGroupingMode === "flat" ? "active" : ""}" onclick="setDuplicateGroupingMode('flat')">Sem grupos</button>
           </div>
-          <button type="button" onclick="openReserveModal()">${duplicateViewMode === "reserved" ? "Editar guardados" : "Reservar cromos"}</button>
+          <button type="button" onclick="openReserveModal()">Nova troca reservada</button>
         </div>
       `;
     }
-    function renderReservedMiniCard(entry) {
+    function renderReservedMiniCard(entry, direction) {
       const sticker = entry.sticker;
       return `
-        <article class="reserved-mini-card" style="${duplicateStickerStyle(sticker.pais)};${checkboxStyle(sticker.pais)}">
+        <article class="reserved-mini-card reserved-mini-card-${direction}" style="${duplicateStickerStyle(sticker.pais)};${checkboxStyle(sticker.pais)}">
           <strong>${escapeHTML(stickerShortLabel(sticker))}</strong>
           <span>${escapeHTML(sticker.nome)}</span>
-          <small>${entry.count > 1 ? `${entry.count}x` : "1x"}</small>
-          <small class="date-label">Guardado desde ${escapeHTML(reservationDateLabel(entry.createdAt))}</small>
+          <small>${entry.count > 1 ? `${entry.count}x` : direction === "give" ? "Vais dar" : "Vais receber"}</small>
         </article>
       `;
     }
 
     function renderReservedGroups(album = currentAlbumStickers()) {
-      const groups = groupedReservationsByPerson(album);
-      if (!groups.length) return `<div class="comparison-empty">Nao tens cromos guardados.</div>`;
+      const groups = groupedReservedTrades(album);
+      if (!groups.length) return `<div class="comparison-empty">Nao tens trocas reservadas.</div>`;
       return groups.map(group => `
         <section class="reserved-person-section">
           <div class="reserved-person-bar">
-            <span>Reservado para: <strong>${escapeHTML(group.person)}</strong></span>
-            <small>${group.total} cromos</small>
-          </div>
-          <div class="reserved-person-meta">
-            <span>Guardado desde ${escapeHTML(reservationDateLabel(group.createdAt))}</span>
-            <button class="secondary reserved-person-edit" type="button" onclick="openReserveModal()">Editar guardados</button>
+            <span>Troca com: <strong>${escapeHTML(group.person)}</strong></span>
+            <small>${escapeHTML(reservationDateLabel(group.date))}</small>
           </div>
           <div class="reserved-person-body">
-            <div class="reserved-mini-grid">
-              ${group.entries.map(renderReservedMiniCard).join("")}
+            <div class="reserved-trade-sides">
+              <div class="reserved-trade-side">
+                <strong>Vais dar</strong>
+                <div class="reserved-mini-grid">${group.give.length ? group.give.map(entry => renderReservedMiniCard(entry, "give")).join("") : `<small class="reserved-trade-empty">Sem cromos registados.</small>`}</div>
+              </div>
+              <div class="reserved-trade-side">
+                <strong>Vais receber</strong>
+                <div class="reserved-mini-grid">${group.receive.length ? group.receive.map(entry => renderReservedMiniCard(entry, "receive")).join("") : `<small class="reserved-trade-empty">Sem cromos registados.</small>`}</div>
+              </div>
             </div>
             <div class="reserved-person-actions">
-              <button type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'completed')">Trocada</button>
-              <button class="secondary" type="button" onclick="finishReservedTrade('${escapeJS(group.person)}', 'rejected')">Recusada</button>
+              <button class="secondary" type="button" onclick="openReserveModal('${escapeJS(group.id)}')">Editar</button>
+              <button type="button" onclick="finishReservedTrade('${escapeJS(group.id)}', 'completed')">Concluir troca</button>
+              <button class="secondary" type="button" onclick="finishReservedTrade('${escapeJS(group.id)}', 'cancelled')">Cancelar troca</button>
             </div>
           </div>
         </section>
@@ -5748,89 +5880,154 @@
     }
     function clearReserveForm() {
       const person = document.getElementById("reservePersonInput");
-      const list = document.getElementById("reserveListInput");
+      const date = document.getElementById("reserveDateInput");
+      const giveList = document.getElementById("reserveGiveListInput");
+      const receiveList = document.getElementById("reserveReceiveListInput");
       const result = document.getElementById("reserveListResult");
       if (person) person.value = "";
-      if (list) list.value = "";
+      if (date) date.value = new Date().toISOString().slice(0, 10);
+      if (giveList) giveList.value = "";
+      if (receiveList) receiveList.value = "";
       if (result) result.innerHTML = "";
       person?.focus();
     }
 
-    async function reserveDuplicateList() {
+    async function reserveTrade() {
       if (isFriendView()) return setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
       if (!requireLiveLogin()) return;
       const personInput = document.getElementById("reservePersonInput");
-      const listInput = document.getElementById("reserveListInput");
+      const dateInput = document.getElementById("reserveDateInput");
+      const giveListInput = document.getElementById("reserveGiveListInput");
+      const receiveListInput = document.getElementById("reserveReceiveListInput");
       const result = document.getElementById("reserveListResult");
       const person = normalizeReservationPerson(personInput?.value);
-      const rawList = listInput?.value || "";
-      if (!person) {
+      const agreedDate = reservationDateKey(dateInput?.value);
+      const rawGiveList = giveListInput?.value || "";
+      const rawReceiveList = receiveListInput?.value || "";
+      if (!person || person === "Sem nome") {
         if (result) result.innerHTML = `<article class="list-compare-card"><h2>Falta o nome</h2><small>Escreve para quem vais guardar estes cromos.</small></article>`;
         personInput?.focus();
         return;
       }
-      if (!rawList.trim()) {
-        if (result) result.innerHTML = `<article class="list-compare-card"><h2>Falta a lista</h2><small>Cola a lista dos cromos que queres reservar.</small></article>`;
-        listInput?.focus();
+      if (!rawGiveList.trim() || !rawReceiveList.trim()) {
+        if (result) result.innerHTML = `<article class="list-compare-card"><h2>Falta uma das listas</h2><small>Indica os cromos que vais dar e os que vais receber.</small></article>`;
+        (!rawGiveList.trim() ? giveListInput : receiveListInput)?.focus();
         return;
       }
-      const parsed = parsePastedStickerList(rawList);
-      let reservedCount = 0;
-      const reservedEntries = [];
-      parsed.entries.forEach(entry => {
+      const parsedGive = parsePastedStickerList(rawGiveList);
+      const parsedReceive = parsePastedStickerList(rawReceiveList);
+      const tradeId = editingReservedTradeId || createReservedTradeId();
+      const previouslyAffectedIds = new Set();
+      const giveEntries = [];
+      const receiveEntries = [];
+      parsedGive.entries.forEach(entry => {
         const sticker = stickers.find(item => item.id === entry.sticker.id);
         if (!sticker || !sticker.tenho) return;
         syncStickerReservations(sticker);
-        const amount = Math.min(Math.max(1, entry.count || 1), availableDuplicates(sticker));
+        const alreadyInThisTrade = normalizeReservations(sticker.reservas)
+          .filter(item => (item.tradeId || legacyReservedTradeId(item.person, item.createdAt)) === tradeId)
+          .reduce((sum, item) => sum + item.count, 0);
+        const amount = Math.min(Math.max(1, entry.count || 1), availableDuplicates(sticker) + alreadyInThisTrade);
         if (!amount) return;
-        sticker.reservas = normalizeReservations(sticker.reservas);
-        const existing = sticker.reservas.find(item => normalizeReservationPerson(item.person) === person);
-        if (existing) existing.count += amount;
-        else sticker.reservas.push({ person, count: amount, createdAt: new Date().toISOString() });
-        syncStickerReservations(sticker);
-        reservedCount += amount;
-        reservedEntries.push({ sticker, count: amount });
+        giveEntries.push({ sticker, count: amount });
       });
-      if (!reservedCount) {
-        if (result) result.innerHTML = `<article class="list-compare-card"><h2>Nada reservado</h2><small>Confirma se esses cromos existem e ainda estao livres nos repetidos.</small></article>`;
+      parsedReceive.entries.forEach(entry => {
+        const sticker = stickers.find(item => item.id === entry.sticker.id);
+        const pendingTradeId = sticker?.pendenteTrocaId || (isPendingIncoming(sticker) ? legacyReservedTradeId(sticker.pendenteDe, sticker.pendenteDesde) : "");
+        if (!sticker || sticker.tenho || (isPendingIncoming(sticker) && pendingTradeId !== tradeId)) return;
+        receiveEntries.push({ sticker, count: 1 });
+      });
+      if (!giveEntries.length || !receiveEntries.length) {
+        if (result) result.innerHTML = `<article class="list-compare-card"><h2>Nao foi possivel criar a troca</h2><small>Os cromos a dar precisam de estar nos repetidos livres e os cromos a receber precisam de estar em falta e sem outra troca pendente.</small></article>`;
         return;
       }
-      saveState(reservedEntries.map(entry => entry.sticker.id));
+
+      if (editingReservedTradeId) {
+        stickers.forEach(sticker => {
+          const hadReservation = normalizeReservations(sticker.reservas).some(item =>
+            (item.tradeId || legacyReservedTradeId(item.person, item.createdAt)) === tradeId
+          );
+          const previousPendingTradeId = sticker.pendenteTrocaId || (isPendingIncoming(sticker) ? legacyReservedTradeId(sticker.pendenteDe, sticker.pendenteDesde) : "");
+          if (hadReservation || previousPendingTradeId === tradeId) previouslyAffectedIds.add(sticker.id);
+          sticker.reservas = normalizeReservations(sticker.reservas).filter(item =>
+            (item.tradeId || legacyReservedTradeId(item.person, item.createdAt)) !== tradeId
+          );
+          sticker.reservados = reservationTotal(sticker);
+          syncStickerReservations(sticker);
+          if (previousPendingTradeId === tradeId) {
+            sticker.pendenteReceber = false;
+            sticker.pendenteDe = "";
+            sticker.pendenteDesde = "";
+            sticker.pendenteTrocaId = "";
+          }
+        });
+      }
+
+      giveEntries.forEach(entry => {
+        entry.sticker.reservas = normalizeReservations(entry.sticker.reservas);
+        entry.sticker.reservas.push({ person, count: entry.count, createdAt: agreedDate, tradeId });
+        syncStickerReservations(entry.sticker);
+      });
+      receiveEntries.forEach(entry => {
+        entry.sticker.pendenteReceber = true;
+        entry.sticker.pendenteDe = person;
+        entry.sticker.pendenteDesde = agreedDate;
+        entry.sticker.pendenteTrocaId = tradeId;
+      });
+
+      const affected = [...giveEntries, ...receiveEntries].map(entry => entry.sticker);
+      saveState([...new Set([...previouslyAffectedIds, ...affected.map(sticker => sticker.id)])]);
       try {
         await persistStateNow();
       } catch (error) {
         console.error(error);
       }
-      recordHistory(`Reserva criada para ${person}: ${reservedCount} cromos`, { type: "sticker", action: "duplicates_reserved_for", partner: person, stickers: reservedEntries.map(entry => entry.sticker) });
-      setSaveStatus(`${reservedCount} cromos reservados para ${person}`);
+      recordHistory(`${editingReservedTradeId ? "Troca reservada editada" : "Troca reservada criada"} com ${person}: ${giveEntries.length} a dar e ${receiveEntries.length} a receber`, { type: "trade", action: editingReservedTradeId ? "reserved_trade_edited" : "reserved_trade_created", partner: person, given: giveEntries.map(entry => entry.sticker), received: receiveEntries.map(entry => entry.sticker) });
+      setSaveStatus(`Troca com ${person} guardada`);
       duplicateViewMode = "reserved";
       closeReserveModal();
       render();
     }
-    function finishReservedTrade(personName, status) {
+
+    function finishReservedTrade(tradeId, status) {
       if (isFriendView()) return setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
       if (!requireLiveLogin()) return;
-      const person = normalizeReservationPerson(personName);
+      const trade = groupedReservedTrades(stickers).find(item => item.id === tradeId);
+      if (!trade) return;
+      const person = trade.person;
       const affected = [];
-      let total = 0;
+      const given = [];
+      const received = [];
       stickers.forEach(sticker => {
         const reservations = normalizeReservations(sticker.reservas);
         const kept = [];
         reservations.forEach(item => {
-          if (normalizeReservationPerson(item.person) !== person) return kept.push(item);
-          total += item.count;
-          affected.push({ sticker, count: item.count });
+          const itemTradeId = item.tradeId || legacyReservedTradeId(item.person, item.createdAt);
+          if (itemTradeId !== tradeId) return kept.push(item);
+          affected.push(sticker);
+          given.push(sticker);
           if (status === "completed") sticker.repetidos = Math.max(0, normalizeDuplicates(sticker.repetidos) - item.count);
         });
         sticker.reservas = kept;
         sticker.reservados = reservationTotal(sticker);
         syncStickerReservations(sticker);
+
+        const pendingTradeId = sticker.pendenteTrocaId || (isPendingIncoming(sticker) ? legacyReservedTradeId(sticker.pendenteDe, sticker.pendenteDesde) : "");
+        if (isPendingIncoming(sticker) && pendingTradeId === tradeId) {
+          affected.push(sticker);
+          received.push(sticker);
+          if (status === "completed") sticker.tenho = true;
+          sticker.pendenteReceber = false;
+          sticker.pendenteDe = "";
+          sticker.pendenteDesde = "";
+          sticker.pendenteTrocaId = "";
+        }
       });
-      if (!total) return;
-      saveState(affected.map(entry => entry.sticker.id));
+      if (!affected.length) return;
+      saveState([...new Set(affected.map(sticker => sticker.id))]);
       const done = status === "completed";
-      recordHistory(`${done ? "Troca guardada concluida" : "Troca guardada recusada"} com ${person}: ${total} cromos`, { type: "sticker", action: done ? "reserved_trade_completed" : "reserved_trade_rejected", partner: person, stickers: affected.map(entry => entry.sticker) });
-      setSaveStatus(done ? `Troca com ${person} concluida` : `Reserva de ${person} cancelada`);
+      recordHistory(`${done ? "Troca reservada concluida" : "Troca reservada cancelada"} com ${person}`, { type: "trade", action: done ? "reserved_trade_completed" : "reserved_trade_cancelled", partner: person, given, received });
+      setSaveStatus(done ? `Troca com ${person} concluida` : `Troca com ${person} cancelada`);
       render();
     }
 
@@ -5839,13 +6036,14 @@
       const countries = allCountriesForAlbum(album);
       const availableCountries = countries.filter(country => album.some(sticker => sticker.pais === country && sticker.tenho && availableDuplicates(sticker) > 0));
       const reservedCount = album.reduce((sum, sticker) => sum + reservedDuplicates(sticker), 0);
+      const reservedTradeCount = groupedReservedTrades(album).length;
       const availableCount = album.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
       const content = duplicateViewMode === "reserved"
-        ? `<section class="duplicate-section duplicate-reserved-section"><div class="duplicate-section-title"><span>Cromos Guardados</span><small>${reservedCount}</small></div>${renderReservedGroups(album)}</section>`
+        ? `<section class="duplicate-section duplicate-reserved-section"><div class="duplicate-section-title"><span>Trocas reservadas</span><small>${reservedTradeCount}</small></div>${renderReservedGroups(album)}</section>`
         : renderDuplicateCountrySection("Cromos Repetidos", "Nao tens repetidos livres.", availableCountries, album, "available");
       return `
         <section class="search-results duplicate-results" aria-label="Cromos repetidos">
-          ${renderDuplicateFilterToolbar(availableCount, reservedCount)}
+          ${renderDuplicateFilterToolbar(availableCount, reservedTradeCount)}
           ${content}
         </section>
       `;

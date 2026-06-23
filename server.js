@@ -18,7 +18,9 @@ const APP_ICON_FILE = path.join(ROOT, "app-icon.png");
 const APP_ICON_192_FILE = path.join(ROOT, "app-icon-192.png");
 const APP_ICON_512_FILE = path.join(ROOT, "app-icon-512.png");
 const PACKAGE_FILE = path.join(ROOT, "package.json");
+const APP_VERSION = readAppVersion();
 const APP_BUILD_ID = buildAppVersion();
+const GIT_COMMIT = String(process.env.RENDER_GIT_COMMIT || "").trim();
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "caderneta";
 const COOKIE_NAME = "caderneta_session";
@@ -88,7 +90,7 @@ const COLLECTIONS = {
   history: "activity_logs",
   legacyCollections: "colecoes"
 };
-const SNAPSHOT_SCHEMA_VERSION = 2;
+const SNAPSHOT_SCHEMA_VERSION = 3;
 
 const emptyAlbum = [
   "pais,codigo,nome,tenho,repetidos"
@@ -142,12 +144,16 @@ function fileMtimeMs(filePath) {
   }
 }
 
-function buildAppVersion() {
-  let packageVersion = "0.0.0";
+function readAppVersion() {
   try {
-    packageVersion = JSON.parse(fs.readFileSync(PACKAGE_FILE, "utf8")).version || packageVersion;
-  } catch {}
+    const packageInfo = JSON.parse(fs.readFileSync(PACKAGE_FILE, "utf8"));
+    return packageInfo.appVersion || packageInfo.version || "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
 
+function buildAppVersion() {
   const newestAsset = Math.max(
     fileMtimeMs(HTML_FILE),
     fileMtimeMs(STYLES_FILE),
@@ -159,12 +165,23 @@ function buildAppVersion() {
     fileMtimeMs(APP_ICON_512_FILE),
     fileMtimeMs(ICON_FILE)
   );
-  return `${packageVersion}-${newestAsset || Date.now()}`;
+  return `${APP_VERSION}-${newestAsset || Date.now()}`;
 }
 
 function serviceWorkerBody() {
   const body = fs.existsSync(SERVICE_WORKER_FILE) ? fs.readFileSync(SERVICE_WORKER_FILE, "utf8") : "";
   return body.replace(/__APP_BUILD__/g, APP_BUILD_ID);
+}
+
+function manifestBody() {
+  const body = fs.existsSync(MANIFEST_FILE) ? fs.readFileSync(MANIFEST_FILE, "utf8") : "{}";
+  return body.replace(/__APP_BUILD__/g, APP_BUILD_ID);
+}
+
+function htmlBody() {
+  return fs.readFileSync(HTML_FILE, "utf8")
+    .replace(/__APP_VERSION__/g, APP_VERSION)
+    .replace(/__APP_BUILD__/g, APP_BUILD_ID);
 }
 function send(res, status, body, type = "text/plain; charset=utf-8", extraHeaders = {}) {
   const rawBody = Buffer.isBuffer(body) ? body : Buffer.from(String(body ?? ""));
@@ -420,6 +437,16 @@ function normalizeReserved(value) {
   return normalizeDuplicates(value);
 }
 
+function normalizePendingIncoming(value) {
+  if (typeof value === "boolean") return value;
+  const normalized = String(value || "").trim().toLowerCase();
+  return ["sim", "yes", "true", "1", "pendente", "a_receber"].includes(normalized);
+}
+
+function normalizePendingPerson(value) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, 80);
+}
+
 function normalizeReservationPerson(value) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, 80) || "Sem nome";
 }
@@ -436,7 +463,8 @@ function normalizeReservations(value) {
   return list.map(item => ({
     person: normalizeReservationPerson(item?.person || item?.name || item?.reservedFor || item?.para),
     count: normalizeDuplicates(item?.count ?? item?.quantity ?? item?.qty ?? item?.total ?? item?.value ?? 1),
-    createdAt: String(item?.createdAt || item?.date || "").slice(0, 40)
+    createdAt: String(item?.createdAt || item?.agreedDate || item?.date || "").slice(0, 40),
+    tradeId: String(item?.tradeId || item?.trocaId || "").trim().slice(0, 80)
   })).filter(item => item.count > 0);
 }
 
@@ -502,6 +530,10 @@ function cleanSticker(item, albumOrder = 0) {
     repetidos: normalizeDuplicates(item.repetidos ?? item.duplicados ?? item.duplicates ?? item.duplicatesCount),
     reservados: normalizeReserved(item.reservados ?? item.suspensos ?? item.guardados ?? item.reserved ?? item.held ?? item.inativos),
     reservas: normalizeReservations(item.reservas ?? item.reservations ?? item.reservedFor ?? item.reservasjson ?? item.reservasJson),
+    pendenteReceber: normalizePendingIncoming(item.pendenteReceber ?? item.pendentereceber ?? item.incomingPending ?? item.incomingpending ?? item.aReceber ?? item.areceber),
+    pendenteDe: normalizePendingPerson(item.pendenteDe ?? item.pendentede ?? item.incomingFrom ?? item.incomingfrom ?? item.aReceberDe ?? item.areceberde),
+    pendenteDesde: String(item.pendenteDesde ?? item.pendentedesde ?? item.incomingSince ?? item.incomingsince ?? "").slice(0, 40),
+    pendenteTrocaId: String(item.pendenteTrocaId ?? item.pendentetrocaid ?? item.incomingTradeId ?? item.incomingtradeid ?? "").trim().slice(0, 80),
     albumOrder
   };
 
@@ -513,6 +545,10 @@ function cleanSticker(item, albumOrder = 0) {
     sticker.reservados = 0;
     sticker.reservas = [];
   } else {
+    sticker.pendenteReceber = false;
+    sticker.pendenteDe = "";
+    sticker.pendenteDesde = "";
+    sticker.pendenteTrocaId = "";
     sticker.reservas = capReservations(sticker.reservas, sticker.repetidos);
     sticker.reservados = sticker.reservas.length
       ? reservationTotal({ reservas: sticker.reservas })
@@ -535,7 +571,7 @@ function parseTextFile(text) {
 
   const lines = trimmed.split(/\r?\n/).filter(Boolean);
   const firstLine = parseCSVLine(lines[0]);
-  const knownHeaders = ["pais", "country", "codigo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson"];
+  const knownHeaders = ["pais", "country", "codigo", "code", "nome", "name", "tenho", "owned", "repetidos", "duplicados", "duplicates", "reservados", "suspensos", "guardados", "reserved", "held", "inativos", "reservas", "reservations", "reservedfor", "reservasjson", "pendentereceber", "incomingpending", "areceber", "pendentede", "incomingfrom", "areceberde", "pendentedesde", "incomingsince", "pendentetrocaid", "incomingtradeid"];
   const hasHeader = firstLine.some(header => knownHeaders.includes(header.trim().toLowerCase()));
 
   let headers = ["pais", "codigo", "nome", "tenho", "repetidos"];
@@ -559,7 +595,7 @@ function csvEscape(value) {
 }
 
 function stickersToCSV(stickers) {
-  const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas";
+  const header = "pais,codigo,nome,tenho,repetidos,reservados,reservas,pendenteReceber,pendenteDe,pendenteDesde,pendenteTrocaId";
   const rows = stickers.map(sticker => [
     sticker.pais,
     sticker.codigo,
@@ -567,7 +603,11 @@ function stickersToCSV(stickers) {
     sticker.tenho ? "sim" : "nao",
     sticker.repetidos || 0,
     reservedDuplicates(sticker),
-    JSON.stringify(normalizeReservations(sticker.reservas ?? sticker.reservations))
+    JSON.stringify(normalizeReservations(sticker.reservas ?? sticker.reservations)),
+    !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? "sim" : "nao",
+    normalizePendingPerson(sticker.pendenteDe),
+    !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteDesde || "") : "",
+    !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteTrocaId || "") : ""
   ].map(csvEscape).join(","));
 
   return [header, ...rows].join("\n");
@@ -578,10 +618,11 @@ function countStickerState(stickers) {
     counts.total += 1;
     if (sticker.tenho) counts.owned += 1;
     if (!sticker.tenho) counts.missing += 1;
+    if (!sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber)) counts.pendingIncoming += 1;
     counts.duplicates += availableDuplicates(sticker);
     counts.reserved += reservedDuplicates(sticker);
     return counts;
-  }, { total: 0, owned: 0, missing: 0, duplicates: 0, reserved: 0 });
+  }, { total: 0, owned: 0, missing: 0, pendingIncoming: 0, duplicates: 0, reserved: 0 });
 }
 
 function baseDocToSticker(doc) {
@@ -599,6 +640,7 @@ function userProgressDoc(user, sticker, now, source = "base") {
   const duplicates = normalizeDuplicates(sticker.repetidos);
   const reservations = capReservations(sticker.reservas ?? sticker.reservations, duplicates);
   const reserved = Math.min(reservations.length ? reservationTotal({ ...sticker, reservas: reservations }) : normalizeReserved(sticker.reservados), duplicates);
+  const pendingIncoming = !owned && normalizePendingIncoming(sticker.pendenteReceber);
   return {
     _id: `${user.id}:${sticker.id}`,
     userId: user.id,
@@ -613,7 +655,11 @@ function userProgressDoc(user, sticker, now, source = "base") {
     duplicates,
     reserved,
     reservations,
-        status: owned ? "obtido" : "em_falta",
+    incomingPending: pendingIncoming,
+    incomingFrom: pendingIncoming ? normalizePendingPerson(sticker.pendenteDe) : "",
+    incomingSince: pendingIncoming ? String(sticker.pendenteDesde || "").slice(0, 40) : "",
+    incomingTradeId: pendingIncoming ? String(sticker.pendenteTrocaId || "").slice(0, 80) : "",
+    status: owned ? "obtido" : pendingIncoming ? "a_receber" : "em_falta",
     source,
     createdAt: now,
     updatedAt: now
@@ -1020,6 +1066,7 @@ async function getUserStickerState(db, user) {
     const owned = normalizeOwned(progress?.owned ?? progress?.tenho ?? progress?.obtido ?? progress?.have);
     const duplicates = normalizeDuplicates(progress?.duplicates ?? progress?.repetidos ?? progress?.duplicados ?? progress?.duplicatesCount);
     const reservations = normalizeReservations(progress?.reservations ?? progress?.reservas ?? progress?.reservedFor);
+    const pendingIncoming = !owned && normalizePendingIncoming(progress?.incomingPending ?? progress?.pendenteReceber ?? progress?.aReceber);
     const reserved = Math.min(
       reservations.length
         ? reservationTotal({ reservas: reservations })
@@ -1032,6 +1079,10 @@ async function getUserStickerState(db, user) {
       repetidos: owned ? duplicates : 0,
       reservados: owned ? reserved : 0,
       reservas: owned ? capReservations(reservations, duplicates) : [],
+      pendenteReceber: pendingIncoming,
+      pendenteDe: pendingIncoming ? normalizePendingPerson(progress?.incomingFrom ?? progress?.pendenteDe ?? progress?.aReceberDe) : "",
+      pendenteDesde: pendingIncoming ? String(progress?.incomingSince ?? progress?.pendenteDesde ?? "").slice(0, 40) : "",
+      pendenteTrocaId: pendingIncoming ? String(progress?.incomingTradeId ?? progress?.pendenteTrocaId ?? "").slice(0, 80) : "",
       albumOrder: sticker.albumOrder
     };
   });
@@ -1073,12 +1124,17 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
         repetidos: normalizeDuplicates(incomingSticker.repetidos),
         reservados: normalizeReserved(incomingSticker.reservados),
         reservas: normalizeReservations(incomingSticker.reservas),
+        pendenteReceber: normalizePendingIncoming(incomingSticker.pendenteReceber),
+        pendenteDe: normalizePendingPerson(incomingSticker.pendenteDe),
+        pendenteDesde: String(incomingSticker.pendenteDesde || "").slice(0, 40),
+        pendenteTrocaId: String(incomingSticker.pendenteTrocaId || "").slice(0, 80),
         albumOrder: baseSticker.albumOrder ?? index
       };
       const owned = Boolean(sticker.tenho);
       const duplicates = normalizeDuplicates(sticker.repetidos);
       const reservations = normalizeReservations(sticker.reservas ?? sticker.reservations);
-  const reserved = Math.min(reservations.length ? reservationTotal({ ...sticker, reservas: reservations }) : normalizeReserved(sticker.reservados), duplicates);
+      const reserved = Math.min(reservations.length ? reservationTotal({ ...sticker, reservas: reservations }) : normalizeReserved(sticker.reservados), duplicates);
+      const pendingIncoming = !owned && normalizePendingIncoming(sticker.pendenteReceber);
 
       return {
         updateOne: {
@@ -1094,8 +1150,12 @@ async function updateUserStickerRowsFromCsv(db, user, csv) {
               missing: !owned,
               duplicates,
               reserved,
-    reservations,
-                  status: owned ? "obtido" : "em_falta",
+              reservations,
+              incomingPending: pendingIncoming,
+              incomingFrom: pendingIncoming ? normalizePendingPerson(sticker.pendenteDe) : "",
+              incomingSince: pendingIncoming ? String(sticker.pendenteDesde || "").slice(0, 40) : "",
+              incomingTradeId: pendingIncoming ? String(sticker.pendenteTrocaId || "").slice(0, 80) : "",
+              status: owned ? "obtido" : pendingIncoming ? "a_receber" : "em_falta",
               source: "online_app",
               updatedAt: now
             },
@@ -1136,7 +1196,11 @@ async function updateUserStickerChanges(db, user, rawChanges) {
       tenho: change.tenho ?? change.owned,
       repetidos: change.repetidos ?? change.duplicates,
       reservados: change.reservados ?? change.reserved,
-      reservas: change.reservas ?? change.reservations
+      reservas: change.reservas ?? change.reservations,
+      pendenteReceber: change.pendenteReceber ?? change.incomingPending,
+      pendenteDe: change.pendenteDe ?? change.incomingFrom,
+      pendenteDesde: change.pendenteDesde ?? change.incomingSince,
+      pendenteTrocaId: change.pendenteTrocaId ?? change.incomingTradeId
     }, base.albumOrder);
     byId.set(id, sticker);
   });
@@ -1161,7 +1225,11 @@ async function updateUserStickerChanges(db, user, rawChanges) {
           duplicates: normalizeDuplicates(sticker.repetidos),
           reserved: reservedDuplicates(sticker),
           reservations: capReservations(sticker.reservas, sticker.repetidos),
-          status: sticker.tenho ? "obtido" : "em_falta",
+          incomingPending: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber),
+          incomingFrom: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? normalizePendingPerson(sticker.pendenteDe) : "",
+          incomingSince: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteDesde || "").slice(0, 40) : "",
+          incomingTradeId: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber) ? String(sticker.pendenteTrocaId || "").slice(0, 80) : "",
+          status: sticker.tenho ? "obtido" : normalizePendingIncoming(sticker.pendenteReceber) ? "a_receber" : "em_falta",
           source: "online_app_incremental",
           updatedAt: now
         },
@@ -1917,7 +1985,11 @@ async function createUserBackup(db, user) {
       repetidos: Number(sticker.repetidos || 0),
       reservados: reservedDuplicates(sticker),
       reservas: normalizeReservations(sticker.reservas ?? sticker.reservations),
-      disponiveis: availableDuplicates(sticker)
+      disponiveis: availableDuplicates(sticker),
+      pendenteReceber: !sticker.tenho && normalizePendingIncoming(sticker.pendenteReceber),
+      pendenteDe: normalizePendingPerson(sticker.pendenteDe),
+      pendenteDesde: String(sticker.pendenteDesde || ""),
+      pendenteTrocaId: String(sticker.pendenteTrocaId || "")
     })),
     csv: stickersToCSV(stickers),
     history: history.map(publicHistoryLog),
@@ -2171,13 +2243,24 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, {
         ok: true,
         service: "caderneta-mundial-2026",
-        appVersion: APP_BUILD_ID,
+        appVersion: APP_VERSION,
+        appBuild: APP_BUILD_ID,
+        gitCommit: GIT_COMMIT ? GIT_COMMIT.slice(0, 12) : null,
         onlineConfigured: config.ok,
         onlineRequired: config.onlineRequired,
         missingConfig: config.missing,
         databaseName: config.databaseName,
         registrationConfigured: config.registrationConfigured,
         uptimeSeconds: Math.round(process.uptime())
+      });
+    }
+
+    if (url.pathname === "/api/version") {
+      if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
+      return sendJson(res, 200, {
+        version: APP_VERSION,
+        build: APP_BUILD_ID,
+        gitCommit: GIT_COMMIT ? GIT_COMMIT.slice(0, 12) : null
       });
     }
 
@@ -2222,7 +2305,7 @@ const server = http.createServer(async (req, res) => {
     if (liveHandled !== false) return;
 
     if (url.pathname === "/manifest.webmanifest") {
-      const body = fs.existsSync(MANIFEST_FILE) ? fs.readFileSync(MANIFEST_FILE, "utf8") : "{}";
+      const body = manifestBody();
       return send(res, 200, body, "application/manifest+json; charset=utf-8", { "Cache-Control": "public, max-age=3600" });
     }
 
@@ -2253,7 +2336,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (url.pathname === "/" || url.pathname === "/caderneta_mundial_2026.html") {
-      const body = fs.readFileSync(HTML_FILE, "utf8").replace(/__APP_BUILD__/g, APP_BUILD_ID);
+      const body = htmlBody();
       return send(res, 200, body, "text/html; charset=utf-8");
     }
 

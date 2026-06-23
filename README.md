@@ -2,6 +2,10 @@
 
 Site online para gerir a caderneta do Mundial 2026 com login, MongoDB Atlas e deploy no Render.
 
+A versao apresentada no footer vem sempre do campo `appVersion` do `package.json`.
+
+As `Trocas reservadas` permitem registar pessoa, data, cromos a dar e a receber. Os cromos a receber continuam em falta, mas ficam automaticamente fora das listas copiadas enquanto a troca estiver pendente.
+
 ## Ficheiros principais
 
 - `caderneta_mundial_2026.html`: interface da app.
@@ -9,6 +13,7 @@ Site online para gerir a caderneta do Mundial 2026 com login, MongoDB Atlas e de
 - `cromos_base.txt`: caderneta base sincronizada para MongoDB.
 - `render.yaml`: configuracao de deploy no Render.
 - `.env.example`: exemplo das variaveis de ambiente.
+- `PROJECT_GUIDE.md`: arquitetura, dados, API, deploy e processo de versoes.
 
 Os ficheiros `cromos.txt` e `backup_cromos.txt` sao progresso/backup pessoal. Nao sao necessarios no Render e estao no `.gitignore`.
 
@@ -62,3 +67,15 @@ https://o-teu-site.onrender.com/?convite=O_TEU_REGISTER_PIN
 Depois do registo, a app entra automaticamente. O progresso fica guardado no MongoDB por utilizador.
 
 Nunca publiques o valor real de `REGISTER_PIN`, passwords ou a connection string do MongoDB no GitHub.
+
+## Publicar uma nova versao
+
+Escolhe o tipo de alteracao:
+
+```text
+npm run version:patch
+npm run version:minor
+npm run version:major
+```
+
+Depois corre `npm run check`, faz commit/push para o GitHub e o Render faz o deploy automatico. O footer, `/api/version`, `/api/health` e o cache da PWA passam a usar a nova versao.
