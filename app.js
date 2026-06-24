@@ -2513,6 +2513,64 @@
       setSaveStatus("Alteracao desfeita");
     }
 
+    async function clearWholeAlbum() {
+      if (isFriendView()) {
+        setSaveStatus(`Estas a ver a caderneta de ${friendProfile}`);
+        return;
+      }
+      if (!requireLiveLogin()) return;
+      if (!stickers.length) {
+        setSaveStatus("Nao ha cromos para limpar");
+        return;
+      }
+
+      const confirmed = confirm("Tens a certeza que queres limpar a caderneta toda? Isto vai remover obtidos, repetidos, guardados e cromos pendentes.");
+      if (!confirmed) return;
+
+      const totals = stickerStatsFor(stickers);
+      const duplicateTotal = stickers.reduce((sum, sticker) => sum + normalizeDuplicates(sticker.repetidos), 0);
+      const reservedTotal = stickers.reduce((sum, sticker) => sum + reservedDuplicates(sticker), 0);
+      pushUndoState("Caderneta limpa");
+
+      stickers.forEach(sticker => {
+        sticker.tenho = false;
+        sticker.repetidos = 0;
+        sticker.reservados = 0;
+        sticker.reservas = [];
+        syncStickerReservations(sticker);
+        sticker.pendenteReceber = false;
+        sticker.pendenteDe = "";
+        sticker.pendenteDesde = "";
+        sticker.pendenteTrocaId = "";
+        sticker.pendenteComoRepetido = false;
+        sticker.rececoesPendentes = [];
+        syncIncomingReservationLegacy(sticker);
+      });
+
+      selectedView = "all";
+      currentSearch = "";
+      const searchInput = document.getElementById("searchInput");
+      if (searchInput) searchInput.value = "";
+
+      saveState();
+      recordHistory(`Caderneta limpa: ${totals.owned} obtidos, ${duplicateTotal} repetidos e ${reservedTotal} guardados removidos`, {
+        type: "album",
+        action: "clear_album"
+      });
+      render();
+
+      const message = document.getElementById("settingsClearAlbumMessage");
+      if (message) message.textContent = "Caderneta limpa com sucesso.";
+      try {
+        await persistStateNow();
+        setSaveStatus("Caderneta limpa e sincronizada");
+      } catch (error) {
+        console.error(error);
+        setSaveStatus("Caderneta limpa, mas houve erro ao sincronizar");
+        if (message) message.textContent = "Caderneta limpa, mas houve erro ao sincronizar.";
+      }
+    }
+
     function historyStorageKey() {
       return `${HISTORY_KEY}_${liveProfile || "local"}`;
     }
@@ -5675,7 +5733,7 @@
           ${lockToggle ? `aria-label="${readonly ? `Cromo de ${escapeHTML(friendProfile)}` : "Cromo repetido"}"` : `aria-checked="${sticker.tenho ? "true" : "false"}" tabindex="0" onclick="toggleStickerOwned('${stickerId}')" onkeydown="handleStickerCardKey(event, '${stickerId}')"`}
           title="${lockToggle ? "Ajusta os repetidos nos botoes" : (sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido")}"
         >
-          <div class="sticker-state" aria-hidden="true">${sticker.tenho ? escapeHTML(duplicateStateLabel) : ""}</div>
+          <div class="sticker-state" aria-hidden="true">${sticker.tenho ? `<span>${escapeHTML(duplicateStateLabel)}</span>` : ""}</div>
           ${showDuplicateBadge ? `<span class="duplicate-unit-badge" aria-label="${duplicateUnits} unidades repetidas">x${duplicateUnits}</span>` : ""}
           <div class="sticker-info">
             <div class="code">
