@@ -114,7 +114,7 @@
     let availableUserColors = [...USER_COLOR_PALETTE];
     let usedUserColors = [];
     let profileColors = {};
-    let appThemeMode = "light";
+    let appThemeMode = "dark";
     let appThemePresetId = "default";
     let collectionMode = localStorage.getItem(COLLECTION_MODE_KEY) || "all";
     let deferredInstallPrompt = null;
@@ -1123,7 +1123,7 @@
         <button class="dashboard-card" type="button" onclick="openCountryModal('${escapeJS(country)}')">
           <span>${escapeHTML(label)}</span>
           <strong>${escapeHTML(countryFullName(country) || exportGroupLabel(country))}</strong>
-          <small>${stats.owned}/${stats.total} obtidos - ${stats.percent}%</small>
+          <small>${countryProgressLabel(stats, { compact: false, suffix: " obtidos" })}</small>
           <div class="dashboard-progress" aria-hidden="true"><i style="--progress-width:${stats.percent}%"></i></div>
         </button>
       `;
@@ -5309,7 +5309,7 @@
         duplicatesCount.setAttribute("aria-label", `${duplicates} repetidos livres e ${reserved} guardados`);
       }
       const percent = total ? Math.round((owned / total) * 100) : 0;
-      if (collectionProgressText) collectionProgressText.textContent = `${owned}/${total} obtidos - ${percent}%`;
+      if (collectionProgressText) collectionProgressText.textContent = percent >= 100 && total ? "Completo" : `${owned}/${total} obtidos - ${percent}%`;
       if (collectionProgressBar) collectionProgressBar.style.width = `${percent}%`;
       updateExportSummary();
     }
@@ -5456,6 +5456,13 @@
       return { total, owned, missing, duplicates, percent };
     }
 
+    function countryProgressLabel(stats, options = {}) {
+      const { compact = true, suffix = "" } = options;
+      if (stats.total && stats.percent >= 100) return "Completo";
+      const base = `${stats.owned}/${stats.total}`;
+      return compact ? `${base} - ${stats.percent}%` : `${base}${suffix} - ${stats.percent}%`;
+    }
+
     function renderCountryCard(country, album = currentAlbumStickers()) {
       const stats = countryStats(country, album);
       const name = countryFullName(country) || country;
@@ -5469,7 +5476,7 @@
           </span>
           <span class="country-card-bottom">
             <span class="country-card-progress" aria-hidden="true"><span></span></span>
-            <span class="country-card-count">${stats.owned}/${stats.total} - ${stats.percent}%</span>
+            <span class="country-card-count ${stats.percent >= 100 && stats.total ? "is-complete" : ""}">${countryProgressLabel(stats)}</span>
           </span>
         </button>
       `;
@@ -5599,7 +5606,7 @@
                 <button class="country-modal-close" type="button" onclick="closeCountryModal()" aria-label="Fechar">x</button>
               </div>
             </div>
-            <div class="country-count">${stats.owned}/${stats.total} obtidos - ${stats.percent}%</div>
+            <div class="country-count ${stats.percent >= 100 && stats.total ? "is-complete" : ""}">${countryProgressLabel(stats, { compact: false, suffix: " obtidos" })}</div>
             <div class="country-progress" aria-hidden="true">
               <div class="country-progress-bar" style="--progress-width:${stats.percent}%"></div>
             </div>
@@ -6333,6 +6340,7 @@
         const ownedInCountry = album.filter(s => s.pais === country && s.tenho).length;
         const totalInCountry = album.filter(s => s.pais === country).length;
         const ownedPercent = totalInCountry ? Math.round((ownedInCountry / totalInCountry) * 100) : 0;
+        const countryHeaderStats = { owned: ownedInCountry, total: totalInCountry, percent: ownedPercent };
 
         return `
           <article class="country" style="${sectionStyle(country)}">
@@ -6341,7 +6349,7 @@
                 <div class="country-title">${escapeHTML(countryFullName(country) || country)}</div>
                 ${countryFullName(country) ? `<div class="country-name">${escapeHTML(country)}</div>` : ""}
               </div>
-              <div class="country-count">${ownedInCountry}/${totalInCountry} obtidos - ${ownedPercent}%</div>
+              <div class="country-count ${ownedPercent >= 100 && totalInCountry ? "is-complete" : ""}">${countryProgressLabel(countryHeaderStats, { compact: false, suffix: " obtidos" })}</div>
               <div class="country-progress" aria-hidden="true">
                 <div class="country-progress-bar" style="--progress-width:${ownedPercent}%"></div>
               </div>

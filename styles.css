@@ -1,17 +1,17 @@
     :root {
-      --bg: #f6f7f9;
-      --card: #ffffff;
-      --panel: #f9fafb;
-      --text: #171717;
-      --muted: #6b7280;
-      --line: #e5e7eb;
-      --main: #111827;
-      --main-soft: #475569;
-      --header-bg: rgba(255,255,255,.92);
+      --bg: #0f1117;
+      --card: #171a21;
+      --panel: #1f2430;
+      --text: #f8fafc;
+      --muted: #b8c2d1;
+      --line: #303744;
+      --main: #60a5fa;
+      --main-soft: #93c5fd;
+      --header-bg: rgba(17,20,28,.94);
       --user-color: #111827;
       --friend-color: #1d4ed8;
       --friend-color-soft: #dbeafe;
-      --ok: #111827;
+      --ok: #60a5fa;
       --danger: #dc2626;
       --shadow: 0 10px 25px rgba(0,0,0,.06);
       --radius: 18px;
@@ -6334,5 +6334,685 @@
         flex-direction: column;
         gap: 4px;
         padding: 10px;
+      }
+    }
+
+    /* Visual stability pass: fixes overlapping controls, heavy typography and cramped mobile layouts. */
+    .brand,
+    .brand-button,
+    .view-title,
+    .stat span,
+    .collection-progress-copy span,
+    .country-card-name,
+    .country-card-code,
+    .country-card-count,
+    .country-group-title,
+    .duplicate-section-title,
+    .duplicate-country-head strong,
+    .duplicate-country-head span,
+    .duplicate-country-preview,
+    .friend-ranking-title strong {
+      letter-spacing: 0;
+    }
+
+    .stat span,
+    .country-card-code,
+    .country-card-count,
+    .country-card-meta,
+    .duplicate-country-head span,
+    .duplicate-country-preview,
+    .friend-ranking-card small,
+    .site-footer-main span,
+    .site-footer-meta span {
+      font-weight: 700;
+    }
+
+    .collection-progress,
+    .stat,
+    .toolbar,
+    .country-card,
+    .duplicate-country-card,
+    .friend-mode-banner,
+    .share-panel,
+    .site-footer {
+      box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
+    }
+
+    .search-results {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .duplicates-view .search-results {
+      margin-top: 0;
+    }
+
+    body.duplicates-view #albumToolbar {
+      display: none !important;
+    }
+
+    .duplicate-results-toolbar {
+      margin: 0 0 14px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--card);
+    }
+
+    .duplicate-section-title {
+      margin: 10px 0 10px;
+      font-size: 16px;
+      font-weight: 850;
+    }
+
+    .duplicate-country-grid {
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      align-items: stretch;
+    }
+
+    .duplicate-country-card {
+      min-height: 118px;
+      gap: 8px;
+      padding: 12px 12px 11px;
+      border-width: 1px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+    }
+
+    .duplicate-country-head strong {
+      font-size: 15px;
+      font-weight: 850;
+      line-height: 1.08;
+    }
+
+    .duplicate-country-counts span {
+      display: block;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--country-text, var(--text));
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.25;
+      text-transform: none;
+    }
+
+    .duplicate-country-counts b {
+      display: inline;
+      margin-right: 4px;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .duplicate-country-preview {
+      min-height: 0;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .duplicate-results .sticker {
+      min-height: 102px;
+      padding-right: 40px;
+    }
+
+    .duplicate-results .duplicate-buttons {
+      border-left-width: 2px;
+    }
+
+    .duplicate-results .duplicate-control-btn {
+      font-size: 17px;
+    }
+
+    @media (min-width: 761px) {
+      .album-dashboard-shell {
+        gap: 14px;
+      }
+
+      .stats {
+        gap: 12px;
+      }
+
+      .stat {
+        min-height: 76px;
+      }
+
+      .stat strong {
+        font-size: 24px;
+      }
+
+      .toolbar {
+        align-items: center;
+      }
+
+      .country-card {
+        min-height: 104px;
+      }
+
+      .country-card-name {
+        font-size: 14px;
+        font-weight: 850;
+      }
+    }
+
+    @media (max-width: 760px) {
+      html,
+      body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      body {
+        min-width: 0;
+      }
+
+      header {
+        z-index: 180;
+      }
+
+      .topbar {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 2px !important;
+        justify-items: center !important;
+        padding: max(8px, env(safe-area-inset-top)) 10px 8px !important;
+        border-radius: 0 !important;
+      }
+
+      .brand-button {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+        font-size: 16px !important;
+        line-height: 1.1;
+      }
+
+      .view-title {
+        font-size: 13px !important;
+        line-height: 1.1;
+      }
+
+      main {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 10px 8px calc(96px + env(safe-area-inset-bottom)) !important;
+      }
+
+      .album-dashboard-shell,
+      .collection-progress,
+      .stats,
+      .toolbar,
+      .country-tabs-wrap,
+      .search-results,
+      #content,
+      .share-panel,
+      .friend-mode-banner,
+      .site-footer {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      .collection-progress {
+        padding: 10px !important;
+        border-radius: 14px !important;
+      }
+
+      .collection-progress-copy {
+        grid-template-columns: 1fr auto !important;
+        align-items: baseline;
+      }
+
+      .collection-progress-copy span {
+        font-size: 9px !important;
+      }
+
+      .collection-progress-copy strong {
+        font-size: 12px !important;
+        white-space: nowrap;
+      }
+
+      .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+      }
+
+      .stat {
+        min-height: 52px !important;
+        padding: 7px 5px !important;
+        border-radius: 11px !important;
+      }
+
+      .stat span {
+        min-height: 20px !important;
+        font-size: 7.5px !important;
+        line-height: 1.12 !important;
+      }
+
+      .stat strong {
+        font-size: 14px !important;
+      }
+
+      .toolbar {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 7px !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+      }
+
+      .search {
+        min-height: 42px !important;
+        padding: 9px 36px 9px 13px !important;
+        font-size: 14px !important;
+      }
+
+      .toolbar-actions {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+      }
+
+      .collection-mode-row {
+        min-width: 0;
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) !important;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .collection-mode-row span {
+        font-size: 9px !important;
+      }
+
+      .collection-mode-select {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        min-height: 36px !important;
+        font-size: 12px !important;
+      }
+
+      .export-list-btn {
+        width: 86px !important;
+        min-width: 86px !important;
+        max-width: 86px !important;
+        min-height: 36px !important;
+        padding: 5px 6px !important;
+        border-radius: 18px !important;
+        font-size: 10px !important;
+        line-height: 1.05 !important;
+      }
+
+      .export-list-btn small {
+        max-width: 74px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 7.5px !important;
+      }
+
+      .country-list-toolbar {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(154px, 44%) !important;
+        align-items: end !important;
+        gap: 8px !important;
+      }
+
+      .country-list-title span {
+        font-size: 8px !important;
+      }
+
+      .country-list-title strong {
+        font-size: 15px !important;
+      }
+
+      .country-sort-control {
+        min-width: 0 !important;
+      }
+
+      .country-sort-control label {
+        font-size: 8px !important;
+      }
+
+      .country-sort-select {
+        min-height: 34px !important;
+        padding: 6px 26px 6px 9px !important;
+        font-size: 9px !important;
+      }
+
+      .country-tabs-wrap .country-tabs {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+      }
+
+      .country-card {
+        min-height: 78px !important;
+        padding: 7px !important;
+        gap: 5px !important;
+        border-radius: 10px !important;
+      }
+
+      .country-card-name {
+        font-size: 9px !important;
+        font-weight: 850 !important;
+        line-height: 1.08 !important;
+      }
+
+      .country-card-code,
+      .country-card-count {
+        font-size: 7px !important;
+      }
+
+      .country-card-bottom {
+        grid-template-columns: 1fr !important;
+        gap: 4px !important;
+      }
+
+      .country-card-count {
+        justify-self: end;
+      }
+
+      .duplicate-results-toolbar {
+        position: static !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 7px !important;
+        margin-bottom: 10px !important;
+        padding: 8px !important;
+        border-radius: 16px !important;
+      }
+
+      .duplicate-filter-tabs,
+      .duplicate-layout-tabs {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+
+      .duplicate-filter-tabs button,
+      .duplicate-layout-tabs button {
+        min-height: 36px !important;
+        padding: 0 7px !important;
+        font-size: 10px !important;
+      }
+
+      .duplicate-reserve-button,
+      .duplicate-results-toolbar > button {
+        width: 100% !important;
+        min-height: 38px !important;
+        font-size: 12px !important;
+      }
+
+      .duplicate-section-title {
+        font-size: 15px !important;
+      }
+
+      .duplicate-country-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+      }
+
+      .duplicate-country-card {
+        min-height: 104px !important;
+        padding: 9px !important;
+        gap: 7px !important;
+        border-radius: 12px !important;
+      }
+
+      .duplicate-country-head strong {
+        font-size: 13px !important;
+      }
+
+      .duplicate-country-head span {
+        font-size: 8px !important;
+      }
+
+      .duplicate-country-counts b {
+        font-size: 18px !important;
+      }
+
+      .duplicate-country-counts span,
+      .duplicate-country-preview {
+        font-size: 9px !important;
+      }
+
+      .country-modal-panel {
+        width: calc(100vw - 12px) !important;
+        max-width: calc(100vw - 12px) !important;
+        max-height: calc(100dvh - 16px) !important;
+        border-radius: 18px !important;
+      }
+
+      .country-modal-head {
+        padding: 12px !important;
+      }
+
+      .country-modal-tabs {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 5px !important;
+      }
+
+      .country-modal-tabs button {
+        min-width: 0 !important;
+        min-height: 34px !important;
+        padding: 5px 3px !important;
+        font-size: 9px !important;
+      }
+
+      .country-modal-content {
+        padding: 9px !important;
+      }
+
+      .sticker-grid,
+      .country-modal-content .sticker-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+      }
+
+      .sticker {
+        min-width: 0 !important;
+      }
+
+      .site-footer {
+        margin-top: 20px !important;
+        margin-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+        padding: 14px 10px !important;
+        gap: 10px !important;
+      }
+
+      .site-footer-meta {
+        gap: 8px !important;
+      }
+
+      .site-footer-meta button {
+        min-height: 34px !important;
+        padding: 0 12px !important;
+        font-size: 12px !important;
+      }
+
+      .mobile-bottom-nav {
+        left: 8px !important;
+        right: 8px !important;
+        bottom: max(8px, env(safe-area-inset-bottom)) !important;
+        height: 60px !important;
+        padding: 6px !important;
+        border-radius: 20px !important;
+      }
+
+      .mobile-bottom-nav button {
+        min-height: 46px !important;
+        border-radius: 15px !important;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+
+      .stat span {
+        font-size: 9px !important;
+      }
+
+      .stat strong {
+        font-size: 16px !important;
+      }
+
+      .country-tabs-wrap .country-tabs,
+      .duplicate-country-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+
+    @media (max-width: 760px) {
+      main {
+        padding-bottom: calc(122px + env(safe-area-inset-bottom)) !important;
+      }
+
+      .export-list-btn {
+        width: 104px !important;
+        min-width: 104px !important;
+        max-width: 104px !important;
+      }
+
+      .export-list-btn span {
+        display: block;
+        max-width: 92px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .export-list-btn small {
+        display: none !important;
+      }
+
+      .site-footer {
+        margin-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+      }
+    }
+
+    /* Compact text guard: keep labels inside their own cards/buttons. */
+    button,
+    .stat,
+    .country-card,
+    .duplicate-country-card,
+    .dashboard-card,
+    .trade-overview-card,
+    .friend-ranking-card,
+    .list-compare-tab,
+    .mobile-tool-action {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    button,
+    button *,
+    .stat *,
+    .country-card *,
+    .duplicate-country-card *,
+    .dashboard-card *,
+    .trade-overview-card *,
+    .friend-ranking-card *,
+    .list-compare-tab *,
+    .mobile-tool-action * {
+      max-width: 100%;
+    }
+
+    .country-card-name,
+    .duplicate-country-head strong,
+    .dashboard-card strong,
+    .trade-overview-card strong,
+    .friend-ranking-main strong,
+    .list-compare-tab strong,
+    .mobile-tool-action strong {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      overflow-wrap: anywhere;
+    }
+
+    .country-card-code,
+    .country-card-count,
+    .duplicate-country-head span,
+    .duplicate-country-preview,
+    .dashboard-card small,
+    .trade-overview-counts span,
+    .friend-ranking-card small,
+    .collection-mode-row span,
+    .collection-mode-select,
+    .country-sort-select,
+    .export-list-btn span,
+    .export-list-btn small {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .country-card-count.is-complete,
+    .country-count.is-complete {
+      color: var(--country-primary, var(--main));
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .stat span {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .country-modal-nav,
+    .country-modal-tabs button,
+    .desktop-nav button,
+    .user-menu-panel button,
+    .mobile-bottom-nav button,
+    .duplicate-filter-tabs button,
+    .duplicate-layout-tabs button {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 760px) {
+      button {
+        font-size: clamp(9px, 2.7vw, 12px);
+      }
+
+      .country-card-name {
+        font-size: clamp(8px, 2.45vw, 10px) !important;
+      }
+
+      .country-card-code,
+      .country-card-count {
+        font-size: clamp(6.5px, 1.9vw, 8px) !important;
+      }
+
+      .duplicate-country-head strong {
+        font-size: clamp(11px, 3.25vw, 13px) !important;
+      }
+
+      .duplicate-country-preview,
+      .duplicate-country-counts span {
+        font-size: clamp(8px, 2.35vw, 9px) !important;
+      }
+
+      .collection-progress-copy strong {
+        max-width: 45vw;
+      }
+
+      .country-modal-title {
+        font-size: clamp(17px, 5vw, 21px) !important;
+        overflow-wrap: anywhere;
       }
     }
