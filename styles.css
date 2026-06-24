@@ -1884,20 +1884,26 @@
       position: absolute;
       top: -1px;
       right: 9px;
-      width: 18px;
-      height: 28px;
+      min-width: 27px;
+      width: auto;
+      height: 29px;
       border: 0;
       border-radius: 0 0 3px 3px;
       background: transparent;
       color: transparent;
       display: grid;
       place-items: start center;
-      padding-top: 4px;
+      padding: 4px 4px 0;
       pointer-events: none;
       transform: translateY(-6px) scale(.72);
       opacity: 0;
       filter: drop-shadow(0 5px 8px rgba(17, 24, 39, .22));
       transition: opacity .16s ease, transform .16s ease;
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 950;
+      white-space: nowrap;
+      text-shadow: 0 1px 2px rgba(0,0,0,.32);
     }
 
     .sticker-state::before {
@@ -1912,7 +1918,7 @@
     }
 
     .sticker-state::after {
-      content: "\2713";
+      content: none;
       position: relative;
       z-index: 1;
       color: var(--check-mark, #ffffff);
@@ -1930,7 +1936,7 @@
       opacity: 1;
       transform: translateY(0) scale(1);
       background: transparent;
-      color: #ffffff;
+      color: var(--check-mark, #ffffff);
       box-shadow: none;
     }
 

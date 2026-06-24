@@ -5659,6 +5659,9 @@
       const pendingIncoming = !readonly && isPendingIncoming(sticker);
       const pendingReceipts = pendingIncoming ? incomingReservations(sticker) : [];
       const duplicateUnits = normalizeDuplicates(sticker.repetidos);
+      const freeDuplicateUnits = availableDuplicates(sticker);
+      const duplicateStateLabel = freeDuplicateUnits > 0 ? `x${freeDuplicateUnits}` : "✓";
+      const showDuplicateBadge = sticker.tenho && duplicateUnits > 1 && (currentView === "duplicates" || options.duplicatePalette);
       const pendingLabel = pendingReceipts.length > 1
         ? `${pendingReceipts.length} trocas pendentes`
         : `${normalizePendingDuplicate(pendingReceipts[0]?.asDuplicate) ? "Repetido a receber" : "A receber"} de ${normalizePendingPerson(pendingReceipts[0]?.person) || "alguem"}`;
@@ -5672,8 +5675,8 @@
           ${lockToggle ? `aria-label="${readonly ? `Cromo de ${escapeHTML(friendProfile)}` : "Cromo repetido"}"` : `aria-checked="${sticker.tenho ? "true" : "false"}" tabindex="0" onclick="toggleStickerOwned('${stickerId}')" onkeydown="handleStickerCardKey(event, '${stickerId}')"`}
           title="${lockToggle ? "Ajusta os repetidos nos botoes" : (sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido")}"
         >
-          <div class="sticker-state" aria-hidden="true"></div>
-          ${sticker.tenho && duplicateUnits > 0 ? `<span class="duplicate-unit-badge" aria-label="${duplicateUnits} unidades repetidas">&times;${duplicateUnits}</span>` : ""}
+          <div class="sticker-state" aria-hidden="true">${sticker.tenho ? escapeHTML(duplicateStateLabel) : ""}</div>
+          ${showDuplicateBadge ? `<span class="duplicate-unit-badge" aria-label="${duplicateUnits} unidades repetidas">x${duplicateUnits}</span>` : ""}
           <div class="sticker-info">
             <div class="code">
               ${escapeHTML((currentView === "duplicates" || options.duplicatePalette) ? `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}` : sticker.codigo)}
@@ -5725,7 +5728,7 @@
         .sort((a, b) => stickerNumber(a) - stickerNumber(b));
       const preview = previewSource.slice(0, 8).map(sticker => {
         const count = mode === "reserved" ? reservedDuplicates(sticker) : availableDuplicates(sticker);
-        return `${stickerExportNumber(sticker)} \u00d7${count}`;
+        return count > 1 ? `${stickerExportNumber(sticker)} x${count}` : stickerExportNumber(sticker);
       });
       return { total, available, reserved, unique: previewSource.length, preview };
     }
