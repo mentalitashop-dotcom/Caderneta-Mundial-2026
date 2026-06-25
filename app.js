@@ -114,6 +114,7 @@
     let availableUserColors = [...USER_COLOR_PALETTE];
     let usedUserColors = [];
     let profileColors = {};
+    let profilePhotos = {};
     let appThemeMode = "dark";
     let appThemePresetId = "default";
     let collectionMode = localStorage.getItem(COLLECTION_MODE_KEY) || "all";
@@ -262,148 +263,160 @@
 
     const COUNTRY_COLORS = {
       FWC: "#111827",
-      MEX: "#006847",
-      RSA: "#007749",
-      KOR: "#c60c30",
-      CZE: "#d7141a",
-      CAN: "#d80621",
-      BIH: "#002395",
-      QAT: "#8a1538",
-      SUI: "#d52b1e",
-      BRA: "#ffdf00",
-      MAR: "#c1272d",
-      HAI: "#00209f",
-      SCO: "#005eb8",
-      USA: "#b31942",
-      PAR: "#0038a8",
-      AUS: "#e4002b",
-      TUR: "#e30a17",
+      MEX: "#006747",
+      RSA: "#C7102E",
+      KOR: "#FFFFFF",
+      CZE: "#124680",
+      CAN: "#D13622",
+      BIH: "#002496",
+      QAT: "#F0F0F0",
+      SUI: "#DA281C",
+      BRA: "#009C3B",
+      MAR: "#C3262F",
+      HAI: "#01209F",
+      SCO: "#005EB8",
+      USA: "#094B9F",
+      PAR: "#D32B1E",
+      AUS: "#0D1288",
+      TUR: "#E30917",
       GER: "#000000",
-      CUW: "#002b7f",
-      CIV: "#f77f00",
-      ECU: "#ffdd00",
-      NED: "#ff4f00",
-      JPN: "#ffffff",
-      SWE: "#006aa7",
-      TUN: "#e70013",
-      BEL: "#000000",
-      EGV: "#ce1126",
-      IRN: "#239f40",
-      NZL: "#00247d",
-      ESP: "#c60b1e",
-      CPV: "#003893",
-      KSA: "#006c35",
-      URU: "#0038a8",
-      FRA: "#0055a4",
-      SEN: "#00853f",
-      IRQ: "#ce1126",
-      NOR: "#00205b",
-      ARG: "#6cace4",
-      ALG: "#006233",
-      AUT: "#ed2939",
-      JOR: "#007a3d",
-      POR: "#ff0000",
-      COD: "#007fff",
-      UZB: "#0099b5",
-      COL: "#003893",
-      ENG: "#ce1124",
-      CRO: "#ce1126",
-      GHA: "#ce1126",
-      PAN: "#005293"
+      CUW: "#01239B",
+      CIV: "#FD8000",
+      ECU: "#FFCC00",
+      NED: "#C6404E",
+      JPN: "#FFFFFF",
+      SWE: "#015293",
+      TUN: "#E30917",
+      BEL: "#101010",
+      EGV: "#C7102E",
+      IRN: "#239F3F",
+      NZL: "#012269",
+      ESP: "#CA3334",
+      CPV: "#013892",
+      KSA: "#0C7646",
+      URU: "#FFFFFF",
+      FRA: "#26377D",
+      SEN: "#008540",
+      IRQ: "#CE1125",
+      NOR: "#B00005",
+      ARG: "#75AADC",
+      ALG: "#006636",
+      AUT: "#C7102E",
+      JOR: "#000000",
+      POR: "#20774D",
+      COD: "#017DF9",
+      UZB: "#3190BB",
+      COL: "#FFCD18",
+      ENG: "#FFFFFF",
+      CRO: "#FE0405",
+      GHA: "#CE1127",
+      PAN: "#FFFFFF"
     };
 
     const COUNTRY_SECONDARY_COLORS = {
       FWC: "#111827",
-      MEX: "#ce1126",
-      RSA: "#ffb81c",
-      KOR: "#003478",
-      CZE: "#11457e",
-      CAN: "#d80621",
-      BIH: "#fecb00",
-      QAT: "#8a1538",
-      SUI: "#d52b1e",
-      BRA: "#009739",
-      MAR: "#006233",
-      HAI: "#d21034",
-      SCO: "#005eb8",
-      USA: "#0a3161",
-      PAR: "#d52b1e",
-      AUS: "#00008b",
-      TUR: "#e30a17",
-      GER: "#dd0000",
-      CUW: "#f9e814",
-      CIV: "#009e60",
-      ECU: "#034ea2",
-      NED: "#21468b",
-      JPN: "#bc002d",
-      SWE: "#fecc00",
-      TUN: "#e70013",
-      BEL: "#fae042",
+      MEX: "#CD1125",
+      RSA: "#00138B",
+      KOR: "#013378",
+      CZE: "#FFFFFF",
+      CAN: "#D8E6ED",
+      BIH: "#FFCB01",
+      QAT: "#85374C",
+      SUI: "#DA281C",
+      BRA: "#009C3B",
+      MAR: "#C3262F",
+      HAI: "#D11234",
+      SCO: "#005EB8",
+      USA: "#0C276A",
+      PAR: "#0038A7",
+      AUS: "#FFFFFF",
+      TUR: "#E30917",
+      GER: "#FECD18",
+      CUW: "#E8D901",
+      CIV: "#039743",
+      ECU: "#FF1C2C",
+      NED: "#2F65AD",
+      JPN: "#FFFFFF",
+      SWE: "#015293",
+      TUN: "#E30917",
+      BEL: "#E32D39",
       EGV: "#000000",
-      IRN: "#da0000",
-      NZL: "#cc142b",
-      ESP: "#ffc400",
-      CPV: "#cf2027",
-      KSA: "#006c35",
-      URU: "#ffffff",
-      FRA: "#ce1126",
-      SEN: "#e31b23",
+      IRN: "#D80100",
+      NZL: "#022267",
+      ESP: "#F7D128",
+      CPV: "#013892",
+      KSA: "#0C7646",
+      URU: "#0038A7",
+      FRA: "#E42E3A",
+      SEN: "#E11C23",
       IRQ: "#000000",
-      NOR: "#ba0c2f",
-      ARG: "#ffffff",
-      ALG: "#ffffff",
-      AUT: "#ed2939",
-      JOR: "#ce1126",
-      POR: "#006600",
-      COD: "#ce1021",
-      UZB: "#1eb53a",
-      COL: "#fcd116",
-      ENG: "#ffffff",
-      CRO: "#171796",
-      GHA: "#fcd116",
-      PAN: "#d21034"
+      NOR: "#00205B",
+      ARG: "#FFFFFF",
+      ALG: "#FFFFFF",
+      AUT: "#FFFFFF",
+      JOR: "#027A3D",
+      POR: "#D93623",
+      COD: "#CD1120",
+      UZB: "#61A945",
+      COL: "#DA0301",
+      ENG: "#FFFFFF",
+      CRO: "#191897",
+      GHA: "#006B3F",
+      PAN: "#0A2359"
     };
 
 
 
     const COUNTRY_TERTIARY_COLORS = {
-      MEX: "#ffffff",
-      KOR: "#ffffff",
-      CAN: "#ffffff",
-      QAT: "#ffffff",
-      SUI: "#ffffff",
-      BRA: "#002776",
-      SCO: "#ffffff",
-      USA: "#ffffff",
-      PAR: "#ffffff",
-      AUS: "#ffffff",
-      TUR: "#ffffff",
-      GER: "#ffce00",
-      CUW: "#002b7f",
-      CIV: "#ffffff",
-      NED: "#ffffff",
-      JPN: "#ffffff",
-      TUN: "#ffffff",
-      BEL: "#ed2939",
-      EGV: "#ffffff",
-      IRN: "#ffffff",
-      NZL: "#ffffff",
-      ESP: "#c60b1e",
-      CPV: "#ffffff",
-      KSA: "#ffffff",
-      URU: "#fcd116",
-      FRA: "#ffffff",
-      SEN: "#fdef42",
-      NOR: "#ffffff",
-      ALG: "#d21034",
-      AUT: "#ffffff",
-      POR: "#ffcc00",
-      COD: "#f7d618",
-      COL: "#ce1126",
-      ENG: "#fcd116",
-      CRO: "#ffffff",
-      GHA: "#006b3f",
-      PAN: "#ffffff"
+      FWC: "#111827",
+      MEX: "#FFFFFF",
+      RSA: "#00784B",
+      KOR: "#C60C33",
+      CZE: "#D8131A",
+      CAN: "#C55C44",
+      BIH: "#4060AD",
+      QAT: "#C86C89",
+      SUI: "#FFFFFF",
+      BRA: "#FFDF00",
+      MAR: "#01592F",
+      HAI: "#CF6C67",
+      SCO: "#FFFFFF",
+      USA: "#E91939",
+      PAR: "#FFFFFF",
+      AUS: "#EB060B",
+      TUR: "#FFFFFF",
+      GER: "#DA0301",
+      CUW: "#533EA9",
+      CIV: "#FDFDFD",
+      ECU: "#01468B",
+      NED: "#F0F1F1",
+      JPN: "#BB002D",
+      SWE: "#FFCB01",
+      TUN: "#FFFFFF",
+      BEL: "#FCE406",
+      EGV: "#FFFFFF",
+      IRN: "#FFFFFF",
+      NZL: "#533968",
+      ESP: "#E7604A",
+      CPV: "#CD2026",
+      KSA: "#FFFFFF",
+      URU: "#586ED3",
+      FRA: "#FFFFFF",
+      SEN: "#FCEF41",
+      IRQ: "#FFFFFF",
+      NOR: "#FFFFFF",
+      ARG: "#9CB8DD",
+      ALG: "#D11234",
+      AUT: "#E2614C",
+      JOR: "#FFFFFF",
+      POR: "#519F4B",
+      COD: "#F4CF1D",
+      UZB: "#FBFCF9",
+      COL: "#0B286C",
+      ENG: "#CD1225",
+      CRO: "#FFFFFF",
+      GHA: "#FED116",
+      PAN: "#D8131A"
     };
     const COUNTRY_NAMES = {
       FWC: "TROF\u00c9US INICIAIS",
@@ -1013,8 +1026,8 @@
       if (!isFriendView()) return;
       const duplicateCopies = friendStickers.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
       if (friendViewAvatar) {
-        friendViewAvatar.textContent = String(friendProfile || "?").trim().charAt(0).toUpperCase();
         friendViewAvatar.style.background = friendUserColor || DEFAULT_USER_COLOR;
+        applyProfilePhoto(friendViewAvatar, profilePhotos[friendProfile] || "", userInitial(friendProfile || "?"));
       }
       if (friendDuplicateCount) friendDuplicateCount.textContent = duplicateCopies;
       if (friendViewAllButton) {
@@ -1791,42 +1804,43 @@
       const primary = countryColor(country);
       const secondary = countrySecondaryColor(country).toLowerCase();
       const base = secondary === "white" ? "#ffffff" : secondary;
+      const check = countryCheckboxColor(country);
       if (appThemeMode === "dark") {
         const theme = currentAppTheme();
         const contentBg = theme.card;
-        const stickerBg = mixColors(theme.panel, base, 0.18);
+        const stickerBg = base;
         const border = mixColors(theme.line, primary, 0.48);
         const headerText = readableTextColor(primary);
         const headerMuted = headerText === "#ffffff" ? "rgba(255,255,255,.86)" : "rgba(17,24,39,.74)";
+        const stickerText = readableTextColor(stickerBg);
+        const stickerMuted = stickerText === "#ffffff" ? "rgba(255,255,255,.84)" : "rgba(17,24,39,.72)";
         const progressTrack = headerText === "#ffffff" ? "rgba(255,255,255,.25)" : "rgba(17,24,39,.22)";
-        return `--section-header-bg:${primary};--section-content-bg:${contentBg};--sticker-bg:${stickerBg};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:#f8fafc;--sticker-muted:#cbd5e1;--progress-track:${progressTrack};--progress-fill:${headerText};--progress-fill-soft:${lightenColor(primary, 0.38)}`;
+        return `--section-header-bg:${primary};--section-content-bg:${contentBg};--sticker-bg:${stickerBg};--check-bg:${check};--check-border:${check};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${headerText};--progress-fill-soft:${lightenColor(primary, 0.38)}`;
       }
 
-      const stickerBg = lightenColor(base, 0.28);
-      const border = lightenColor(base, 0.08);
+      const stickerBg = base;
+      const border = primary;
       const headerText = readableTextColor(primary);
       const headerMuted = headerText === "#ffffff" ? "rgba(255,255,255,.86)" : "#374151";
       const stickerText = readableTextColor(stickerBg);
       const stickerMuted = stickerText === "#ffffff" ? "rgba(255,255,255,.84)" : "#374151";
       const progressTrack = headerText === "#ffffff" ? "rgba(255,255,255,.28)" : "rgba(17,24,39,.18)";
-      return `--section-header-bg:${primary};--section-content-bg:#ffffff;--sticker-bg:${stickerBg};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${headerText};--progress-fill-soft:${lightenColor(primary, 0.38)}`;
+      return `--section-header-bg:${primary};--section-content-bg:#ffffff;--sticker-bg:${stickerBg};--check-bg:${check};--check-border:${check};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${headerText};--progress-fill-soft:${lightenColor(primary, 0.38)}`;
     }
 
     function countryCardStyle(country) {
       const primary = countryColor(country);
-      const secondary = countrySecondaryColor(country).toLowerCase();
-      const base = secondary === "white" ? "#ffffff" : secondary;
       if (appThemeMode === "dark") {
         const theme = currentAppTheme();
-        const soft = mixColors(theme.card, primary, theme.countryMode === "normal" ? 0.16 : 0.22);
         const border = mixColors(theme.line, primary, 0.55);
-        return `--country-primary:${primary};--country-soft:${soft};--country-border:${border};--country-text:#f8fafc;--country-muted:#cbd5e1;--country-track:rgba(255,255,255,.16);--country-shadow:rgba(0,0,0,.32)`;
+        const text = readableTextColor(primary);
+        const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "rgba(17,24,39,.72)";
+        return `--country-primary:${primary};--country-soft:${primary};--country-border:${border};--country-text:${text};--country-muted:${muted};--country-track:rgba(255,255,255,.22);--country-shadow:rgba(0,0,0,.32)`;
       }
 
-      const soft = lightenColor(base, 0.38);
-      const text = readableTextColor(soft);
+      const text = readableTextColor(primary);
       const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "#475569";
-      return `--country-primary:${primary};--country-soft:${soft};--country-border:${primary};--country-text:${text};--country-muted:${muted};--country-track:rgba(15,23,42,.13);--country-shadow:${hexToRgba(primary, .18)}`;
+      return `--country-primary:${primary};--country-soft:${primary};--country-border:${primary};--country-text:${text};--country-muted:${muted};--country-track:rgba(15,23,42,.18);--country-shadow:${hexToRgba(primary, .18)}`;
     }
 
     function renderCountryTabs() {
@@ -3058,7 +3072,9 @@
     }
 
     function currentUserRankingItem() {
-      return compatibilityWithFriend(liveProfile || "Tu", stickers, currentUserColor || DEFAULT_USER_COLOR);
+      const item = compatibilityWithFriend(liveProfile || "Tu", stickers, currentUserColor || DEFAULT_USER_COLOR);
+      item.profilePhoto = savedProfilePhoto();
+      return item;
     }
 
     function rankingItemFromProfile(item) {
@@ -3078,6 +3094,7 @@
         compatibilityReady: false,
         tradeSize: 0,
         stats: { total, owned, missing, duplicates, percent },
+        profilePhoto: item.profilePhoto || profilePhotos[item.profile] || "",
         updatedAt: item.updatedAt || ""
       };
     }
@@ -4393,6 +4410,7 @@
       friendProfile = profile;
       friendUpdatedAt = data.updatedAt || "";
       friendUserColor = sanitizeUserColor(data.userColor || profileColors[profile] || DEFAULT_USER_COLOR);
+      profilePhotos[profile] = data.profilePhoto || profilePhotos[profile] || "";
       friendStickers = data.stickers || [];
     }
 
@@ -4877,8 +4895,10 @@
       liveProfilesLoadedAt = Date.now();
 
       profileColors = {};
+      profilePhotos = {};
       profiles.forEach(item => {
         profileColors[item.profile] = sanitizeUserColor(item.userColor || DEFAULT_USER_COLOR);
+        profilePhotos[item.profile] = item.profilePhoto || "";
       });
 
       const options = [
