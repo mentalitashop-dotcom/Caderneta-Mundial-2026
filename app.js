@@ -303,7 +303,7 @@
       ALG: "#006636",
       AUT: "#C7102E",
       JOR: "#000000",
-      POR: "#20774D",
+      POR: "#D93623",
       COD: "#017DF9",
       UZB: "#3190BB",
       COL: "#FFCD18",
@@ -355,10 +355,10 @@
       ALG: "#FFFFFF",
       AUT: "#E2614C",
       JOR: "#027A3D",
-      POR: "#D93623",
+      POR: "#20774D",
       COD: "#CD1120",
       UZB: "#61A945",
-      COL: "#0B286C",
+      COL: "#DA0301",
       ENG: "#CD1225",
       CRO: "#FFFFFF",
       GHA: "#CE1127",
@@ -412,7 +412,7 @@
       POR: "#FFCC00",
       COD: "#F4CF1D",
       UZB: "#FBFCF9",
-      COL: "#DA0301",
+      COL: "#0B286C",
       ENG: "#FFFFFF",
       CRO: "#191897",
       GHA: "#FED116",
@@ -431,7 +431,10 @@
       TUN: "#FFFFFF",
       KSA: "#FFFFFF",
       AUT: "#FFFFFF",
-      GHA: "#FED116"
+      COD: COUNTRY_TERTIARY_COLORS.COD,
+      POR: COUNTRY_TERTIARY_COLORS.POR,
+      GHA: "#FED116",
+      PAN: COUNTRY_TERTIARY_COLORS.PAN
     };
     const COUNTRY_NAMES = {
       FWC: "TROF\u00c9US INICIAIS",
@@ -6121,6 +6124,8 @@
     }
     function renderReservedMiniCard(entry, direction) {
       const sticker = entry.sticker;
+      const badgeBg = countrySecondaryColor(sticker.pais).toLowerCase();
+      const badgeText = readableTextColor(badgeBg);
       const action = direction === "give"
         ? "Vais dar"
         : direction === "receive-duplicate"
@@ -6130,9 +6135,16 @@
         <article class="reserved-mini-card reserved-mini-card-${direction}" style="${duplicateStickerStyle(sticker.pais)};${checkboxStyle(sticker.pais)}">
           <strong>${escapeHTML(stickerShortLabel(sticker))}</strong>
           <span>${escapeHTML(sticker.nome)}</span>
-          <small class="reserved-unit-count">&times;${entry.count} · ${action}</small>
+          <small class="reserved-unit-count" style="--reserved-unit-bg:${badgeBg};--reserved-unit-text:${badgeText};">${action}</small>
         </article>
       `;
+    }
+
+    function expandReservedEntries(entries) {
+      return entries.flatMap(entry => {
+        const count = Math.max(1, normalizeDuplicates(entry.count));
+        return Array.from({ length: count }, () => ({ ...entry, count: 1 }));
+      });
     }
 
     function renderReservedGroups(album = currentAlbumStickers()) {
@@ -6140,6 +6152,9 @@
       if (!groups.length) return `<div class="comparison-empty">Nao tens trocas reservadas.</div>`;
       return groups.map(group => {
         const { toCollect: newStickers, asDuplicates: duplicateStickers } = splitIncomingEntries(group.receive);
+        const giveCards = expandReservedEntries(group.give);
+        const newStickerCards = expandReservedEntries(newStickers);
+        const duplicateStickerCards = expandReservedEntries(duplicateStickers);
         const receiveTotal = group.receive.reduce((sum, entry) => sum + entry.count, 0);
         return `
         <section class="reserved-person-section">
@@ -6151,14 +6166,14 @@
             <div class="reserved-trade-sides">
               <div class="reserved-trade-side">
                 <strong>Vais dar: ${group.give.reduce((sum, entry) => sum + entry.count, 0)}</strong>
-                <div class="reserved-mini-grid">${group.give.length ? group.give.map(entry => renderReservedMiniCard(entry, "give")).join("") : `<small class="reserved-trade-empty">Sem cromos registados.</small>`}</div>
+                <div class="reserved-mini-grid">${giveCards.length ? giveCards.map(entry => renderReservedMiniCard(entry, "give")).join("") : `<small class="reserved-trade-empty">Sem cromos registados.</small>`}</div>
               </div>
               <div class="reserved-trade-side reserved-trade-receive-side">
                 <strong>Vais receber: ${receiveTotal}</strong>
                 <span class="reserved-trade-subtitle">Para colar: ${newStickers.reduce((sum, entry) => sum + entry.count, 0)}</span>
-                <div class="reserved-mini-grid">${newStickers.length ? newStickers.map(entry => renderReservedMiniCard(entry, "receive")).join("") : `<small class="reserved-trade-empty">Sem cromos novos.</small>`}</div>
+                <div class="reserved-mini-grid">${newStickerCards.length ? newStickerCards.map(entry => renderReservedMiniCard(entry, "receive")).join("") : `<small class="reserved-trade-empty">Sem cromos novos.</small>`}</div>
                 <span class="reserved-trade-subtitle">Como repetidos: ${duplicateStickers.reduce((sum, entry) => sum + entry.count, 0)}</span>
-                <div class="reserved-mini-grid">${duplicateStickers.length ? duplicateStickers.map(entry => renderReservedMiniCard(entry, "receive-duplicate")).join("") : `<small class="reserved-trade-empty">Sem repetidos a receber.</small>`}</div>
+                <div class="reserved-mini-grid">${duplicateStickerCards.length ? duplicateStickerCards.map(entry => renderReservedMiniCard(entry, "receive-duplicate")).join("") : `<small class="reserved-trade-empty">Sem repetidos a receber.</small>`}</div>
               </div>
             </div>
             <div class="reserved-person-actions">

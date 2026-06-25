@@ -4037,6 +4037,8 @@
 
     .reserved-unit-count {
       width: fit-content;
+      background: var(--reserved-unit-bg, var(--check-bg, var(--main))) !important;
+      color: var(--reserved-unit-text, var(--check-mark, #fff)) !important;
       font-weight: 1000 !important;
     }
 
