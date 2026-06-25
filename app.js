@@ -309,7 +309,7 @@
       COL: "#FFCD18",
       ENG: "#FFFFFF",
       CRO: "#FE0405",
-      GHA: "#CE1127",
+      GHA: "#006B3F",
       PAN: "#FFFFFF"
     };
 
@@ -361,14 +361,14 @@
       COL: "#0B286C",
       ENG: "#CD1225",
       CRO: "#FFFFFF",
-      GHA: "#006B3F",
+      GHA: "#CE1127",
       PAN: "#D8131A"
     };
 
 
 
     const COUNTRY_TERTIARY_COLORS = {
-      FWC: "#111827",
+      FWC: "#FFFFFF",
       MEX: "#FFFFFF",
       RSA: "#FFCB01",
       KOR: "#013378",
@@ -417,6 +417,21 @@
       CRO: "#191897",
       GHA: "#FED116",
       PAN: "#0A2359"
+    };
+
+    const COUNTRY_PROGRESS_COLORS = {
+      FWC: "#FFFFFF",
+      MEX: "#FFFFFF",
+      RSA: COUNTRY_TERTIARY_COLORS.RSA,
+      SUI: "#FFFFFF",
+      MAR: "#FFFFFF",
+      TUR: "#FFFFFF",
+      GER: "#FECD18",
+      JPN: COUNTRY_TERTIARY_COLORS.JPN,
+      TUN: "#FFFFFF",
+      KSA: "#FFFFFF",
+      AUT: "#FFFFFF",
+      GHA: "#FED116"
     };
     const COUNTRY_NAMES = {
       FWC: "TROF\u00c9US INICIAIS",
@@ -1323,6 +1338,14 @@
       if (isFriendView()) return appThemeMode === "dark" ? lightenColor(friendUserColor || DEFAULT_USER_COLOR, 0.2) : darkenColor(friendUserColor || DEFAULT_USER_COLOR, 0.08);
       return original;
     }
+
+    function countryProgressColor(country) {
+      const code = String(country).split(" ")[0];
+      const original = COUNTRY_PROGRESS_COLORS[code] || COUNTRY_SECONDARY_COLORS[code] || "#111827";
+      if (isFriendView()) return appThemeMode === "dark" ? lightenColor(friendUserColor || DEFAULT_USER_COLOR, 0.2) : darkenColor(friendUserColor || DEFAULT_USER_COLOR, 0.08);
+      return original;
+    }
+
     function readableTextColor(hex) {
       const normalized = String(hex).replace("#", "");
       const r = parseInt(normalized.slice(0, 2), 16);
@@ -1805,7 +1828,7 @@
       const secondary = countrySecondaryColor(country).toLowerCase();
       const base = secondary === "white" ? "#ffffff" : secondary;
       const check = countryCheckboxColor(country);
-      const progressColor = base;
+      const progressColor = countryProgressColor(country).toLowerCase();
       const progressText = readableTextColor(progressColor);
       if (appThemeMode === "dark") {
         const theme = currentAppTheme();
@@ -1832,8 +1855,7 @@
 
     function countryCardStyle(country) {
       const primary = countryColor(country);
-      const secondary = countrySecondaryColor(country).toLowerCase();
-      const progressColor = secondary === "white" ? "#ffffff" : secondary;
+      const progressColor = countryProgressColor(country).toLowerCase();
       const progressText = readableTextColor(progressColor);
       if (appThemeMode === "dark") {
         const theme = currentAppTheme();
