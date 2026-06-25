@@ -264,18 +264,18 @@
     const COUNTRY_COLORS = {
       FWC: "#111827",
       MEX: "#006747",
-      RSA: "#C7102E",
+      RSA: "#00784B",
       KOR: "#FFFFFF",
-      CZE: "#124680",
+      CZE: "#D8131A",
       CAN: "#D13622",
       BIH: "#002496",
-      QAT: "#F0F0F0",
+      QAT: "#85374C",
       SUI: "#DA281C",
       BRA: "#009C3B",
       MAR: "#C3262F",
       HAI: "#01209F",
       SCO: "#005EB8",
-      USA: "#094B9F",
+      USA: "#E91939",
       PAR: "#D32B1E",
       AUS: "#0D1288",
       TUR: "#E30917",
@@ -316,53 +316,53 @@
     const COUNTRY_SECONDARY_COLORS = {
       FWC: "#111827",
       MEX: "#CD1125",
-      RSA: "#00138B",
-      KOR: "#013378",
+      RSA: "#C7102E",
+      KOR: "#C60C33",
       CZE: "#FFFFFF",
       CAN: "#D8E6ED",
       BIH: "#FFCB01",
-      QAT: "#85374C",
+      QAT: "#F0F0F0",
       SUI: "#DA281C",
-      BRA: "#009C3B",
+      BRA: "#FFDF00",
       MAR: "#C3262F",
       HAI: "#D11234",
-      SCO: "#005EB8",
-      USA: "#0C276A",
+      SCO: "#FFFFFF",
+      USA: "#FFFFFF",
       PAR: "#0038A7",
-      AUS: "#FFFFFF",
+      AUS: "#EB060B",
       TUR: "#E30917",
-      GER: "#FECD18",
+      GER: "#DA0301",
       CUW: "#E8D901",
       CIV: "#039743",
-      ECU: "#FF1C2C",
+      ECU: "#01468B",
       NED: "#2F65AD",
       JPN: "#FFFFFF",
-      SWE: "#015293",
+      SWE: "#FFCB01",
       TUN: "#E30917",
-      BEL: "#E32D39",
+      BEL: "#FCE406",
       EGV: "#000000",
       IRN: "#D80100",
-      NZL: "#022267",
+      NZL: "#CC142B",
       ESP: "#F7D128",
-      CPV: "#013892",
+      CPV: "#FFFFFF",
       KSA: "#0C7646",
       URU: "#0038A7",
-      FRA: "#E42E3A",
-      SEN: "#E11C23",
-      IRQ: "#000000",
+      FRA: "#FFFFFF",
+      SEN: "#FCEF41",
+      IRQ: "#FFFFFF",
       NOR: "#00205B",
       ARG: "#FFFFFF",
       ALG: "#FFFFFF",
-      AUT: "#FFFFFF",
+      AUT: "#E2614C",
       JOR: "#027A3D",
       POR: "#D93623",
       COD: "#CD1120",
       UZB: "#61A945",
-      COL: "#DA0301",
-      ENG: "#FFFFFF",
-      CRO: "#191897",
+      COL: "#0B286C",
+      ENG: "#CD1225",
+      CRO: "#FFFFFF",
       GHA: "#006B3F",
-      PAN: "#0A2359"
+      PAN: "#D8131A"
     };
 
 
@@ -370,53 +370,53 @@
     const COUNTRY_TERTIARY_COLORS = {
       FWC: "#111827",
       MEX: "#FFFFFF",
-      RSA: "#00784B",
-      KOR: "#C60C33",
-      CZE: "#D8131A",
+      RSA: "#FFCB01",
+      KOR: "#013378",
+      CZE: "#124680",
       CAN: "#C55C44",
       BIH: "#4060AD",
       QAT: "#C86C89",
       SUI: "#FFFFFF",
-      BRA: "#FFDF00",
+      BRA: "#002776",
       MAR: "#01592F",
       HAI: "#CF6C67",
-      SCO: "#FFFFFF",
-      USA: "#E91939",
+      SCO: "#005EB8",
+      USA: "#0C276A",
       PAR: "#FFFFFF",
-      AUS: "#EB060B",
+      AUS: "#FFFFFF",
       TUR: "#FFFFFF",
-      GER: "#DA0301",
+      GER: "#FECD18",
       CUW: "#533EA9",
       CIV: "#FDFDFD",
-      ECU: "#01468B",
+      ECU: "#FF1C2C",
       NED: "#F0F1F1",
       JPN: "#BB002D",
-      SWE: "#FFCB01",
+      SWE: "#015293",
       TUN: "#FFFFFF",
-      BEL: "#FCE406",
+      BEL: "#E32D39",
       EGV: "#FFFFFF",
       IRN: "#FFFFFF",
-      NZL: "#533968",
+      NZL: "#FFFFFF",
       ESP: "#E7604A",
       CPV: "#CD2026",
       KSA: "#FFFFFF",
-      URU: "#586ED3",
-      FRA: "#FFFFFF",
-      SEN: "#FCEF41",
-      IRQ: "#FFFFFF",
+      URU: "#FCD116",
+      FRA: "#E42E3A",
+      SEN: "#E11C23",
+      IRQ: "#000000",
       NOR: "#FFFFFF",
-      ARG: "#9CB8DD",
+      ARG: "#FCD116",
       ALG: "#D11234",
-      AUT: "#E2614C",
-      JOR: "#FFFFFF",
-      POR: "#519F4B",
+      AUT: "#FFFFFF",
+      JOR: "#CE1126",
+      POR: "#FFCC00",
       COD: "#F4CF1D",
       UZB: "#FBFCF9",
-      COL: "#0B286C",
-      ENG: "#CD1225",
-      CRO: "#FFFFFF",
+      COL: "#DA0301",
+      ENG: "#FFFFFF",
+      CRO: "#191897",
       GHA: "#FED116",
-      PAN: "#D8131A"
+      PAN: "#0A2359"
     };
     const COUNTRY_NAMES = {
       FWC: "TROF\u00c9US INICIAIS",
@@ -1805,42 +1805,47 @@
       const secondary = countrySecondaryColor(country).toLowerCase();
       const base = secondary === "white" ? "#ffffff" : secondary;
       const check = countryCheckboxColor(country);
+      const progressColor = base;
+      const progressText = readableTextColor(progressColor);
       if (appThemeMode === "dark") {
         const theme = currentAppTheme();
         const contentBg = theme.card;
         const stickerBg = base;
         const border = mixColors(theme.line, primary, 0.48);
         const headerText = readableTextColor(primary);
-        const headerMuted = headerText === "#ffffff" ? "rgba(255,255,255,.86)" : "rgba(17,24,39,.74)";
+        const headerMuted = progressColor;
         const stickerText = readableTextColor(stickerBg);
         const stickerMuted = stickerText === "#ffffff" ? "rgba(255,255,255,.84)" : "rgba(17,24,39,.72)";
         const progressTrack = headerText === "#ffffff" ? "rgba(255,255,255,.25)" : "rgba(17,24,39,.22)";
-        return `--section-header-bg:${primary};--section-content-bg:${contentBg};--sticker-bg:${stickerBg};--check-bg:${check};--check-border:${check};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${headerText};--progress-fill-soft:${lightenColor(primary, 0.38)}`;
+        return `--section-header-bg:${primary};--section-content-bg:${contentBg};--sticker-bg:${stickerBg};--check-bg:${check};--check-border:${check};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--progress-text:${progressText};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${progressColor};--progress-fill-soft:${lightenColor(progressColor, 0.22)}`;
       }
 
       const stickerBg = base;
       const border = primary;
       const headerText = readableTextColor(primary);
-      const headerMuted = headerText === "#ffffff" ? "rgba(255,255,255,.86)" : "#374151";
+      const headerMuted = progressColor;
       const stickerText = readableTextColor(stickerBg);
       const stickerMuted = stickerText === "#ffffff" ? "rgba(255,255,255,.84)" : "#374151";
       const progressTrack = headerText === "#ffffff" ? "rgba(255,255,255,.28)" : "rgba(17,24,39,.18)";
-      return `--section-header-bg:${primary};--section-content-bg:#ffffff;--sticker-bg:${stickerBg};--check-bg:${check};--check-border:${check};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${headerText};--progress-fill-soft:${lightenColor(primary, 0.38)}`;
+      return `--section-header-bg:${primary};--section-content-bg:#ffffff;--sticker-bg:${stickerBg};--check-bg:${check};--check-border:${check};--section-border:${border};--section-text:${headerText};--header-muted:${headerMuted};--progress-text:${progressText};--sticker-text:${stickerText};--sticker-muted:${stickerMuted};--progress-track:${progressTrack};--progress-fill:${progressColor};--progress-fill-soft:${lightenColor(progressColor, 0.22)}`;
     }
 
     function countryCardStyle(country) {
       const primary = countryColor(country);
+      const secondary = countrySecondaryColor(country).toLowerCase();
+      const progressColor = secondary === "white" ? "#ffffff" : secondary;
+      const progressText = readableTextColor(progressColor);
       if (appThemeMode === "dark") {
         const theme = currentAppTheme();
         const border = mixColors(theme.line, primary, 0.55);
         const text = readableTextColor(primary);
         const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "rgba(17,24,39,.72)";
-        return `--country-primary:${primary};--country-soft:${primary};--country-border:${border};--country-text:${text};--country-muted:${muted};--country-track:rgba(255,255,255,.22);--country-shadow:rgba(0,0,0,.32)`;
+        return `--country-primary:${primary};--country-soft:${primary};--country-border:${border};--country-text:${text};--country-muted:${muted};--country-progress:${progressColor};--country-progress-text:${progressText};--country-track:rgba(255,255,255,.22);--country-shadow:rgba(0,0,0,.32)`;
       }
 
       const text = readableTextColor(primary);
       const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "#475569";
-      return `--country-primary:${primary};--country-soft:${primary};--country-border:${primary};--country-text:${text};--country-muted:${muted};--country-track:rgba(15,23,42,.18);--country-shadow:${hexToRgba(primary, .18)}`;
+      return `--country-primary:${primary};--country-soft:${primary};--country-border:${primary};--country-text:${text};--country-muted:${muted};--country-progress:${progressColor};--country-progress-text:${progressText};--country-track:rgba(15,23,42,.18);--country-shadow:${hexToRgba(primary, .18)}`;
     }
 
     function renderCountryTabs() {
