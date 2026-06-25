@@ -28,7 +28,7 @@
         { id: "wine", name: "Carvao vinho", accent: "#fb7185", countryMode: "theme", bg: "#120f12", card: "#1d181c", panel: "#2a2027", text: "#fff1f2", muted: "#d4bec5", line: "#44303a", header: "rgba(29,24,28,.94)" }
       ]
     };
-    const LIVE_REFRESH_MS = 8000;
+    const LIVE_REFRESH_MS = 4000;
     const IDLE_LOGOUT_MS = 30 * 60 * 1000;
     const AUTH_REQUEST_TIMEOUT_MS = 30000;
     const STARTUP_REQUEST_TIMEOUT_MS = 8000;
@@ -75,7 +75,7 @@
     let liveProfilesLoadedAt = 0;
     const friendAlbumCache = new Map();
     const friendAlbumRequests = new Map();
-    const FRIEND_CACHE_TTL_MS = 2 * 60 * 1000;
+    const FRIEND_CACHE_TTL_MS = 12_000;
     let friendLoadSequence = 0;
     let tradeOverviewRefreshTimer = null;
     let onlineProfilePhoto = "";
@@ -95,6 +95,7 @@
     let tradePickPages = { give: 1, receive: 1 };
     let tradeOverviewItems = [];
     let tradeOverviewLoading = false;
+    let tradeOverviewLoadedAt = 0;
     let listCompareMode = "duplicates";
     let activeListTool = "compare";
     let modalTouchGesture = null;
@@ -3189,8 +3190,51 @@
             </div>
           </div>
         </section>
+        ${renderFriendNeededPanel()}
       `;
     }
+
+    function renderFriendNeededPanel() {
+      if (!hasSelectedFriend()) return "";
+      const list = possibleTradeReceives();
+      const totalCopies = duplicateCopyCount(list);
+      const grouped = new Map();
+      list.forEach(sticker => {
+        if (!grouped.has(sticker.pais)) grouped.set(sticker.pais, []);
+        grouped.get(sticker.pais).push(sticker);
+      });
+      const groups = [...grouped.entries()].sort((a, b) => albumCountries().indexOf(a[0]) - albumCountries().indexOf(b[0]));
+      return `
+        <section class="friend-needed-panel" style="--friend-rank-color:${escapeHTML(friendUserColor || DEFAULT_USER_COLOR)}">
+          <div class="friend-needed-head">
+            <strong>${escapeHTML(friendProfile)} tem para ti</strong>
+            <span>${totalCopies} cromos disponiveis</span>
+          </div>
+          ${groups.length ? `
+            <div class="friend-needed-list">
+              ${groups.map(([country, stickersList]) => `
+                <div class="friend-needed-group">
+                  <span class="friend-needed-country">${escapeHTML(exportGroupLabel(country))}</span>
+                  <div class="friend-needed-chips">
+                    ${stickersList.map(sticker => {
+                      const copies = availableDuplicates(sticker);
+                      return `
+                        <span class="friend-needed-chip" style="${countryCardStyle(sticker.pais)}">
+                          <b>${escapeHTML(stickerShortLabel(sticker))}</b>
+                          <small>${escapeHTML(sticker.nome)}</small>
+                          ${copies > 1 ? `<em>x${copies}</em>` : ""}
+                        </span>
+                      `;
+                    }).join("")}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          ` : `<div class="comparison-empty">${escapeHTML(friendProfile)} nao tem repetidos que te faltem neste momento.</div>`}
+        </section>
+      `;
+    }
+
     function renderFriendTradePrompt() {
       if (!friendTradePrompt) return;
       if (!isFriendView()) {
@@ -3706,6 +3750,7 @@
         });
         if (activePage === "friends") renderFriendInsights(friendRankingItems);
       } finally {
+        tradeOverviewLoadedAt = Date.now();
         tradeOverviewLoading = false;
         renderTradeOverview();
       }
@@ -4492,7 +4537,7 @@
 
     function refreshFromUserMenu() {
       closeUserMenu();
-      refreshLiveNow();
+      refreshLiveNow({ silent: false, force: true });
     }
 
     document.addEventListener("click", event => {
@@ -4914,6 +4959,7 @@
       }
 
       const selected = friendProfile || liveFriendSelect?.value || tradeFriendSelect?.value || "";
+      const previousProfiles = new Map(liveProfilesList.map(item => [item.profile, item]));
       const response = await apiFetch("/api/live/profiles", { cache: "no-store" });
       if (!response.ok) return;
 
@@ -4923,6 +4969,13 @@
         .filter(item => item && item.profile && item.profile !== liveProfile);
       liveProfilesList = profiles;
       liveProfilesLoadedAt = Date.now();
+
+      profiles.forEach(item => {
+        const previous = previousProfiles.get(item.profile);
+        if (previous && item.updatedAt && previous.updatedAt && item.updatedAt !== previous.updatedAt) {
+          friendAlbumCache.delete(item.profile);
+        }
+      });
 
       profileColors = {};
       profilePhotos = {};
@@ -5028,7 +5081,7 @@
     }
     function startLiveRefresh() {
       if (liveRefreshTimer) clearInterval(liveRefreshTimer);
-      liveRefreshTimer = setInterval(refreshLiveNow, LIVE_REFRESH_MS);
+      liveRefreshTimer = setInterval(() => refreshLiveNow({ silent: true }), LIVE_REFRESH_MS);
     }
 
     function stopIdleLogoutTimer() {
@@ -5208,39 +5261,62 @@
       sessionExpiryHandled = false;
     }
 
-    async function refreshLiveNow() {
+    async function refreshLiveNow(options = {}) {
+      const silent = options.silent !== false;
+      const force = Boolean(options.force);
       if (!liveEnabled) return;
       if (!liveProfile) {
-        setSaveStatus("Entra no modo online primeiro");
-        liveUsernameInput.focus();
+        if (!silent) {
+          setSaveStatus("Entra no modo online primeiro");
+          liveUsernameInput.focus();
+        }
         return;
       }
+      if (liveRefreshInFlight) return;
 
+      liveRefreshInFlight = true;
       try {
-        if (hasSelectedFriend() && activePage !== "album") {
+        if (pendingStickerIds.size || fullSyncPending) {
+          await persistStateNow();
+        }
+
+        if (hasSelectedFriend() && activePage === "friends") {
           const activeFriend = friendProfile;
           const data = await fetchFriendAlbumCached(activeFriend, true);
-          applyFriendAlbumData(activeFriend, data);
-          if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
-          render();
-          renderTradePanel();
-          if (activePage === "friends") {
+          const changed = force || data.updatedAt !== friendUpdatedAt;
+          if (changed) {
+            applyFriendAlbumData(activeFriend, data);
+            if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
             if (liveComparison) liveComparison.innerHTML = "";
+            render();
+            renderTradePanel();
           }
-          setSaveStatus(`Caderneta de ${activeFriend} atualizada`);
-        } else {
-          const data = await fetchLiveState();
-          if (data.exists && data.csv && data.updatedAt && data.updatedAt !== liveUpdatedAt) {
-            loadStickers(parseTextFile(data.csv));
-            liveUpdatedAt = data.updatedAt;
-            setSaveStatus("Online atualizado");
-          }
+          if (!silent && changed) setSaveStatus(`Caderneta de ${activeFriend} atualizada`);
         }
-        await loadLiveProfiles();
+
+        const data = await fetchLiveState();
+        if (data.exists && data.csv && (force || (data.updatedAt && data.updatedAt !== liveUpdatedAt))) {
+          loadStickers(parseTextFile(data.csv));
+          liveUpdatedAt = data.updatedAt || liveUpdatedAt;
+          if (activePage === "friends") {
+            renderFriendInsights(friendRankingItems.length ? friendRankingItems : rankingItemsFromProfiles());
+          } else {
+            render();
+          }
+          renderTradePanel();
+          if (!silent) setSaveStatus("Online atualizado");
+        }
+
+        await loadLiveProfiles(true);
+        if (activePage === "friends" && (!tradeOverviewLoadedAt || force || Date.now() - tradeOverviewLoadedAt > LIVE_REFRESH_MS * 2)) {
+          await refreshTradeOverview().catch(() => renderTradeOverview());
+        }
         await loadTradeRequests();
       } catch (error) {
-        setSaveStatus("Erro ao atualizar live");
+        if (!silent) setSaveStatus("Erro ao atualizar live");
         console.error(error);
+      } finally {
+        liveRefreshInFlight = false;
       }
     }
 

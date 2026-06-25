@@ -4725,6 +4725,119 @@
       background: color-mix(in srgb, var(--card) 78%, var(--friend-rank-color, var(--main)) 22%);
     }
 
+    .friend-needed-panel {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid color-mix(in srgb, var(--friend-rank-color, var(--main)) 48%, var(--line));
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--card) 88%, var(--friend-rank-color, var(--main)) 12%);
+    }
+
+    .friend-needed-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .friend-needed-head strong {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 1000;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .friend-needed-head span {
+      flex: 0 0 auto;
+      color: var(--main);
+      font-size: 11px;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    .friend-needed-list {
+      display: grid;
+      gap: 9px;
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 3px;
+    }
+
+    .friend-needed-group {
+      display: grid;
+      gap: 6px;
+    }
+
+    .friend-needed-country {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 1000;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .friend-needed-chips {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+      gap: 7px;
+    }
+
+    .friend-needed-chip {
+      position: relative;
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+      min-height: 46px;
+      padding: 7px 28px 7px 8px;
+      border: 1px solid var(--country-border, var(--line));
+      border-radius: 10px;
+      background: var(--country-bg, var(--card));
+      color: var(--country-text, var(--text));
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .10);
+    }
+
+    .friend-needed-chip b,
+    .friend-needed-chip small {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .friend-needed-chip b {
+      font-size: 11px;
+      font-weight: 1000;
+      line-height: 1;
+    }
+
+    .friend-needed-chip small {
+      color: var(--country-muted, currentColor);
+      font-size: 9px;
+      line-height: 1.1;
+    }
+
+    .friend-needed-chip em {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      min-width: 20px;
+      height: 20px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--country-progress, var(--main));
+      color: var(--country-progress-text, #fff);
+      font-size: 9px;
+      font-style: normal;
+      font-weight: 1000;
+    }
+
     @media (max-width: 640px) {
       .friends-ranking-head {
         margin-top: 6px;
@@ -4765,6 +4878,49 @@
 
       .friend-ranking-trades b {
         font-size: 11px;
+      }
+
+      .friend-needed-panel {
+        margin-top: 8px;
+        padding: 9px;
+        border-radius: 13px;
+      }
+
+      .friend-needed-head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .friend-needed-head strong {
+        font-size: 11px;
+      }
+
+      .friend-needed-head span {
+        font-size: 9px;
+      }
+
+      .friend-needed-list {
+        max-height: 210px;
+      }
+
+      .friend-needed-chips {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .friend-needed-chip {
+        min-height: 42px;
+        padding: 6px 24px 6px 7px;
+        border-radius: 9px;
+      }
+
+      .friend-needed-chip b {
+        font-size: 10px;
+      }
+
+      .friend-needed-chip small {
+        font-size: 8px;
       }
     }
 
