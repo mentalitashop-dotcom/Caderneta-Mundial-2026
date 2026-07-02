@@ -8,7 +8,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "check": "node --check server.js && node --check app.js && node --check scripts/bump-version.js",
+    "check": "node --check server.js && node --check app.js && node --check scripts/bump-version.js && npm test",
+    "test": "node --test tests/*.test.js",
     "version:patch": "node scripts/bump-version.js patch",
     "version:minor": "node scripts/bump-version.js minor",
     "version:major": "node scripts/bump-version.js major"

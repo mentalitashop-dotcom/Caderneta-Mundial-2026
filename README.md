@@ -13,6 +13,8 @@ A app esta pensada para funcionar online no Render. O MongoDB e a fonte de verda
 - Deploy: Render com auto deploy a partir do GitHub.
 - Dados online: MongoDB Atlas.
 - PWA: `manifest.webmanifest`, `sw.js` e icones `app-icon-*`.
+- Testes: `tests/`, com regras criticas de repetidos livres e reservados.
+- Regras partilhadas: `lib/`, para logica pequena que pode ser testada fora da UI.
 
 ## Funcionalidades principais
 
@@ -43,6 +45,9 @@ A app esta pensada para funcionar online no Render. O MongoDB e a fonte de verda
 - `render.yaml`: configuracao do servico no Render.
 - `.github/workflows/keep-render-awake.yml`: workflow que faz ping ao Render.
 - `.env.example`: exemplo das variaveis de ambiente.
+- `lib/cromo-state.js`: helpers testaveis para repetidos, reservados e disponiveis.
+- `tests/cromo-state.test.js`: testes das regras de repetidos livres/reservados.
+- `scripts/bump-version.js`: script para atualizar `version` e `appVersion`.
 - `PROJECT_GUIDE.md`: guia tecnico mais completo.
 
 ## Ficheiros para subir ao GitHub
@@ -60,15 +65,18 @@ app.js
 caderneta_mundial_2026.html
 cromos_base.txt
 icon.svg
+lib/
 manifest.webmanifest
 package-lock.json
 package.json
 PROJECT_GUIDE.md
 README.md
 render.yaml
+scripts/
 server.js
 styles.css
 sw.js
+tests/
 ```
 
 Nao subas ficheiros com dados pessoais, passwords, `.env`, exports privados ou backups antigos. Os ficheiros `cromos.txt` e `backup_cromos.txt` eram do modo local antigo e nao fazem falta no Render.
@@ -153,14 +161,16 @@ Para testar o modo online localmente, cria um `.env` com base no `.env.example` 
 ```text
 npm start
 npm run dev
+npm test
 npm run check
 npm run version:patch
 npm run version:minor
 npm run version:major
 ```
 
-- `npm run check`: valida a sintaxe de `server.js`, `app.js` e `scripts/bump-version.js`.
-- `version:*`: atualiza a versao/appVersion quando o script existir no projeto.
+- `npm test`: corre os testes das regras criticas.
+- `npm run check`: valida a sintaxe de `server.js`, `app.js`, `scripts/bump-version.js` e corre os testes.
+- `version:*`: atualiza `version`, `appVersion` e o `package-lock.json`.
 
 ## Publicar uma nova versao
 

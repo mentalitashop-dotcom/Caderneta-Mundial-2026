@@ -3,6 +3,7 @@ const http = require("http");
 const path = require("path");
 const crypto = require("crypto");
 const zlib = require("zlib");
+const cromoState = require("./lib/cromo-state");
 
 const ROOT = __dirname;
 loadLocalEnv(path.join(ROOT, ".env"));
@@ -429,12 +430,11 @@ function normalizeOwned(value) {
 }
 
 function normalizeDuplicates(value) {
-  const parsed = Number.parseInt(String(value ?? "0").trim(), 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  return cromoState.normalizeDuplicates(value);
 }
 
 function normalizeReserved(value) {
-  return normalizeDuplicates(value);
+  return cromoState.normalizeReserved(value);
 }
 
 function normalizePendingIncoming(value) {
@@ -503,47 +503,27 @@ function syncIncomingReservationLegacy(sticker) {
 }
 
 function normalizeReservationPerson(value) {
-  return String(value || "").replace(/\s+/g, " ").trim().slice(0, 80) || "Sem nome";
+  return cromoState.normalizeReservationPerson(value);
 }
 
 function normalizeReservations(value) {
-  let raw = value;
-  if (typeof raw === "string") {
-    const trimmed = raw.trim();
-    if (!trimmed) return [];
-    try { raw = JSON.parse(trimmed); } catch { return []; }
-  }
-
-  const list = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? [raw] : []);
-  return list.map(item => ({
-    person: normalizeReservationPerson(item?.person || item?.name || item?.reservedFor || item?.para),
-    count: normalizeDuplicates(item?.count ?? item?.quantity ?? item?.qty ?? item?.total ?? item?.value ?? 1),
-    createdAt: String(item?.createdAt || item?.agreedDate || item?.date || "").slice(0, 40),
-    tradeId: String(item?.tradeId || item?.trocaId || "").trim().slice(0, 80)
-  })).filter(item => item.count > 0);
+  return cromoState.normalizeReservations(value);
 }
 
 function reservationTotal(sticker) {
-  return normalizeReservations(sticker?.reservas ?? sticker?.reservations).reduce((sum, item) => sum + item.count, 0);
+  return cromoState.reservationTotal(sticker);
 }
 
 function capReservations(reservations, duplicateCount) {
-  let remaining = normalizeDuplicates(duplicateCount);
-  return normalizeReservations(reservations).map(item => {
-    const count = Math.min(item.count, remaining);
-    remaining -= count;
-    return { ...item, count };
-  }).filter(item => item.count > 0);
+  return cromoState.capReservations(reservations, duplicateCount);
 }
 
 function reservedDuplicates(sticker) {
-  const reservations = normalizeReservations(sticker?.reservas ?? sticker?.reservations);
-  const raw = reservations.length ? reservationTotal({ reservas: reservations }) : normalizeReserved(sticker?.reservados ?? sticker?.reserved);
-  return Math.min(raw, normalizeDuplicates(sticker?.repetidos ?? sticker?.duplicates));
+  return cromoState.reservedDuplicates(sticker);
 }
 
 function availableDuplicates(sticker) {
-  return Math.max(0, normalizeDuplicates(sticker?.repetidos ?? sticker?.duplicates) - reservedDuplicates(sticker));
+  return cromoState.availableDuplicates(sticker);
 }
 
 function parseCSVLine(line) {
