@@ -7630,3 +7630,54 @@
     flex: 1 1 0;
   }
 }
+
+/* reserved-trades-dropdown */
+.reserved-person-section {
+  overflow: hidden;
+}
+
+.reserved-person-section > summary.reserved-person-bar {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.reserved-person-section > summary.reserved-person-bar::-webkit-details-marker {
+  display: none;
+}
+
+.reserved-drop-indicator {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--main);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.reserved-person-section[open] .reserved-drop-indicator {
+  font-size: 0;
+}
+
+.reserved-person-section[open] .reserved-drop-indicator::before {
+  content: "-";
+  font-size: 14px;
+}
+
+.reserved-person-section:not([open]) .reserved-person-body {
+  display: none;
+}
+
+.reserved-person-section[open] .reserved-person-body {
+  animation: reservedDropIn .16s ease-out;
+}
+
+@keyframes reservedDropIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

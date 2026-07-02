@@ -6306,11 +6306,12 @@
         const duplicateStickerCards = expandReservedEntries(duplicateStickers);
         const receiveTotal = group.receive.reduce((sum, entry) => sum + entry.count, 0);
         return `
-        <section class="reserved-person-section">
-          <div class="reserved-person-bar">
+        <details class="reserved-person-section">
+          <summary class="reserved-person-bar">
             <span>Troca com: <strong>${escapeHTML(group.person)}</strong></span>
             <small>${escapeHTML(reservationDateLabel(group.date))}</small>
-          </div>
+            <span class="reserved-drop-indicator" aria-hidden="true">+</span>
+          </summary>
           <div class="reserved-person-body">
             <div class="reserved-trade-sides">
               <div class="reserved-trade-side">
@@ -6331,7 +6332,7 @@
               <button class="secondary" type="button" onclick="finishReservedTrade('${escapeJS(group.id)}', 'cancelled')">Cancelar troca</button>
             </div>
           </div>
-        </section>
+        </details>
       `;
       }).join("");
     }
