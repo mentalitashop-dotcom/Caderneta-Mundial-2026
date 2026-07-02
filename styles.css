@@ -2657,7 +2657,17 @@
 
     body.friend-view .collection-progress-bar,
     body.friend-view .country-card-progress span {
-      background: var(--friend-color);
+      background: var(--main);
+    }
+
+    body.friend-view .country-card-count {
+      color: var(--main) !important;
+      text-shadow: 0 1px 2px rgba(0,0,0,.34);
+    }
+
+    body.friend-view .country-card-count.is-complete,
+    body.friend-view .country-count.is-complete {
+      color: var(--main) !important;
     }
 
     #content .country {
@@ -4725,6 +4735,16 @@
       background: color-mix(in srgb, var(--card) 78%, var(--friend-rank-color, var(--main)) 22%);
     }
 
+    .friend-ranking-box {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: 0 10px 26px rgba(15, 23, 42, .10);
+    }
+
     .friend-needed-panel {
       display: grid;
       gap: 10px;
@@ -4839,6 +4859,11 @@
     }
 
     @media (max-width: 640px) {
+      .friend-ranking-box {
+        padding: 9px;
+        border-radius: 13px;
+      }
+
       .friends-ranking-head {
         margin-top: 6px;
       }
@@ -6015,7 +6040,7 @@
     }
 
     .friend-ranking-position {
-      background: var(--main) !important;
+      background: var(--friend-rank-color, var(--main)) !important;
     }
 
     body.friend-view .friends-ranking-panel {
@@ -6195,15 +6220,17 @@
     }
 
     @media (min-width: 901px) {
-      body.friend-view main { padding-right: 270px; }
+      body.friend-view main { padding-right: 354px; }
       body.friend-view #livePanel {
         position: fixed;
         top: 114px;
         right: 14px;
         z-index: 70;
-        width: 238px;
+        box-sizing: border-box;
+        width: 318px;
         max-height: calc(100vh - 104px);
         overflow-y: auto;
+        overflow-x: hidden;
         margin: 0;
         padding: 10px;
         border: 1px solid var(--line);
@@ -6212,11 +6239,23 @@
         box-shadow: 0 14px 34px rgba(2, 6, 23, .14);
       }
       body.friend-view #livePanel .friends-ranking-head { display: none; }
-      body.friend-view #livePanel .friends-ranking-panel { display: block; }
+      body.friend-view #livePanel .friends-ranking-panel { display: grid; gap: 12px; }
+      body.friend-view #livePanel .friend-ranking-box,
+      body.friend-view #livePanel .friend-needed-panel {
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--card) 94%, var(--panel));
+      }
       body.friend-view #livePanel .friend-ranking-title strong { font-size: 13px; }
       body.friend-view #livePanel .friend-ranking-list { max-height: none; overflow: visible; gap: 5px; }
-      body.friend-view #livePanel .friend-ranking-card { min-height: 48px; padding: 6px; gap: 6px; grid-template-columns: 24px minmax(0, 1fr); }
+      body.friend-view #livePanel .friend-ranking-card { min-width: 0; min-height: 48px; padding: 6px; gap: 6px; grid-template-columns: 28px minmax(0, 1fr); }
       body.friend-view #livePanel .friend-ranking-trades { display: none; }
+      body.friend-view #livePanel .friend-needed-panel { min-width: 0; overflow: hidden; margin-top: 0; padding: 10px; }
+      body.friend-view #livePanel .friend-needed-head { align-items: flex-start; flex-direction: column; gap: 3px; }
+      body.friend-view #livePanel .friend-needed-head strong,
+      body.friend-view #livePanel .friend-needed-head span { max-width: 100%; white-space: normal; }
+      body.friend-view #livePanel .friend-needed-list { max-height: 260px; overflow-x: hidden; }
+      body.friend-view #livePanel .friend-needed-chips { grid-template-columns: 1fr; }
+      body.friend-view #livePanel .friend-needed-chip { min-width: 0; }
       body.friend-view #livePanel #liveComparison { display: none; }
     }
 

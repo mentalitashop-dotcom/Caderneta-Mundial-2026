@@ -1346,7 +1346,7 @@
     function countryProgressColor(country) {
       const code = String(country).split(" ")[0];
       const original = COUNTRY_PROGRESS_COLORS[code] || COUNTRY_SECONDARY_COLORS[code] || "#111827";
-      if (isFriendView()) return appThemeMode === "dark" ? lightenColor(friendUserColor || DEFAULT_USER_COLOR, 0.2) : darkenColor(friendUserColor || DEFAULT_USER_COLOR, 0.08);
+      if (isFriendView()) return currentAppTheme().accent || "#0ea5e9";
       return original;
     }
 
@@ -1860,6 +1860,24 @@
     function countryCardStyle(country) {
       const primary = countryColor(country);
       const progressColor = countryProgressColor(country).toLowerCase();
+      const progressText = readableTextColor(progressColor);
+      if (appThemeMode === "dark") {
+        const theme = currentAppTheme();
+        const border = mixColors(theme.line, primary, 0.55);
+        const text = readableTextColor(primary);
+        const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "rgba(17,24,39,.72)";
+        return `--country-primary:${primary};--country-soft:${primary};--country-border:${border};--country-text:${text};--country-muted:${muted};--country-progress:${progressColor};--country-progress-text:${progressText};--country-track:rgba(255,255,255,.22);--country-shadow:rgba(0,0,0,.32)`;
+      }
+
+      const text = readableTextColor(primary);
+      const muted = text === "#ffffff" ? "rgba(255,255,255,.82)" : "#475569";
+      return `--country-primary:${primary};--country-soft:${primary};--country-border:${primary};--country-text:${text};--country-muted:${muted};--country-progress:${progressColor};--country-progress-text:${progressText};--country-track:rgba(15,23,42,.18);--country-shadow:${hexToRgba(primary, .18)}`;
+    }
+
+    function nativeCountryCardStyle(country) {
+      const code = String(country).split(" ")[0];
+      const primary = (COUNTRY_COLORS[code] || "#111827").toLowerCase();
+      const progressColor = (COUNTRY_PROGRESS_COLORS[code] || COUNTRY_SECONDARY_COLORS[code] || "#0ea5e9").toLowerCase();
       const progressText = readableTextColor(progressColor);
       if (appThemeMode === "dark") {
         const theme = currentAppTheme();
@@ -3159,7 +3177,7 @@
       }
       friendInsights.innerHTML = `
         <section class="friends-ranking-panel">
-          <div>
+          <div class="friend-ranking-box">
             <div class="friend-ranking-title">
               <strong>Ranking da caderneta</strong>
               <span>${list.length} users</span>
@@ -3219,7 +3237,7 @@
                     ${stickersList.map(sticker => {
                       const copies = availableDuplicates(sticker);
                       return `
-                        <span class="friend-needed-chip" style="${countryCardStyle(sticker.pais)}">
+                        <span class="friend-needed-chip" style="${nativeCountryCardStyle(sticker.pais)}">
                           <b>${escapeHTML(stickerShortLabel(sticker))}</b>
                           <small>${escapeHTML(sticker.nome)}</small>
                           ${copies > 1 ? `<em>x${copies}</em>` : ""}
