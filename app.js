@@ -66,6 +66,7 @@
     let liveEnabled = false;
     let liveProfile = "";
     let liveUpdatedAt = "";
+    let liveTradesUpdatedAt = "";
     let friendProfile = "";
     let friendStickers = [];
     let friendUpdatedAt = "";
@@ -4387,6 +4388,10 @@
       }
       const data = await response.json().catch(() => ({}));
       tradeRequests = Array.isArray(data.trades) ? data.trades : [];
+      liveTradesUpdatedAt = tradeRequests.reduce((latest, trade) => {
+        const value = trade.updatedAt || trade.createdAt || "";
+        return value > latest ? value : latest;
+      }, liveTradesUpdatedAt || "");
       tradeHistoryPage = Math.max(1, tradeHistoryPage);
       renderTradeRequests();
       if (activePage === "notifications") renderNotificationsPanel();
@@ -4967,31 +4972,23 @@
       return data;
     }
 
-    async function refreshOwnAlbumState() {
-      const data = await fetchLiveState();
-      if (data.exists && data.csv) {
-        loadStickers(parseTextFile(data.csv));
-        liveUpdatedAt = data.updatedAt || liveUpdatedAt;
-      }
+
+    async function fetchLiveUpdates() {
+      const response = await apiFetch("/api/live/updates", { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Nao foi possivel ler os updates live");
+      return data;
     }
 
-    async function loadLiveProfiles(force = false) {
-      if (!liveEnabled || !liveProfile) return;
-
-      if (!force && liveProfilesList.length && Date.now() - liveProfilesLoadedAt < 60_000) {
-        if (activePage === "friends") renderFriendInsights(rankingItemsFromProfiles());
-        return;
-      }
-
-      const selected = friendProfile || liveFriendSelect?.value || tradeFriendSelect?.value || "";
-      const previousProfiles = new Map(liveProfilesList.map(item => [item.profile, item]));
-      const response = await apiFetch("/api/live/profiles", { cache: "no-store" });
-      if (!response.ok) return;
-
-      const data = await response.json();
-      const profiles = (data.profiles || [])
+    function normalizeLiveProfilePayload(profiles) {
+      return (profiles || [])
         .map(item => typeof item === "string" ? { profile: item } : item)
         .filter(item => item && item.profile && item.profile !== liveProfile);
+    }
+
+    function applyLiveProfilesFromPayload(rawProfiles, selected = "") {
+      const profiles = normalizeLiveProfilePayload(rawProfiles);
+      const previousProfiles = new Map(liveProfilesList.map(item => [item.profile, item]));
       liveProfilesList = profiles;
       liveProfilesLoadedAt = Date.now();
 
@@ -5018,6 +5015,28 @@
       if (tradeFriendSelect) tradeFriendSelect.innerHTML = options;
       if (profiles.some(item => item.profile === selected)) syncFriendSelects(selected);
       if (activePage === "friends") renderFriendInsights(rankingItemsFromProfiles());
+      return profiles;
+    }
+    async function refreshOwnAlbumState() {
+      const data = await fetchLiveState();
+      if (data.exists && data.csv) {
+        loadStickers(parseTextFile(data.csv));
+        liveUpdatedAt = data.updatedAt || liveUpdatedAt;
+      }
+    }
+
+    async function loadLiveProfiles(force = false) {
+      if (!liveEnabled || !liveProfile) return;
+
+      if (!force && liveProfilesList.length && Date.now() - liveProfilesLoadedAt < 60_000) {
+        if (activePage === "friends") renderFriendInsights(rankingItemsFromProfiles());
+        return;
+      }
+
+      const selected = friendProfile || liveFriendSelect?.value || tradeFriendSelect?.value || "";
+      const data = await fetchLiveUpdates();
+      applyLiveProfilesFromPayload(data.profiles || [], selected);
+      if (!liveTradesUpdatedAt && data.tradesUpdatedAt) liveTradesUpdatedAt = data.tradesUpdatedAt;
     }
 
     async function writeLiveStateNow() {
@@ -5305,38 +5324,50 @@
           await persistStateNow();
         }
 
-        if (hasSelectedFriend() && activePage === "friends") {
-          const activeFriend = friendProfile;
-          const data = await fetchFriendAlbumCached(activeFriend, true);
-          const changed = force || data.updatedAt !== friendUpdatedAt;
-          if (changed) {
-            applyFriendAlbumData(activeFriend, data);
-            if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
-            if (liveComparison) liveComparison.innerHTML = "";
-            render();
-            renderTradePanel();
-          }
-          if (!silent && changed) setSaveStatus(`Caderneta de ${activeFriend} atualizada`);
-        }
+        const selected = friendProfile || liveFriendSelect?.value || tradeFriendSelect?.value || "";
+        const updates = await fetchLiveUpdates();
+        const profiles = applyLiveProfilesFromPayload(updates.profiles || [], selected);
+        const selectedFriend = hasSelectedFriend() ? friendProfile : "";
+        const selectedFriendMeta = selectedFriend ? profiles.find(item => item.profile === selectedFriend) : null;
+        const ownChanged = force || Boolean(updates.ownUpdatedAt && updates.ownUpdatedAt !== liveUpdatedAt);
+        const friendChanged = Boolean(selectedFriend && activePage === "friends" && (
+          force || !friendStickers.length || (selectedFriendMeta?.updatedAt && selectedFriendMeta.updatedAt !== friendUpdatedAt)
+        ));
+        const tradesChanged = force || !liveTradesUpdatedAt || Boolean(updates.tradesUpdatedAt && updates.tradesUpdatedAt !== liveTradesUpdatedAt);
 
-        const data = await fetchLiveState();
-        if (data.exists && data.csv && (force || (data.updatedAt && data.updatedAt !== liveUpdatedAt))) {
-          loadStickers(parseTextFile(data.csv));
-          liveUpdatedAt = data.updatedAt || liveUpdatedAt;
-          if (activePage === "friends") {
-            renderFriendInsights(friendRankingItems.length ? friendRankingItems : rankingItemsFromProfiles());
-          } else {
-            render();
-          }
+        if (friendChanged) {
+          const data = await fetchFriendAlbumCached(selectedFriend, true);
+          applyFriendAlbumData(selectedFriend, data);
+          if (!albumCountries().includes(selectedCountry)) selectedCountry = "all";
+          if (liveComparison) liveComparison.innerHTML = "";
+          render();
           renderTradePanel();
-          if (!silent) setSaveStatus("Online atualizado");
+          if (!silent) setSaveStatus(`Caderneta de ${selectedFriend} atualizada`);
         }
 
-        await loadLiveProfiles(true);
-        if (activePage === "friends" && (!tradeOverviewLoadedAt || force || Date.now() - tradeOverviewLoadedAt > LIVE_REFRESH_MS * 2)) {
+        if (ownChanged) {
+          const data = await fetchLiveState();
+          if (data.exists && data.csv) {
+            loadStickers(parseTextFile(data.csv));
+            liveUpdatedAt = data.updatedAt || liveUpdatedAt;
+            if (activePage === "friends") {
+              renderFriendInsights(friendRankingItems.length ? friendRankingItems : rankingItemsFromProfiles());
+            } else {
+              render();
+            }
+            renderTradePanel();
+            if (!silent) setSaveStatus("Online atualizado");
+          }
+        }
+
+        if (activePage === "friends" && (ownChanged || friendChanged || force || !tradeOverviewLoadedAt || Date.now() - tradeOverviewLoadedAt > LIVE_REFRESH_MS * 4)) {
           await refreshTradeOverview().catch(() => renderTradeOverview());
         }
-        await loadTradeRequests();
+
+        if (tradesChanged) {
+          await loadTradeRequests();
+          liveTradesUpdatedAt = updates.tradesUpdatedAt || liveTradesUpdatedAt;
+        }
       } catch (error) {
         if (!silent) setSaveStatus("Erro ao atualizar live");
         console.error(error);

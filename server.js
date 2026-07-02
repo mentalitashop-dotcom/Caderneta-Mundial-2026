@@ -2050,6 +2050,12 @@ async function createUserBackup(db, user) {
     trades: trades.map(trade => publicTrade(trade, user))
   };
 }
+
+function compactLiveTimestamp(value) {
+  if (!value) return "";
+  if (value instanceof Date) return value.toISOString();
+  return String(value);
+}
 async function handleLiveRoute(req, res, url) {
   if (url.pathname === "/api/live/status") {
     if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
@@ -2079,7 +2085,7 @@ async function handleLiveRoute(req, res, url) {
     });
   }
 
-  if (url.pathname === "/api/live/profiles") {
+  if (url.pathname === "/api/live/profiles" || url.pathname === "/api/live/updates") {
     if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
     const users = await db.collection(COLLECTIONS.users)
       .find(
@@ -2097,18 +2103,33 @@ async function handleLiveRoute(req, res, url) {
           .toArray()
       : [];
     const snapshotsById = new Map(snapshots.map(snapshot => [String(snapshot._id), snapshot]));
+    const profiles = users.map(item => {
+      const snapshot = snapshotsById.get(String(item._id || item.id)) || {};
+      return {
+        profile: item.username || item.profile,
+        userColor: cleanUserColor(item.userColor || item.themeColor),
+        profilePhoto: cleanProfilePhoto(item.profilePhoto),
+        counts: snapshot.counts || null,
+        updatedAt: compactLiveTimestamp(snapshot.updatedAt)
+      };
+    });
+
+    if (url.pathname === "/api/live/profiles") return sendJson(res, 200, { profiles });
+
+    const latestTrade = await db.collection(COLLECTIONS.trades)
+      .find(
+        { $or: [{ fromUserId: user.id }, { toUserId: user.id }] },
+        { projection: { updatedAt: 1, createdAt: 1 } }
+      )
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(1)
+      .next();
+    const ownProfile = profiles.find(item => item.profile === user.username);
 
     return sendJson(res, 200, {
-      profiles: users.map(item => {
-        const snapshot = snapshotsById.get(String(item._id || item.id)) || {};
-        return {
-          profile: item.username || item.profile,
-          userColor: cleanUserColor(item.userColor || item.themeColor),
-          profilePhoto: cleanProfilePhoto(item.profilePhoto),
-          counts: snapshot.counts || null,
-          updatedAt: snapshot.updatedAt || ""
-        };
-      })
+      profiles,
+      ownUpdatedAt: ownProfile?.updatedAt || "",
+      tradesUpdatedAt: compactLiveTimestamp(latestTrade?.updatedAt || latestTrade?.createdAt)
     });
   }
 
