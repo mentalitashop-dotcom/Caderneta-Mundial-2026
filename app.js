@@ -4552,6 +4552,13 @@
       }
     });
 
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refreshLiveNow({ silent: true, force: true });
+    });
+
+    window.addEventListener("focus", () => refreshLiveNow({ silent: true, force: true }));
+    window.addEventListener("online", () => refreshLiveNow({ silent: true, force: true }));
+
 
     function isStandaloneApp() {
       return window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
@@ -5827,9 +5834,14 @@
     function renderOwnedDuplicateControls(sticker, stickerId, readonly) {
       if (readonly || !sticker.tenho) return "";
       const total = normalizeDuplicates(sticker.repetidos);
+      const available = availableDuplicates(sticker);
+      const reserved = reservedDuplicates(sticker);
       return `
         <div class="duplicate-row owned-duplicate-row" onclick="event.stopPropagation()">
-          <span class="duplicate-summary">Unidades repetidas: <span class="duplicate-summary-count">${total}</span></span>
+          <span class="duplicate-summary">
+            Unidades repetidas: <span class="duplicate-summary-count">${total}</span>
+            <small>${available} livres${reserved ? ` · ${reserved} reservadas` : ""}</small>
+          </span>
           <span class="duplicate-buttons" style="${duplicateInputStyle(sticker.pais)}">
             <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', -1)" title="Remover repetido" ${total ? "" : "disabled"}>-</button>
             <button class="duplicate-control-btn" type="button" onclick="event.stopPropagation(); adjustDuplicates('${stickerId}', 1)" title="Adicionar repetido">+</button>
@@ -5844,8 +5856,10 @@
       const pendingReceipts = pendingIncoming ? incomingReservations(sticker) : [];
       const duplicateUnits = normalizeDuplicates(sticker.repetidos);
       const freeDuplicateUnits = availableDuplicates(sticker);
-      const duplicateStateLabel = freeDuplicateUnits > 0 ? `x${freeDuplicateUnits}` : "✓";
-      const showDuplicateBadge = sticker.tenho && duplicateUnits > 1 && (currentView === "duplicates" || options.duplicatePalette);
+      const reservedDuplicateUnits = reservedDuplicates(sticker);
+      const visibleDuplicateUnits = options.duplicatePalette && modalView === "reserved" ? reservedDuplicateUnits : freeDuplicateUnits;
+      const duplicateStateLabel = visibleDuplicateUnits > 0 ? `x${visibleDuplicateUnits}` : "✓";
+      const showDuplicateBadge = sticker.tenho && visibleDuplicateUnits > 1 && (currentView === "duplicates" || options.duplicatePalette);
       const pendingLabel = pendingReceipts.length > 1
         ? `${pendingReceipts.length} trocas pendentes`
         : `${normalizePendingDuplicate(pendingReceipts[0]?.asDuplicate) ? "Repetido a receber" : "A receber"} de ${normalizePendingPerson(pendingReceipts[0]?.person) || "alguem"}`;
@@ -5860,7 +5874,7 @@
           title="${lockToggle ? "Ajusta os repetidos nos botoes" : (sticker.tenho ? "Remover dos obtidos" : "Marcar como obtido")}"
         >
           <div class="sticker-state" aria-hidden="true">${sticker.tenho ? `<span>${escapeHTML(duplicateStateLabel)}</span>` : ""}</div>
-          ${showDuplicateBadge ? `<span class="duplicate-unit-badge" aria-label="${duplicateUnits} unidades repetidas">x${duplicateUnits}</span>` : ""}
+          ${showDuplicateBadge ? `<span class="duplicate-unit-badge" aria-label="${visibleDuplicateUnits} unidades ${modalView === "reserved" ? "guardadas" : "livres"}">x${visibleDuplicateUnits}</span>` : ""}
           <div class="sticker-info">
             <div class="code">
               ${escapeHTML((currentView === "duplicates" || options.duplicatePalette) ? `${exportGroupLabel(sticker.pais)} ${stickerExportNumber(sticker)}` : sticker.codigo)}
@@ -6200,18 +6214,11 @@
     }
     function renderReservedMiniCard(entry, direction) {
       const sticker = entry.sticker;
-      const badgeBg = countrySecondaryColor(sticker.pais).toLowerCase();
-      const badgeText = readableTextColor(badgeBg);
-      const action = direction === "give"
-        ? "Vais dar"
-        : direction === "receive-duplicate"
-          ? "Como repetido"
-          : "Vais receber";
+      const stripBg = countrySecondaryColor(sticker.pais).toLowerCase();
       return `
-        <article class="reserved-mini-card reserved-mini-card-${direction}" style="${duplicateStickerStyle(sticker.pais)};${checkboxStyle(sticker.pais)}">
+        <article class="reserved-mini-card reserved-mini-card-${direction}" style="${duplicateStickerStyle(sticker.pais)};${checkboxStyle(sticker.pais)};--reserved-strip-bg:${stripBg}">
           <strong>${escapeHTML(stickerShortLabel(sticker))}</strong>
           <span>${escapeHTML(sticker.nome)}</span>
-          <small class="reserved-unit-count" style="--reserved-unit-bg:${badgeBg};--reserved-unit-text:${badgeText};">${action}</small>
         </article>
       `;
     }

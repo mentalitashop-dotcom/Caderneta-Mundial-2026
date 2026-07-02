@@ -4492,7 +4492,7 @@
       padding: 8px 8px 8px 10px;
       overflow: hidden;
       border: 1px solid var(--duplicate-card-border, var(--line));
-      border-left: 4px solid var(--check-bg, var(--main));
+      border-left: 4px solid var(--reserved-strip-bg, var(--check-bg, var(--main)));
       border-radius: 10px;
       background: var(--duplicate-card-bg, var(--card));
       color: var(--duplicate-card-text, var(--text));
