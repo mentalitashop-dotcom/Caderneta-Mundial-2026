@@ -7410,3 +7410,179 @@
         width: 100% !important;
       }
     }
+
+/* friend-sidebar-layout-fix */
+@media (min-width: 901px) {
+  body.friend-view main {
+    padding-right: 390px !important;
+  }
+
+  body.friend-view #livePanel {
+    position: fixed !important;
+    top: 114px !important;
+    right: 18px !important;
+    width: 340px !important;
+    min-width: 340px !important;
+    max-width: 340px !important;
+    max-height: calc(100dvh - 132px) !important;
+    display: grid !important;
+    align-content: start !important;
+    gap: 14px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 4px 12px !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body.friend-view #livePanel .friends-ranking-panel,
+  body.friend-view #livePanel .friend-ranking-box,
+  body.friend-view #livePanel .friend-needed-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+  }
+
+  body.friend-view #livePanel .friends-ranking-panel {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-box,
+  body.friend-view #livePanel .friend-needed-panel {
+    padding: 12px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 14px !important;
+    background: color-mix(in srgb, var(--card) 94%, var(--panel)) !important;
+    overflow: hidden !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-title {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin: 0 0 10px !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-title strong,
+  body.friend-view #livePanel .friend-ranking-title span {
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    writing-mode: horizontal-tb !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-title strong {
+    flex: 1 1 auto !important;
+    color: var(--main) !important;
+    font-size: 13px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-title span {
+    flex: 0 0 auto !important;
+    color: var(--text) !important;
+    font-size: 12px !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 58px !important;
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    gap: 9px !important;
+    padding: 8px 10px !important;
+    border-radius: 16px !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-position {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 12px !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-main,
+  body.friend-view #livePanel .friend-ranking-main strong,
+  body.friend-view #livePanel .friend-ranking-main small {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-main strong {
+    font-size: 13px !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-main small {
+    color: var(--friend-rank-color, var(--main)) !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-progress i {
+    background: var(--friend-rank-color, var(--main)) !important;
+  }
+
+  body.friend-view #livePanel .friend-needed-panel {
+    margin-top: 0 !important;
+  }
+
+  body.friend-view #livePanel .friend-needed-head strong,
+  body.friend-view #livePanel .friend-needed-head span {
+    color: var(--text) !important;
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+  }
+
+  body.friend-view #livePanel .friend-needed-head span {
+    color: var(--friend-rank-color, var(--main)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  body.friend-view #livePanel {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-title,
+  body.friend-view #livePanel .friend-needed-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-title strong,
+  body.friend-view #livePanel .friend-ranking-title span,
+  body.friend-view #livePanel .friend-needed-head strong,
+  body.friend-view #livePanel .friend-needed-head span {
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    writing-mode: horizontal-tb !important;
+  }
+}
