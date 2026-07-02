@@ -4699,7 +4699,7 @@
       width: var(--friend-progress, 0%);
       height: 100%;
       border-radius: inherit;
-      background: var(--friend-rank-color, var(--main));
+      background: var(--main);
     }
 
     .friend-ranking-trades {
@@ -6020,17 +6020,26 @@
     }
 
     .friend-ranking-title {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
       align-items: end;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 8px;
     }
 
     .friend-ranking-title strong {
+      min-width: 0;
       color: var(--main);
       font-size: 16px;
       font-weight: 1000;
+      line-height: 1.08;
+    }
+
+    .friend-ranking-title span {
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
     }
 
     .friend-ranking-card.is-me {
@@ -6245,7 +6254,11 @@
         border-radius: 12px;
         background: color-mix(in srgb, var(--card) 94%, var(--panel));
       }
-      body.friend-view #livePanel .friend-ranking-title strong { font-size: 13px; }
+      body.friend-view #livePanel .friend-ranking-title { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+      body.friend-view #livePanel .friend-ranking-title strong { font-size: 13px; line-height: 1.12; }
+      body.friend-view #livePanel .friend-ranking-title span { font-size: 12px; }
+      body.friend-view #livePanel .friend-ranking-progress i { background: var(--main); }
+      body.friend-view #livePanel .friend-ranking-main small { color: var(--main); }
       body.friend-view #livePanel .friend-ranking-list { max-height: none; overflow: visible; gap: 5px; }
       body.friend-view #livePanel .friend-ranking-card { min-width: 0; min-height: 48px; padding: 6px; gap: 6px; grid-template-columns: 28px minmax(0, 1fr); }
       body.friend-view #livePanel .friend-ranking-trades { display: none; }
