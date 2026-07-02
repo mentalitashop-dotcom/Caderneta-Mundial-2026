@@ -4047,6 +4047,20 @@
       renderTradeModal(scrollState);
     }
 
+    function setTradeSideSelection(side, mode) {
+      const scrollState = tradePickScrollState();
+      const source = side === "give" ? possibleTradeGivesFriendNeeds() : possibleTradeReceives();
+      const target = side === "give" ? selectedTradeGiveIds : selectedTradeReceiveIds;
+      target.splice(0, target.length, ...(mode === "all" ? source.map(sticker => sticker.id) : []));
+      renderTradeModal(scrollState);
+    }
+
+    function selectAllTradeStickers() {
+      const scrollState = tradePickScrollState();
+      selectedTradeGiveIds = possibleTradeGivesFriendNeeds().map(sticker => sticker.id);
+      selectedTradeReceiveIds = possibleTradeReceives().map(sticker => sticker.id);
+      renderTradeModal(scrollState);
+    }
     function tradeSelectionIsBalanced() {
       return selectedTradeGiveIds.length > 0 && selectedTradeGiveIds.length === selectedTradeReceiveIds.length;
     }
@@ -4083,6 +4097,7 @@
             <h2 >Proposta para ${escapeHTML(friendProfile)}</h2>
             <p>Seleciona só cromos que o ${escapeHTML(friendProfile)} precisa e cromos dele que te faltam.</p>
             <div class="trade-modal-balance">${escapeHTML(balanceText)}</div>
+            <button class="trade-select-all-button secondary" type="button" onclick="selectAllTradeStickers()" ${hasEnough ? "" : "disabled"}>Selecionar tudo</button>
           </div>
           <button class="trade-modal-close secondary" type="button" onclick="closeTradeModal()" aria-label="Fechar">x</button>
         </div>
@@ -4092,6 +4107,7 @@
               <div class="trade-pick-column-title">
                 <span>Tu dás</span>
                 <span>${selectedTradeGiveIds.length}/${gives.length}</span>
+                <span class="trade-pick-title-actions"><button class="secondary" type="button" onclick="setTradeSideSelection('give', 'all')">Todos</button><button class="secondary" type="button" onclick="setTradeSideSelection('give', 'none')">Limpar</button></span>
               </div>
               ${renderTradeGroupedSummary(selectedGives)}
               <div class="trade-pick-list" data-trade-side="give">${givePage.items.map(sticker => tradePickCard(sticker, "give")).join("")}</div>
@@ -4101,6 +4117,7 @@
               <div class="trade-pick-column-title">
                 <span>Tu recebes</span>
                 <span>${selectedTradeReceiveIds.length}/${receives.length}</span>
+                <span class="trade-pick-title-actions"><button class="secondary" type="button" onclick="setTradeSideSelection('receive', 'all')">Todos</button><button class="secondary" type="button" onclick="setTradeSideSelection('receive', 'none')">Limpar</button></span>
               </div>
               ${renderTradeGroupedSummary(selectedReceives)}
               <div class="trade-pick-list" data-trade-side="receive">${receivePage.items.map(sticker => tradePickCard(sticker, "receive")).join("")}</div>

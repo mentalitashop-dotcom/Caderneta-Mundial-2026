@@ -7586,3 +7586,47 @@
     writing-mode: horizontal-tb !important;
   }
 }
+
+/* trade-select-all-controls */
+.trade-select-all-button {
+  width: fit-content;
+  min-height: 32px;
+  margin-top: 8px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.trade-pick-title-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.trade-pick-title-actions button {
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .trade-pick-column-title {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .trade-pick-title-actions {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+
+  .trade-pick-title-actions button {
+    flex: 1 1 0;
+  }
+}
