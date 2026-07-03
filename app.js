@@ -6270,10 +6270,12 @@
             <button type="button" class="${duplicateViewMode === "available" ? "active" : ""}" onclick="setDuplicateViewMode('available')">Repetidos <small>${availableCount}</small></button>
             <button type="button" class="${duplicateViewMode === "reserved" ? "active" : ""}" onclick="setDuplicateViewMode('reserved')">Trocas reservadas <small>${reservedCount}</small></button>
           </div>
-          <div class="duplicate-layout-tabs" role="group" aria-label="Organizacao dos repetidos">
-            <button type="button" class="${duplicateGroupingMode === "groups" ? "active" : ""}" onclick="setDuplicateGroupingMode('groups')">Agrupados</button>
-            <button type="button" class="${duplicateGroupingMode === "flat" ? "active" : ""}" onclick="setDuplicateGroupingMode('flat')">Sem grupos</button>
-          </div>
+          ${duplicateViewMode === "available" ? `
+            <div class="duplicate-layout-tabs" role="group" aria-label="Organizacao dos repetidos">
+              <button type="button" class="${duplicateGroupingMode === "groups" ? "active" : ""}" onclick="setDuplicateGroupingMode('groups')">Agrupados</button>
+              <button type="button" class="${duplicateGroupingMode === "flat" ? "active" : ""}" onclick="setDuplicateGroupingMode('flat')">Sem grupos</button>
+            </div>
+          ` : ""}
           <button type="button" onclick="openReserveModal()">Nova troca reservada</button>
         </div>
       `;
@@ -6310,7 +6312,7 @@
           <summary class="reserved-person-bar">
             <span>Troca com: <strong>${escapeHTML(group.person)}</strong></span>
             <small>${escapeHTML(reservationDateLabel(group.date))}</small>
-            <span class="reserved-drop-indicator" aria-hidden="true">+</span>
+            <span class="reserved-drop-indicator" aria-hidden="true"></span>
           </summary>
           <div class="reserved-person-body">
             <div class="reserved-trade-sides">

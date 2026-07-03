@@ -7681,3 +7681,113 @@
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* reserved-trades-arrow-animation */
+.reserved-drop-indicator {
+  width: 18px !important;
+  height: 18px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--main) !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+}
+
+.reserved-drop-indicator::before {
+  content: "" !important;
+  width: 7px;
+  height: 7px;
+  display: block;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  transition: transform .18s ease, color .18s ease;
+}
+
+.reserved-person-section[open] .reserved-drop-indicator::before {
+  content: "" !important;
+  transform: rotate(-135deg);
+}
+
+.reserved-person-section .reserved-person-body {
+  display: block !important;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-6px);
+  transition: max-height .28s ease, opacity .2s ease, transform .2s ease;
+}
+
+.reserved-person-section[open] .reserved-person-body {
+  max-height: 1400px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reserved-person-section[open] .reserved-person-bar {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* header-logo-left */
+.brand-button {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  text-decoration: none !important;
+}
+
+.brand-button:hover,
+.brand-button:focus-visible {
+  text-decoration: none !important;
+  transform: translateY(-1px);
+}
+
+.brand-logo {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  object-fit: cover !important;
+  border-radius: inherit !important;
+}
+
+@media (min-width: 761px) {
+  .topbar {
+    grid-template-columns: auto minmax(320px, auto) minmax(180px, 1fr) !important;
+    grid-template-areas: "brand nav user" !important;
+    align-items: center !important;
+  }
+
+  .brand-button {
+    grid-area: brand !important;
+    justify-self: start !important;
+  }
+
+  .desktop-nav {
+    grid-area: nav !important;
+    justify-self: center !important;
+  }
+
+  .top-user-actions,
+  .user-menu {
+    grid-area: user !important;
+    justify-self: end !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .brand-button {
+    justify-self: start !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+}
