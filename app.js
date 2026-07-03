@@ -195,6 +195,7 @@
     const bulkAddResult = document.getElementById("bulkAddResult");
     const settingsPanel = document.getElementById("settingsPanel");
     const accountPanel = document.getElementById("accountPanel");
+    const accountOverview = document.getElementById("accountOverview");
     const settingsBackupMessage = document.getElementById("settingsBackupMessage");
     const installAppButton = document.getElementById("installAppButton");
     const installHelpText = document.getElementById("installHelpText");
@@ -1043,6 +1044,7 @@
       historyPanel?.classList.toggle("hidden", activePage !== "history");
       accountPanel?.classList.toggle("hidden", activePage !== "account");
       settingsPanel?.classList.toggle("hidden", activePage !== "settings");
+      if (activePage === "account") renderAccountOverview();
       updateListToolUI();
       updateMobileBottomNav();
       updateDesktopNav();
@@ -3589,15 +3591,8 @@
       switchAppPage("tools");
     }
     function openMobileAccountHub() {
-      if (!isMobileShell()) {
-        openAccountPanel();
-        return;
-      }
-      mobileToolsModalMode = "profile";
-      mobileToolsModalOpen = true;
-      document.body.classList.add("modal-open");
-      renderMobileToolsModal();
-      updateMobileBottomNav();
+      closeMobileToolsModal();
+      openAccountPanel();
     }
 
     function closeMobileToolsModal() {
@@ -3635,6 +3630,45 @@
       `;
     }
 
+
+    function renderAccountOverview() {
+      if (!accountOverview) return;
+      const album = stickers || [];
+      const total = album.length;
+      const owned = album.filter(sticker => sticker.tenho).length;
+      const missing = Math.max(0, total - owned);
+      const duplicates = album.reduce((sum, sticker) => sum + availableDuplicates(sticker), 0);
+      const reserved = album.reduce((sum, sticker) => sum + reservedDuplicates(sticker), 0);
+      const percent = total ? Math.round((owned / total) * 100) : 0;
+      const pendingTrades = (tradeRequests || []).filter(trade => trade.status === "pending").length;
+      accountOverview.innerHTML = `
+        <section class="account-client-card">
+          <div class="account-client-head">
+            <span class="mobile-profile-avatar">${mobileProfileAvatarMarkup()}</span>
+            <div>
+              <strong>${escapeHTML(liveProfile || "Conta")}</strong>
+              <span>Área da conta</span>
+            </div>
+          </div>
+          <div class="account-client-progress">
+            <span>${owned}/${total} obtidos - ${percent}%</span>
+            <i style="width:${percent}%"></i>
+          </div>
+          <div class="mobile-profile-stats account-client-stats">
+            <div class="mobile-profile-stat"><span>Faltam</span><strong>${missing}</strong></div>
+            <div class="mobile-profile-stat"><span>Repetidos</span><strong>${duplicates}${reserved ? `(${reserved})` : ""}</strong></div>
+            <div class="mobile-profile-stat"><span>Trocas</span><strong>${pendingTrades}</strong></div>
+            <div class="mobile-profile-stat"><span>Progresso</span><strong>${percent}%</strong></div>
+          </div>
+          <div class="account-client-actions">
+            <button type="button" onclick="openNotificationsPanel()">Notificações</button>
+            <button type="button" onclick="openTradesPanel()">Trocas</button>
+            <button type="button" onclick="openSettingsPanel()">Definições</button>
+            <button class="secondary" type="button" onclick="logoutLiveAccount()">Logout</button>
+          </div>
+        </section>
+      `;
+    }
     function renderMobileToolsModal() {
       if (!mobileToolsModal || !mobileToolsModalBody) return;
       if (!mobileToolsModalOpen) {

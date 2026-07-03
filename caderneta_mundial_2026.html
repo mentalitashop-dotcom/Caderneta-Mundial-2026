@@ -238,13 +238,9 @@
         </div>
       </div>
       <div class="mobile-tools-page-grid">
-        <button class="mobile-tool-card" type="button" onclick="openTradesPanel()"><strong>Trocas</strong><span>Propostas, pedidos e trocas com amigos.</span></button>
         <button class="mobile-tool-card" type="button" onclick="openListComparePanel()"><strong>Comparar listas</strong><span>Confere faltas e repetidos de outra pessoa.</span></button>
         <button class="mobile-tool-card" type="button" onclick="setListTool('add'); openListComparePanel()"><strong>Adicionar lista</strong><span>Cola muitos cromos e adiciona tudo de uma vez.</span></button>
         <button class="mobile-tool-card" type="button" onclick="openHistoryPanel()"><strong>Historico</strong><span>Vê os logs e alterações da tua caderneta.</span></button>
-        <button class="mobile-tool-card" type="button" onclick="openNotificationsPanel()"><strong>Notificacoes</strong><span>Atividade, propostas e avisos recentes.</span></button>
-        <button class="mobile-tool-card" type="button" onclick="openSettingsPanel()"><strong>Definicoes</strong><span>Tema, aparência e opções do site.</span></button>
-        <button class="mobile-tool-card" type="button" onclick="openAccountPanel()"><strong>Conta</strong><span>Foto, cor, password e dados do user.</span></button>
         <button class="mobile-tool-card" type="button" onclick="installPwaApp()"><strong>Instalar app</strong><span>Cria o atalho no telemóvel.</span></button>
       </div>
     </section>
@@ -367,7 +363,8 @@
           <span>Dados do user, foto, cor e segurança.</span>
         </div>
       </div>
-      <div class="settings-grid">
+      <div id="accountOverview" class="account-client-overview"></div>
+      <div class="settings-grid account-settings-grid">
         <article class="setting-card">
           <h2>Cor do user</h2>
           <p>Esta cor identifica a tua caderneta quando os teus amigos a estiverem a ver.</p>
