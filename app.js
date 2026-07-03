@@ -964,7 +964,7 @@
       }
 
       if (activePage === "tools") {
-        currentViewTitle.textContent = "Mais";
+        currentViewTitle.textContent = "Ferramentas";
         return;
       }
 
