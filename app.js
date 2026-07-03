@@ -1356,7 +1356,7 @@
     function countryProgressColor(country) {
       const code = String(country).split(" ")[0];
       const original = COUNTRY_PROGRESS_COLORS[code] || COUNTRY_SECONDARY_COLORS[code] || "#111827";
-      if (isFriendView()) return currentAppTheme().accent || "#0ea5e9";
+      if (isFriendView()) return original;
       return original;
     }
 

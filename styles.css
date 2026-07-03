@@ -8052,3 +8052,54 @@ body > main {
     padding-bottom: calc(82px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* mobile-friends-ranking-vertical-and-complete-filter */
+@media (max-width: 900px) {
+  #livePanel .friend-ranking-list,
+  body.friend-view #livePanel .friend-ranking-list {
+    display: grid !important;
+    grid-auto-flow: row !important;
+    grid-auto-columns: unset !important;
+    grid-template-columns: 1fr !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    scroll-snap-type: none !important;
+    gap: 8px !important;
+    padding-bottom: 0 !important;
+  }
+
+  #livePanel .friend-ranking-card,
+  body.friend-view #livePanel .friend-ranking-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    scroll-snap-align: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .collection-mode-row {
+    min-width: 0 !important;
+  }
+
+  .collection-mode-row span {
+    font-size: 9px !important;
+  }
+
+  .collection-mode-select {
+    min-height: 32px !important;
+    max-width: 150px !important;
+    padding: 0 9px !important;
+    font-size: 10px !important;
+  }
+}
+
+/* friend-country-progress-native-colors */
+body.friend-view .country-card-progress span {
+  background: linear-gradient(90deg, var(--country-progress, var(--country-text, var(--country-primary, var(--main)))), var(--country-progress-soft, var(--country-progress, var(--country-text, var(--country-primary, var(--main)))))) !important;
+}
+
+body.friend-view .country-card-count,
+body.friend-view .country-card-count.is-complete {
+  color: var(--country-progress, var(--country-text, var(--country-muted, var(--muted)))) !important;
+}
