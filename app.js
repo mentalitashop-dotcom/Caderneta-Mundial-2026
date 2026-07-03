@@ -166,6 +166,7 @@
     const tradeFriendSelect = document.getElementById("tradeFriendSelect");
     const tradeSuggestions = document.getElementById("tradeSuggestions");
     const tradeOverview = document.getElementById("tradeOverview");
+    const toolsPanel = document.getElementById("toolsPanel");
     const mobileBottomNav = document.getElementById("mobileBottomNav");
     const desktopNav = document.getElementById("desktopNav");
     const mobileTradeBadge = document.getElementById("mobileTradeBadge");
@@ -961,6 +962,11 @@
         return;
       }
 
+      if (activePage === "tools") {
+        currentViewTitle.textContent = "Mais";
+        return;
+      }
+
       if (activePage === "compare") {
         currentViewTitle.textContent = "Listas";
         return;
@@ -1030,6 +1036,7 @@
       content?.classList.toggle("hidden", !showAlbum);
       livePanel?.classList.toggle("hidden", activePage !== "friends");
       tradePanel?.classList.add("hidden");
+      toolsPanel?.classList.toggle("hidden", activePage !== "tools");
       listComparePanel?.classList.toggle("hidden", activePage !== "compare");
       bulkAddPanel?.classList.toggle("hidden", activePage !== "compare" || activeListTool !== "add");
       notificationsPanel?.classList.toggle("hidden", activePage !== "notifications");
@@ -3578,17 +3585,9 @@
     }
 
     function openMobileToolsHub() {
-      if (!isMobileShell()) {
-        openListComparePanel();
-        return;
-      }
-      mobileToolsModalMode = "tools";
-      mobileToolsModalOpen = true;
-      document.body.classList.add("modal-open");
-      renderMobileToolsModal();
-      updateMobileBottomNav();
+      closeMobileToolsModal();
+      switchAppPage("tools");
     }
-
     function openMobileAccountHub() {
       if (!isMobileShell()) {
         openAccountPanel();
