@@ -193,6 +193,10 @@
     const bulkAddPanel = document.getElementById("bulkAddPanel");
     const bulkAddInput = document.getElementById("bulkAddInput");
     const bulkAddResult = document.getElementById("bulkAddResult");
+    const friendListPanel = document.getElementById("friendListPanel");
+    const friendListUserSelect = document.getElementById("friendListUserSelect");
+    const friendListInput = document.getElementById("friendListInput");
+    const friendListResult = document.getElementById("friendListResult");
     const settingsPanel = document.getElementById("settingsPanel");
     const accountPanel = document.getElementById("accountPanel");
     const accountOverview = document.getElementById("accountOverview");
@@ -2326,13 +2330,14 @@
       return `<div class="comparison-lines">${lines.map(escapeHTML).join("<br>")}</div>`;
     }
 
-    function renderListComparison() {
+    async function renderListComparison() {
       if (!listCompareResult) return;
       const mode = LIST_COMPARE_MODE_COPY[listCompareMode] ? listCompareMode : "duplicates";
       compareDuplicatesTab?.classList.toggle("active", mode === "duplicates");
       compareMissingTab?.classList.toggle("active", mode === "missing");
       compareDuplicatesTab?.setAttribute("aria-selected", String(mode === "duplicates"));
       compareMissingTab?.setAttribute("aria-selected", String(mode === "missing"));
+      renderFriendListUserOptions();
 
       const text = listCompareInput?.value || "";
       if (!text.trim()) {
@@ -2345,38 +2350,56 @@
         return;
       }
 
-      const parsed = parsePastedStickerList(text);
-      const matches = mode === "duplicates"
-        ? parsed.entries.filter(entry => !entry.sticker.tenho)
-        : parsed.entries
-            .map(entry => ({
-              ...entry,
-              count: Math.min(Math.max(1, entry.count || 1), availableDuplicates(entry.sticker))
-            }))
-            .filter(entry => entry.sticker.tenho && entry.count > 0);
-      const formatter = mode === "duplicates"
-        ? entry => formatCountedSticker(entry, entry.count)
-        : entry => formatCountedSticker(entry, entry.count);
-      const unknownList = parsed.unknown.slice(0, 10);
+      const selectedProfile = friendListUserSelect?.value || "__me";
+      listCompareResult.innerHTML = `<article class="list-compare-card" style="grid-column:1/-1"><h2>A comparar lista...</h2><small>A verificar a caderneta escolhida.</small></article>`;
 
-      listCompareResult.innerHTML = `
-        <article class="list-compare-card">
-          <h2>${escapeHTML(LIST_COMPARE_MODE_COPY[mode].resultTitle)} (${matches.length})</h2>
-          <small>${escapeHTML(LIST_COMPARE_MODE_COPY[mode].helpText)}</small>
-          ${renderGroupedEntries(matches, LIST_COMPARE_MODE_COPY[mode].emptyText, formatter)}
-        </article>
-        <article class="list-compare-card">
-          <h2>Leitura da lista</h2>
-          <div class="list-compare-meta">
-            <span class="list-compare-pill">${parsed.entries.length} cromos lidos</span>
-            <span class="list-compare-pill">${parsed.totalItems} no total</span>
-            <span class="list-compare-pill">${matches.length} encontrados</span>
-          </div>
-          ${unknownList.length ? `<small>Nao consegui reconhecer: ${escapeHTML(unknownList.join(", "))}${parsed.unknown.length > unknownList.length ? "..." : ""}</small>` : `<small>Lista lida com sucesso.</small>`}
-        </article>
-      `;
+      try {
+        const parsed = parsePastedStickerList(text);
+        const target = await targetAlbumForListUser(selectedProfile);
+        const targetById = new Map(target.album.map(sticker => [sticker.id, sticker]));
+        const matches = mode === "duplicates"
+          ? parsed.entries
+              .map(entry => ({ ...entry, count: 1 }))
+              .filter(entry => {
+                const targetSticker = targetById.get(entry.sticker.id);
+                return targetSticker && !targetSticker.tenho;
+              })
+          : parsed.entries
+              .map(entry => {
+                const targetSticker = targetById.get(entry.sticker.id);
+                const available = targetSticker ? availableDuplicates(targetSticker) : 0;
+                return { ...entry, count: Math.min(Math.max(1, entry.count || 1), available) };
+              })
+              .filter(entry => entry.count > 0);
+        const totalCopies = matches.reduce((sum, entry) => sum + Math.max(1, entry.count || 1), 0);
+        const formatter = entry => formatCountedSticker(entry, entry.count);
+        const unknownList = parsed.unknown.slice(0, 10);
+        const targetName = target.profile || "a caderneta escolhida";
+        const emptyText = mode === "duplicates"
+          ? `${targetName} nao precisa de nenhum cromo dessa lista.`
+          : `${targetName} nao tem repetidos livres para essa lista.`;
+
+        listCompareResult.innerHTML = `
+          <article class="list-compare-card">
+            <h2>${escapeHTML(LIST_COMPARE_MODE_COPY[mode].resultTitle)} (${totalCopies})</h2>
+            <small>Comparado com ${escapeHTML(targetName)}.</small>
+            ${renderGroupedEntries(matches, emptyText, formatter)}
+          </article>
+          <article class="list-compare-card">
+            <h2>Leitura da lista</h2>
+            <div class="list-compare-meta">
+              <span class="list-compare-pill">${parsed.entries.length} cromos lidos</span>
+              <span class="list-compare-pill">${parsed.totalItems} no total</span>
+              <span class="list-compare-pill">${totalCopies} encontrados</span>
+            </div>
+            ${unknownList.length ? `<small>Nao consegui reconhecer: ${escapeHTML(unknownList.join(", "))}${parsed.unknown.length > unknownList.length ? "..." : ""}</small>` : `<small>Lista lida com sucesso.</small>`}
+          </article>
+        `;
+      } catch (error) {
+        console.error("Erro ao comparar lista", error);
+        listCompareResult.innerHTML = `<article class="list-compare-card" style="grid-column:1/-1"><h2>Nao foi possivel comparar</h2><small>Confirma a sessao online e tenta novamente.</small></article>`;
+      }
     }
-
     function setListCompareMode(mode) {
       listCompareMode = LIST_COMPARE_MODE_COPY[mode] ? mode : "duplicates";
       renderListComparison();
@@ -2506,6 +2529,86 @@
       if (bulkAddInput) bulkAddInput.value = "";
       renderBulkAddPreview();
       bulkAddInput?.focus();
+    }
+    function renderFriendListUserOptions() {
+      if (!friendListUserSelect) return;
+      const selected = friendListUserSelect.value || "__me";
+      const options = [
+        `<option value="__me">${escapeHTML(liveProfile ? `${liveProfile} (tu)` : "A tua caderneta")}</option>`,
+        ...liveProfilesList.map(item => `<option value="${escapeHTML(item.profile)}">${escapeHTML(item.profile)}</option>`)
+      ];
+      friendListUserSelect.innerHTML = options.join("");
+      friendListUserSelect.value = options.some(option => option.includes(`value="${escapeHTML(selected)}"`)) ? selected : "__me";
+    }
+
+    function renderFriendListIntro() {
+      if (!friendListResult) return;
+      friendListResult.innerHTML = `
+        <article class="list-compare-card" style="grid-column:1/-1">
+          <h2>Cola uma lista de faltas</h2>
+          <small>Escolhe um user e a app mostra que repetidos livres esse user consegue dar para essa lista.</small>
+        </article>
+      `;
+    }
+
+    async function targetAlbumForListUser(value) {
+      if (!value || value === "__me") return { profile: liveProfile || "a tua caderneta", album: stickers };
+      const data = await fetchFriendAlbumCached(value);
+      return { profile: value, album: data.stickers || [] };
+    }
+
+    async function renderFriendListComparison() {
+      if (!friendListResult) return;
+      const text = friendListInput?.value || "";
+      renderFriendListUserOptions();
+      if (!text.trim()) {
+        renderFriendListIntro();
+        return;
+      }
+
+      const selectedProfile = friendListUserSelect?.value || "__me";
+      friendListResult.innerHTML = `<article class="list-compare-card" style="grid-column:1/-1"><h2>A verificar lista...</h2><small>A procurar repetidos livres no user escolhido.</small></article>`;
+
+      try {
+        const parsed = parsePastedStickerList(text);
+        const target = await targetAlbumForListUser(selectedProfile);
+        const byId = new Map(target.album.map(sticker => [sticker.id, sticker]));
+        const matches = parsed.entries
+          .map(entry => {
+            const targetSticker = byId.get(entry.sticker.id);
+            const available = targetSticker ? availableDuplicates(targetSticker) : 0;
+            return { ...entry, count: Math.min(Math.max(1, entry.count || 1), available) };
+          })
+          .filter(entry => entry.count > 0);
+        const totalCopies = matches.reduce((sum, entry) => sum + entry.count, 0);
+        const unknownList = parsed.unknown.slice(0, 10);
+
+        friendListResult.innerHTML = `
+          <article class="list-compare-card">
+            <h2>${escapeHTML(target.profile)} consegue dar (${totalCopies})</h2>
+            <small>Comparado com os repetidos livres do user escolhido.</small>
+            ${renderGroupedEntries(matches, `${target.profile} nao tem repetidos livres dessa lista.`)}
+          </article>
+          <article class="list-compare-card">
+            <h2>Leitura da lista</h2>
+            <div class="list-compare-meta">
+              <span class="list-compare-pill">${parsed.entries.length} cromos lidos</span>
+              <span class="list-compare-pill">${parsed.totalItems} no total</span>
+              <span class="list-compare-pill">${totalCopies} disponiveis</span>
+            </div>
+            ${unknownList.length ? `<small>Nao consegui reconhecer: ${escapeHTML(unknownList.join(", "))}${parsed.unknown.length > unknownList.length ? "..." : ""}</small>` : `<small>Lista lida com sucesso.</small>`}
+          </article>
+        `;
+      } catch (error) {
+        console.error("Erro ao comparar lista por user", error);
+        friendListResult.innerHTML = `<article class="list-compare-card" style="grid-column:1/-1"><h2>Nao foi possivel verificar</h2><small>Confirma se tens sessao online e tenta novamente.</small></article>`;
+      }
+    }
+
+    function clearFriendListComparison() {
+      if (friendListInput) friendListInput.value = "";
+      renderFriendListIntro();
+      friendListInput?.focus();
     }
 
 
@@ -4523,21 +4626,31 @@
       const compareTool = document.getElementById("listCompareTool");
       const compareButton = document.getElementById("listToolCompareButton");
       const addButton = document.getElementById("listToolAddButton");
+      const friendButton = document.getElementById("listToolFriendButton");
       compareTool?.classList.toggle("hidden", activeListTool !== "compare");
       bulkAddPanel?.classList.toggle("hidden", activePage !== "compare" || activeListTool !== "add");
+      friendListPanel?.classList.toggle("hidden", activePage !== "compare" || activeListTool !== "friend");
       compareButton?.classList.toggle("active", activeListTool === "compare");
       addButton?.classList.toggle("active", activeListTool === "add");
+      friendButton?.classList.toggle("active", activeListTool === "friend");
     }
 
     function setListTool(tool) {
-      activeListTool = tool === "add" ? "add" : "compare";
+      activeListTool = tool === "add" ? "add" : tool === "friend" ? "friend" : "compare";
       updateListToolUI();
       if (activeListTool === "compare") {
+        renderFriendListUserOptions();
+        loadLiveProfiles().then(renderFriendListUserOptions).catch(() => {});
         renderListComparison();
         setTimeout(() => listCompareInput?.focus(), 0);
-      } else {
+      } else if (activeListTool === "add") {
         renderBulkAddPreview();
         setTimeout(() => bulkAddInput?.focus(), 0);
+      } else {
+        renderFriendListUserOptions();
+        renderFriendListIntro();
+        loadLiveProfiles().then(renderFriendListUserOptions).catch(() => {});
+        setTimeout(() => friendListInput?.focus(), 0);
       }
     }
 
@@ -5065,6 +5178,7 @@
       if (tradeFriendSelect) tradeFriendSelect.innerHTML = options;
       if (profiles.some(item => item.profile === selected)) syncFriendSelects(selected);
       if (activePage === "friends") renderFriendInsights(rankingItemsFromProfiles());
+      if (activePage === "compare") renderFriendListUserOptions();
       return profiles;
     }
     async function refreshOwnAlbumState() {
@@ -5080,6 +5194,7 @@
 
       if (!force && liveProfilesList.length && Date.now() - liveProfilesLoadedAt < 60_000) {
         if (activePage === "friends") renderFriendInsights(rankingItemsFromProfiles());
+      if (activePage === "compare") renderFriendListUserOptions();
         return;
       }
 

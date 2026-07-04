@@ -8160,3 +8160,47 @@ body.friend-view .country-card-count.is-complete {
     line-height: 1.22 !important;
   }
 }
+/* list-user-compare-tool */
+.list-user-row {
+  display: grid;
+  gap: 6px;
+  max-width: 360px;
+}
+
+.list-user-row label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.list-user-select {
+  min-height: 42px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  outline: none;
+}
+
+.list-user-select:focus {
+  border-color: var(--main);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, .12);
+}
+
+@media (max-width: 760px) {
+  .list-user-row {
+    max-width: none !important;
+  }
+
+  .list-user-select {
+    min-height: 38px !important;
+    font-size: 12px !important;
+  }
+}

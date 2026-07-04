@@ -239,7 +239,7 @@
       </div>
       <div class="mobile-tools-page-grid">
         <button class="mobile-tool-card" type="button" onclick="openListComparePanel()"><strong>Comparar listas</strong><span>Confere faltas e repetidos de outra pessoa.</span></button>
-        <button class="mobile-tool-card" type="button" onclick="setListTool('add'); openListComparePanel()"><strong>Adicionar lista</strong><span>Cola muitos cromos e adiciona tudo de uma vez.</span></button>
+        <button class="mobile-tool-card" type="button" onclick="openBulkAddPanel()"><strong>Adicionar lista</strong><span>Cola muitos cromos e adiciona tudo de uma vez.</span></button>
         <button class="mobile-tool-card" type="button" onclick="openHistoryPanel()"><strong>Historico</strong><span>Vê os logs e alterações da tua caderneta.</span></button>
       </div>
     </section>
@@ -273,6 +273,10 @@
                 <strong>Faltas da pessoa</strong>
                 <span>Mostra quais consegues dar com os teus repetidos.</span>
               </button>
+            </div>
+            <div class="list-user-row">
+              <label for="friendListUserSelect">Comparar com</label>
+              <select id="friendListUserSelect" class="list-user-select" onchange="renderListComparison()"></select>
             </div>
             <textarea id="listCompareInput" class="list-compare-input" spellcheck="false" placeholder="Cola aqui uma lista, por exemplo:&#10;&#10;FWC : 13, 16&#10;MEX : 14, 17&#10;GER : 1, 5, 6, 7, 11,"></textarea>
             <div class="list-compare-actions">
