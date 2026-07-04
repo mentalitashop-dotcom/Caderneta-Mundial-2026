@@ -2013,7 +2013,7 @@
     }
 
     function exportGroupedLines(list, formatter) {
-      return albumCountries()
+      return allCountriesForAlbum(stickers)
         .map(country => {
           const countryStickers = list
             .filter(sticker => sticker.pais === country)
@@ -2067,7 +2067,7 @@
 
     function compactComparisonLines(list, formatter = stickerExportNumber) {
       const ids = new Set(list.map(sticker => sticker.id));
-      return albumCountries()
+      return allCountriesForAlbum(stickers)
         .map(country => {
           const countryStickers = currentAlbumStickers()
             .filter(sticker => sticker.pais === country && ids.has(sticker.id))
@@ -2307,7 +2307,7 @@
     }
     function groupedListFromEntries(entries, formatter) {
       const byId = new Map(entries.map(entry => [entry.sticker.id, entry]));
-      return albumCountries()
+      return allCountriesForAlbum(stickers)
         .map(country => {
           const values = stickers
             .filter(sticker => sticker.pais === country && byId.has(sticker.id))
