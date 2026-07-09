@@ -83,6 +83,7 @@
     let undoState = null;
     let undoTimer = null;
     let tradeHistoryPage = 1;
+    let historyDayIndex = 0;
     let tradeModalOpen = false;
     let reserveModalOpen = false;
     let editingReservedTradeId = "";
@@ -3028,6 +3029,10 @@
       return renderHistoryItem({ ...first, text, stickers: items.flatMap(item => item.stickers || []) });
     }
 
+    function changeHistoryDay(delta) {
+      historyDayIndex = Math.max(0, historyDayIndex + Number(delta || 0));
+      renderHistoryPanel();
+    }
     function renderHistoryPanel(message = "") {
       if (!historyResult) return;
       const query = normalizeSearch(historySearchInput?.value || "");
@@ -3051,6 +3056,7 @@
       }));
 
       if (!items.length) {
+        historyDayIndex = 0;
         historyResult.innerHTML = "<div class=\"comparison-empty\">" + escapeHTML(message || "Ainda nao ha logs de cromos.") + "</div>";
         return;
       }
@@ -3067,17 +3073,27 @@
         dayMap.get(key).push(item);
       });
 
+      const days = [...grouped.entries()];
+      historyDayIndex = Math.max(0, Math.min(historyDayIndex, days.length - 1));
+      const [day, dayGroups] = days[historyDayIndex];
+      const groups = [...dayGroups.values()];
+      const total = groups.reduce((sum, group) => sum + group.length, 0);
+      const hasPrev = historyDayIndex > 0;
+      const hasNext = historyDayIndex < days.length - 1;
+
       historyResult.innerHTML =
         (message ? "<div class=\"comparison-empty\">" + escapeHTML(message) + "</div>" : "") +
-        "<div class=\"history-log\">" +
-        [...grouped.entries()].map(([day, dayGroups]) => {
-          const groups = [...dayGroups.values()];
-          const total = groups.reduce((sum, group) => sum + group.length, 0);
-          return "<section class=\"history-day\"><div class=\"history-day-head\"><h3>" + escapeHTML(day) + "</h3><span>" + total + " movimentos</span></div><div class=\"history-day-list\">" + groups.map(renderHistoryLogGroup).join("") + "</div></section>";
-        }).join("") +
+        "<div class=\"history-log history-log-paged\">" +
+          "<section class=\"history-day\">" +
+            "<div class=\"history-day-head history-day-head-paged\">" +
+              "<button class=\"history-day-nav\" type=\"button\" onclick=\"changeHistoryDay(-1)\" " + (hasPrev ? "" : "disabled") + " aria-label=\"Dia mais recente\">&lt;</button>" +
+              "<div class=\"history-day-current\"><h3>" + escapeHTML(day) + "</h3><span>" + total + " movimentos · " + (historyDayIndex + 1) + "/" + days.length + "</span></div>" +
+              "<button class=\"history-day-nav\" type=\"button\" onclick=\"changeHistoryDay(1)\" " + (hasNext ? "" : "disabled") + " aria-label=\"Dia mais antigo\">&gt;</button>" +
+            "</div>" +
+            "<div class=\"history-day-list\">" + groups.map(renderHistoryLogGroup).join("") + "</div>" +
+          "</section>" +
         "</div>";
     }
-
     function clearHistoryLog() {
       writeHistoryLog([]);
       renderHistoryPanel();
