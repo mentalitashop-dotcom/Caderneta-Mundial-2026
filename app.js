@@ -2995,8 +2995,8 @@
         const key = normalized.clientId || normalized.id || (normalized.text + "|" + normalized.at);
         if (!byKey.has(key)) byKey.set(key, normalized);
       };
-      liveHistoryLogs.filter(item => item.type !== "trade" && item.action !== "trade_accepted").forEach(add);
-      readHistoryLog().filter(item => item.type !== "trade" && item.action !== "trade_accepted" && !String(item.text || "").toLowerCase().includes("troca")).forEach(add);
+      liveHistoryLogs.filter(item => item.action !== "trade_accepted" && !(item.type === "trade" && !String(item.action || "").startsWith("reserved_trade_"))).forEach(add);
+      readHistoryLog().filter(item => item.action !== "trade_accepted" && !(item.type === "trade" && !String(item.action || "").startsWith("reserved_trade_"))).forEach(add);
       historyBaselineItems().forEach(add);
       return [...byKey.values()].sort((a, b) => {
         const aFixedLabel = a.timeLabel && !a.at;
@@ -4344,34 +4344,35 @@
       }[status] || status || "pendente";
     }
 
+    function tradeStickerGroupedCodes(list) {
+      const groups = new Map();
+      (Array.isArray(list) ? list : []).forEach(sticker => {
+        const country = exportGroupLabel(sticker.pais);
+        const number = stickerExportNumber(sticker);
+        if (!groups.has(country)) groups.set(country, new Map());
+        const countryMap = groups.get(country);
+        countryMap.set(number, (countryMap.get(number) || 0) + 1);
+      });
+      return groups;
+    }
+
+    function tradeStickerCodeText(number, count) {
+      return count > 1 ? `${number} x${count}` : number;
+    }
+
     function tradeStickerList(list) {
       if (!list || !list.length) return "Sem cromos";
-      const groups = new Map();
-      list.forEach(sticker => {
-        const country = exportGroupLabel(sticker.pais);
-        if (!groups.has(country)) groups.set(country, []);
-        groups.get(country).push(stickerExportNumber(sticker));
-      });
-
-      return [...groups.entries()]
-        .map(([country, codes]) => `${escapeHTML(country)}: ${[...new Set(codes)].map(escapeHTML).join(" ")}`)
+      return [...tradeStickerGroupedCodes(list).entries()]
+        .map(([country, codes]) => `${escapeHTML(country)}: ${[...codes.entries()].map(([number, count]) => escapeHTML(tradeStickerCodeText(number, count))).join(" ")}`)
         .join("<br>");
     }
 
     function tradeStickerInlineList(list) {
       if (!list || !list.length) return "Sem cromos";
-      const groups = new Map();
-      list.forEach(sticker => {
-        const country = exportGroupLabel(sticker.pais);
-        if (!groups.has(country)) groups.set(country, []);
-        groups.get(country).push(stickerExportNumber(sticker));
-      });
-
-      return [...groups.entries()]
-        .map(([country, codes]) => `${escapeHTML(country)} ${[...new Set(codes)].map(escapeHTML).join(", ")}`)
-        .join(" · ");
+      return [...tradeStickerGroupedCodes(list).entries()]
+        .map(([country, codes]) => `${escapeHTML(country)} ${[...codes.entries()].map(([number, count]) => escapeHTML(tradeStickerCodeText(number, count))).join(", ")}`)
+        .join(" Â· ");
     }
-
     function tradeStickerDetailList(list) {
       return renderTradeGroupedSummary(list || [], "Resumo");
     }
@@ -6501,6 +6502,12 @@
       person?.focus();
     }
 
+    function expandReservedHistoryEntries(entries) {
+      return (Array.isArray(entries) ? entries : []).flatMap(entry => {
+        const count = Math.max(1, Number(entry?.count || 1));
+        return Array.from({ length: count }, () => entry.sticker);
+      }).filter(Boolean);
+    }
     async function reserveTrade() {
       if (isFriendView()) return setSaveStatus(`A caderneta de ${friendProfile} e so de leitura`);
       if (!requireLiveLogin()) return;
@@ -6597,7 +6604,7 @@
       }
       const giveTotal = giveEntries.reduce((sum, entry) => sum + entry.count, 0);
       const receiveTotal = receiveEntries.reduce((sum, entry) => sum + entry.count, 0);
-      recordHistory(`${editingReservedTradeId ? "Troca reservada editada" : "Troca reservada criada"} com ${person}: ${giveTotal} a dar e ${receiveTotal} a receber`, { type: "trade", action: editingReservedTradeId ? "reserved_trade_edited" : "reserved_trade_created", partner: person, given: giveEntries.map(entry => entry.sticker), received: receiveEntries.map(entry => entry.sticker) });
+      recordHistory(`${editingReservedTradeId ? "Troca reservada editada" : "Troca reservada criada"} com ${person}: ${giveTotal} a dar e ${receiveTotal} a receber`, { type: "trade", action: editingReservedTradeId ? "reserved_trade_edited" : "reserved_trade_created", partner: person, tradeId, given: expandReservedHistoryEntries(giveEntries), received: expandReservedHistoryEntries(receiveEntries) });
       setSaveStatus(`Troca com ${person} guardada`);
       duplicateViewMode = "reserved";
       closeReserveModal();
@@ -6611,8 +6618,8 @@
       if (!trade) return;
       const person = trade.person;
       const affected = [];
-      const given = [];
-      const received = [];
+      const givenEntries = [];
+      const receivedEntries = [];
       stickers.forEach(sticker => {
         const reservations = normalizeReservations(sticker.reservas);
         const kept = [];
@@ -6620,7 +6627,7 @@
           const itemTradeId = item.tradeId || legacyReservedTradeId(item.person, item.createdAt);
           if (itemTradeId !== tradeId) return kept.push(item);
           affected.push(sticker);
-          given.push(sticker);
+          givenEntries.push({ sticker, count: item.count });
           if (status === "completed") sticker.repetidos = Math.max(0, normalizeDuplicates(sticker.repetidos) - item.count);
         });
         sticker.reservas = kept;
@@ -6630,7 +6637,7 @@
         const receipt = incomingReservations(sticker).find(item => item.tradeId === tradeId);
         if (receipt) {
           affected.push(sticker);
-          received.push(sticker);
+          receivedEntries.push({ sticker, count: receipt.count });
           if (status === "completed") {
             applyCompletedIncomingReceipt(sticker, receipt);
           }
@@ -6641,7 +6648,7 @@
       if (!affected.length) return;
       saveState([...new Set(affected.map(sticker => sticker.id))]);
       const done = status === "completed";
-      recordHistory(`${done ? "Troca reservada concluida" : "Troca reservada cancelada"} com ${person}`, { type: "trade", action: done ? "reserved_trade_completed" : "reserved_trade_cancelled", partner: person, given, received });
+      recordHistory(`${done ? "Troca reservada concluida" : "Troca reservada cancelada"} com ${person}`, { type: "trade", action: done ? "reserved_trade_completed" : "reserved_trade_cancelled", partner: person, tradeId, given: expandReservedHistoryEntries(givenEntries), received: expandReservedHistoryEntries(receivedEntries) });
       setSaveStatus(done ? `Troca com ${person} concluida` : `Troca com ${person} cancelada`);
       render();
     }
