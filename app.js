@@ -3070,9 +3070,11 @@
       historyResult.innerHTML =
         (message ? "<div class=\"comparison-empty\">" + escapeHTML(message) + "</div>" : "") +
         "<div class=\"history-log\">" +
-        [...grouped.entries()].map(([day, dayGroups]) =>
-          "<section class=\"history-day\"><h3>" + escapeHTML(day) + "</h3>" + [...dayGroups.values()].map(renderHistoryLogGroup).join("") + "</section>"
-        ).join("") +
+        [...grouped.entries()].map(([day, dayGroups]) => {
+          const groups = [...dayGroups.values()];
+          const total = groups.reduce((sum, group) => sum + group.length, 0);
+          return "<section class=\"history-day\"><div class=\"history-day-head\"><h3>" + escapeHTML(day) + "</h3><span>" + total + " movimentos</span></div><div class=\"history-day-list\">" + groups.map(renderHistoryLogGroup).join("") + "</div></section>";
+        }).join("") +
         "</div>";
     }
 

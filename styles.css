@@ -8204,3 +8204,123 @@ body.friend-view .country-card-count.is-complete {
     font-size: 12px !important;
   }
 }
+/* history-days-visual-grouping */
+.history-log {
+  gap: 18px !important;
+}
+
+.history-day {
+  gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--main) 28%, var(--line)) !important;
+  border-radius: 18px !important;
+  background: var(--card) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .10);
+}
+
+.history-day-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--main) 12%, var(--panel));
+}
+
+.history-day-head h3 {
+  margin: 0;
+  color: var(--main);
+  font-size: 13px;
+  font-weight: 1000;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.history-day-head span {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.history-day-list {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.history-day-list::before {
+  content: "";
+  position: absolute;
+  left: 42px;
+  top: 18px;
+  bottom: 18px;
+  width: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--main) 22%, transparent);
+}
+
+.history-line {
+  position: relative;
+  z-index: 1;
+  border-radius: 14px !important;
+}
+
+.history-line::before {
+  content: "";
+  position: absolute;
+  left: 25px;
+  top: 18px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--main);
+  box-shadow: 0 0 0 4px var(--card);
+}
+
+@media (max-width: 760px) {
+  .history-log {
+    gap: 14px !important;
+  }
+
+  .history-day-head {
+    padding: 10px 11px;
+  }
+
+  .history-day-head h3 {
+    font-size: 11px;
+  }
+
+  .history-day-head span {
+    font-size: 9px;
+  }
+
+  .history-day-list {
+    padding: 10px;
+  }
+
+  .history-day-list::before,
+  .history-line::before {
+    display: none;
+  }
+
+  .history-line {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    gap: 7px !important;
+    padding: 9px !important;
+  }
+
+  .history-line time {
+    font-size: 10px !important;
+  }
+}
