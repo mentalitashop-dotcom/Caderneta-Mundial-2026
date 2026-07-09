@@ -8399,3 +8399,12 @@ body.friend-view .country-card-count.is-complete {
     padding: 4px 7px;
   }
 }
+/* history-remove-time-dot */
+.history-line::before {
+  display: none !important;
+}
+
+.history-day-list::before {
+  left: 52px !important;
+  opacity: .45;
+}

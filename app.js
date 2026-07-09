@@ -3078,17 +3078,17 @@
       const [day, dayGroups] = days[historyDayIndex];
       const groups = [...dayGroups.values()];
       const total = groups.reduce((sum, group) => sum + group.length, 0);
-      const hasPrev = historyDayIndex > 0;
-      const hasNext = historyDayIndex < days.length - 1;
+      const hasOlder = historyDayIndex < days.length - 1;
+      const hasNewer = historyDayIndex > 0;
 
       historyResult.innerHTML =
         (message ? "<div class=\"comparison-empty\">" + escapeHTML(message) + "</div>" : "") +
         "<div class=\"history-log history-log-paged\">" +
           "<section class=\"history-day\">" +
             "<div class=\"history-day-head history-day-head-paged\">" +
-              "<button class=\"history-day-nav\" type=\"button\" onclick=\"changeHistoryDay(-1)\" " + (hasPrev ? "" : "disabled") + " aria-label=\"Dia mais recente\">&lt;</button>" +
+              "<button class=\"history-day-nav\" type=\"button\" onclick=\"changeHistoryDay(1)\" " + (hasOlder ? "" : "disabled") + " aria-label=\"Dia anterior\">&lt;</button>" +
               "<div class=\"history-day-current\"><h3>" + escapeHTML(day) + "</h3><span>" + total + " movimentos · " + (historyDayIndex + 1) + "/" + days.length + "</span></div>" +
-              "<button class=\"history-day-nav\" type=\"button\" onclick=\"changeHistoryDay(1)\" " + (hasNext ? "" : "disabled") + " aria-label=\"Dia mais antigo\">&gt;</button>" +
+              "<button class=\"history-day-nav\" type=\"button\" onclick=\"changeHistoryDay(-1)\" " + (hasNewer ? "" : "disabled") + " aria-label=\"Dia seguinte\">&gt;</button>" +
             "</div>" +
             "<div class=\"history-day-list\">" + groups.map(renderHistoryLogGroup).join("") + "</div>" +
           "</section>" +
