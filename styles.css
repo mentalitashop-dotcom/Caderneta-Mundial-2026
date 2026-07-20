@@ -8442,27 +8442,27 @@ textarea,
   min-width: 0;
 }
 
-body:has(#authGate:not(.hidden)) {
+body.auth-locked {
   min-height: 100dvh;
   overflow: hidden;
 }
 
-body:has(#authGate:not(.hidden)) header,
-body:has(#authGate:not(.hidden)) main,
-body:has(#authGate:not(.hidden)) #appInstallFooter,
-body:has(#authGate:not(.hidden)) #mobileBottomNav,
-body:has(#authGate:not(.hidden)) #saveStatus {
+body.auth-locked header,
+body.auth-locked main,
+body.auth-locked #appInstallFooter,
+body.auth-locked #mobileBottomNav,
+body.auth-locked #saveStatus {
   display: none !important;
 }
 
-body:has(#authGate:not(.hidden)) .auth-screen {
+body.auth-locked .auth-screen {
   min-height: 100dvh;
   height: 100dvh;
   padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
   overflow: hidden;
 }
 
-body:has(#authGate:not(.hidden)) .auth-card {
+body.auth-locked .auth-card {
   width: min(100%, 420px);
   max-height: calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow-y: auto;
