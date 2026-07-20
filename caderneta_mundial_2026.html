@@ -426,6 +426,16 @@
           </div>
           <div id="settingsClearAlbumMessage" class="settings-message" aria-live="polite"></div>
         </article>
+
+        <article class="setting-card danger-zone-card delete-account-card">
+          <h2>Eliminar conta</h2>
+          <p>Apaga definitivamente o user, cromos, repetidos, guardados, trocas, historico e sessoes. Para confirmar escreve o teu username em CAPSLOCK.</p>
+          <input id="settingsDeleteAccountConfirmInput" class="live-input delete-account-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="USERNAME EM CAPSLOCK" oninput="updateDeleteAccountButtonState()" />
+          <div class="settings-actions">
+            <button id="settingsDeleteAccountButton" class="danger" type="button" onclick="deleteLiveAccount()" disabled>Eliminar conta</button>
+          </div>
+          <div id="settingsDeleteAccountMessage" class="settings-message" aria-live="polite"></div>
+        </article>
       </div>
     </section>
 

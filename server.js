@@ -1741,6 +1741,52 @@ async function updateTradeProposalStatus(db, user, payload) {
   return updatedTrade;
 }
 
+async function deleteUserAccount(db, user) {
+  const userId = user.id || user._id;
+  const username = user.username;
+  const usernameLower = userKey(username);
+  const userKeys = [userId, username, usernameLower].filter(Boolean);
+  const now = new Date();
+
+  const tradeFilter = {
+    $or: [
+      { fromUserId: { $in: userKeys } },
+      { toUserId: { $in: userKeys } },
+      { fromUser: username },
+      { toUser: username }
+    ]
+  };
+
+  const snapshotFilter = {
+    $or: [
+      { _id: { $in: userKeys } },
+      { userId: { $in: userKeys } },
+      { profile: username },
+      { username }
+    ]
+  };
+
+  const [sessions, stickers, snapshots, history, trades, legacy, users] = await Promise.all([
+    db.collection(COLLECTIONS.sessions).deleteMany({ $or: [{ userId: { $in: userKeys } }, { username }] }),
+    db.collection(COLLECTIONS.userStickers).deleteMany({ $or: [{ userId: { $in: userKeys } }, { username }] }),
+    db.collection(COLLECTIONS.snapshots).deleteMany(snapshotFilter),
+    db.collection(COLLECTIONS.history).deleteMany({ $or: [{ userId: { $in: userKeys } }, { username }] }),
+    db.collection(COLLECTIONS.trades).deleteMany(tradeFilter),
+    db.collection(COLLECTIONS.legacyCollections).deleteMany(snapshotFilter),
+    db.collection(COLLECTIONS.users).deleteOne({ _id: userId })
+  ]);
+
+  return {
+    deletedAt: now,
+    sessions: sessions.deletedCount || 0,
+    stickers: stickers.deletedCount || 0,
+    snapshots: snapshots.deletedCount || 0,
+    history: history.deletedCount || 0,
+    trades: trades.deletedCount || 0,
+    legacy: legacy.deletedCount || 0,
+    users: users.deletedCount || 0
+  };
+}
 async function handleAuthRoute(req, res, url) {
   if (url.pathname === "/api/auth/status") {
     if (req.method !== "GET" && req.method !== "HEAD") return methodNotAllowed(res, ["GET"]);
@@ -1900,6 +1946,29 @@ async function handleAuthRoute(req, res, url) {
   }
 
   if (url.pathname === "/api/auth/change-password") return methodNotAllowed(res, ["POST"]);
+  if (url.pathname === "/api/auth/delete-account" && req.method === "POST") {
+    const user = await requireVerifiedUser(req, res);
+    if (!user) return;
+    if (!authRequestAllowed(req, res, "delete-account", user.username)) return;
+
+    const payload = await readJson(req);
+    const confirmation = String(payload.confirmation || payload.usernameConfirmation || "").trim();
+    const expectedConfirmation = String(user.username || "").toUpperCase();
+
+    if (!expectedConfirmation || confirmation !== expectedConfirmation) {
+      recordAuthFailure(req, "delete-account", user.username);
+      return sendJson(res, 400, { error: `Para eliminar a conta escreve ${expectedConfirmation} em maiusculas.` });
+    }
+
+    const db = await openMongoDbForRequest(res);
+    if (!db) return;
+
+    const result = await deleteUserAccount(db, user);
+    clearAuthFailures(req, "delete-account", user.username);
+    return sendJson(res, 200, { ok: true, deleted: result }, { "Set-Cookie": clearSessionCookie() });
+  }
+
+  if (url.pathname === "/api/auth/delete-account") return methodNotAllowed(res, ["POST"]);
 
   if (url.pathname === "/api/auth/register" && req.method === "POST") {
     const payload = await readJson(req);

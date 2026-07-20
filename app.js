@@ -217,6 +217,9 @@
     const settingsConfirmPasswordInput = document.getElementById("settingsConfirmPasswordInput");
     const settingsPasswordMessage = document.getElementById("settingsPasswordMessage");
     const settingsChangePasswordButton = document.getElementById("settingsChangePasswordButton");
+    const settingsDeleteAccountConfirmInput = document.getElementById("settingsDeleteAccountConfirmInput");
+    const settingsDeleteAccountButton = document.getElementById("settingsDeleteAccountButton");
+    const settingsDeleteAccountMessage = document.getElementById("settingsDeleteAccountMessage");
     const liveLogoutButton = document.getElementById("liveLogoutButton");
     const liveLoginButton = document.getElementById("liveLoginButton");
     const liveRegisterButton = document.getElementById("liveRegisterButton");
@@ -4732,6 +4735,7 @@
       setSettingsMessage(settingsProfilePhotoMessage, "");
       setSettingsMessage(settingsPasswordMessage, "");
       setSettingsMessage(settingsBackupMessage, "");
+      resetDeleteAccountForm();
       setTimeout(() => themeColorInput?.focus(), 0);
     }
     function openSettingsPanel() {
@@ -5146,6 +5150,65 @@
       }
     }
 
+    function expectedDeleteAccountConfirmation() {
+      return String(liveProfile || "").toUpperCase();
+    }
+
+    function resetDeleteAccountForm() {
+      if (settingsDeleteAccountConfirmInput) {
+        settingsDeleteAccountConfirmInput.value = "";
+        const expected = expectedDeleteAccountConfirmation();
+        settingsDeleteAccountConfirmInput.placeholder = expected || "USERNAME EM CAPSLOCK";
+      }
+      setSettingsMessage(settingsDeleteAccountMessage, "");
+      updateDeleteAccountButtonState();
+    }
+
+    function updateDeleteAccountButtonState() {
+      const expected = expectedDeleteAccountConfirmation();
+      const actual = String(settingsDeleteAccountConfirmInput?.value || "").trim();
+      const canDelete = Boolean(liveEnabled && liveProfile && expected && actual === expected);
+      if (settingsDeleteAccountButton) {
+        settingsDeleteAccountButton.disabled = !canDelete;
+        settingsDeleteAccountButton.classList.toggle("is-armed", canDelete);
+      }
+    }
+
+    async function deleteLiveAccount() {
+      if (!requireLiveLogin()) return;
+
+      const expected = expectedDeleteAccountConfirmation();
+      const confirmation = String(settingsDeleteAccountConfirmInput?.value || "").trim();
+      if (!expected || confirmation !== expected) {
+        setSettingsMessage(settingsDeleteAccountMessage, `Para eliminar a conta escreve ${expected} em maiusculas.`, true);
+        updateDeleteAccountButtonState();
+        return;
+      }
+
+      const deletedProfile = liveProfile;
+      try {
+        if (settingsDeleteAccountButton) {
+          settingsDeleteAccountButton.disabled = true;
+          settingsDeleteAccountButton.textContent = "A eliminar...";
+        }
+        setSettingsMessage(settingsDeleteAccountMessage, "A eliminar conta e dados associados...");
+        await authRequest("/api/auth/delete-account", { confirmation });
+        try {
+          localStorage.removeItem(historyStorageKey());
+          localStorage.removeItem(profilePhotoStorageKey());
+        } catch {}
+        endLiveSession("deleted");
+        sessionExpiryHandled = false;
+        setAuthMessage(`Conta ${deletedProfile} eliminada com sucesso.`, "login");
+        setSaveStatus("Conta eliminada");
+      } catch (error) {
+        setSettingsMessage(settingsDeleteAccountMessage, error.message || "Nao foi possivel eliminar a conta.", true);
+        setSaveStatus("Erro ao eliminar conta");
+      } finally {
+        if (settingsDeleteAccountButton) settingsDeleteAccountButton.textContent = "Eliminar conta";
+        updateDeleteAccountButtonState();
+      }
+    }
     async function fetchLiveState(profile = "") {
       const query = profile ? `?profile=${encodeURIComponent(profile)}` : "";
       const response = await apiFetch(`/api/live/state${query}`, { cache: "no-store" });
@@ -5469,13 +5532,15 @@
       if (liveFriendSelect) liveFriendSelect.innerHTML = `<option value="">Escolhe um amigo</option>`;
       closeUserMenu();
       const expired = reason === "idle" || reason === "expired";
-      liveStatusText.textContent = expired
-        ? "Sessao expirada. Entra novamente."
-        : "Sessao terminada. Entra para voltar ao modo online.";
+      liveStatusText.textContent = reason === "deleted"
+        ? "Conta eliminada."
+        : expired
+          ? "Sessao expirada. Entra novamente."
+          : "Sessao terminada. Entra para voltar ao modo online.";
       setAuthMode("login");
       updateLiveLoginUI();
-      setAuthMessage(expired ? "Sessao expirada. Faz login novamente." : "", "login");
-      setSaveStatus(expired ? "Sessao expirada" : "Sessao terminada");
+      setAuthMessage(reason === "deleted" ? "Conta eliminada com sucesso." : expired ? "Sessao expirada. Faz login novamente." : "", "login");
+      setSaveStatus(reason === "deleted" ? "Conta eliminada" : expired ? "Sessao expirada" : "Sessao terminada");
     }
 
     async function logoutLiveAccount(reason = "manual") {
@@ -6865,6 +6930,10 @@
     });
     settingsConfirmPasswordInput?.addEventListener("keydown", event => {
       if (event.key === "Enter") changePasswordFromSettings();
+    });
+    settingsDeleteAccountConfirmInput?.addEventListener("input", updateDeleteAccountButtonState);
+    settingsDeleteAccountConfirmInput?.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !settingsDeleteAccountButton?.disabled) deleteLiveAccount();
     });
     themeColorInput?.addEventListener("input", event => {
       themeColorTextInput.value = event.target.value;
