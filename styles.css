@@ -9359,3 +9359,48 @@ body.auth-locked #authGate {
   max-width: 100vw !important;
   z-index: 200 !important;
 }
+
+/* auth-app-visible-fix-2026-07-20 */
+body:not(.auth-locked) {
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+}
+
+body:not(.auth-locked) #authGate {
+  display: none !important;
+  position: static !important;
+  height: auto !important;
+  min-height: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+body:not(.auth-locked) header {
+  display: block !important;
+}
+
+body:not(.auth-locked) main {
+  display: grid !important;
+}
+
+body:not(.auth-locked) #appInstallFooter {
+  display: block !important;
+}
+
+@media (max-width: 760px) {
+  body:not(.auth-locked) main {
+    display: flex !important;
+  }
+
+  body:not(.auth-locked) #mobileBottomNav {
+    display: grid !important;
+  }
+}
+
+@media (min-width: 761px) {
+  body:not(.auth-locked) #mobileBottomNav {
+    display: none !important;
+  }
+}
