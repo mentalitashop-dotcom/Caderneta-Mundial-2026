@@ -8408,3 +8408,954 @@ body.friend-view .country-card-count.is-complete {
   left: 52px !important;
   opacity: .45;
 }
+/* mobile-ux-final-pass-2026-07-20 */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea,
+.stat,
+.country-card,
+.duplicate-country-card,
+.sticker,
+.share-panel,
+.album-dashboard-shell {
+  min-width: 0;
+}
+
+body:has(#authGate:not(.hidden)) {
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+body:has(#authGate:not(.hidden)) header,
+body:has(#authGate:not(.hidden)) main,
+body:has(#authGate:not(.hidden)) #appInstallFooter,
+body:has(#authGate:not(.hidden)) #mobileBottomNav,
+body:has(#authGate:not(.hidden)) #saveStatus {
+  display: none !important;
+}
+
+body:has(#authGate:not(.hidden)) .auth-screen {
+  min-height: 100dvh;
+  height: 100dvh;
+  padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+body:has(#authGate:not(.hidden)) .auth-card {
+  width: min(100%, 420px);
+  max-height: calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --mobile-topbar-h: 58px;
+    --mobile-bottom-nav-h: 66px;
+    --mobile-page-gap: 8px;
+  }
+
+  body {
+    width: 100% !important;
+    min-width: 0 !important;
+    overscroll-behavior-x: none;
+  }
+
+  header,
+  .topbar {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 80 !important;
+    min-height: var(--mobile-topbar-h) !important;
+    padding: calc(7px + env(safe-area-inset-top)) 10px 7px !important;
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow: visible !important;
+  }
+
+  .brand,
+  .brand-button {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .brand-logo {
+    width: 34px !important;
+    height: 34px !important;
+    object-fit: cover !important;
+    border-radius: 10px !important;
+  }
+
+  .topbar nav:first-of-type {
+    min-width: 0 !important;
+    display: grid !important;
+    justify-items: center !important;
+  }
+
+  .view-title {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: clamp(13px, 3.8vw, 17px) !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+  }
+
+  #desktopNav,
+  .desktop-nav,
+  .top-user-actions {
+    display: none !important;
+  }
+
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 10px var(--mobile-page-gap) calc(var(--mobile-bottom-nav-h) + 18px + env(safe-area-inset-bottom)) !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    overflow-x: hidden !important;
+  }
+
+  body.friend-view main {
+    padding-right: var(--mobile-page-gap) !important;
+  }
+
+  .album-dashboard-shell,
+  .share-panel,
+  .toolbar,
+  .country-tabs-wrap,
+  #content,
+  .result-summary,
+  .album-home-title,
+  .friend-mode-banner,
+  .friend-trade-prompt,
+  .site-footer {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .album-dashboard-shell,
+  .share-panel,
+  .toolbar,
+  .country-tabs-wrap,
+  .friend-mode-banner,
+  .friend-trade-prompt {
+    border-radius: 14px !important;
+    padding: 10px !important;
+  }
+
+  .collection-progress {
+    padding: 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .collection-progress-copy {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .collection-progress-copy span,
+  .collection-progress-copy strong {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .collection-progress-copy span {
+    font-size: 10px !important;
+  }
+
+  .collection-progress-copy strong {
+    font-size: clamp(12px, 3.4vw, 15px) !important;
+    text-align: right !important;
+  }
+
+  .collection-progress-track {
+    height: 8px !important;
+    border-radius: 999px !important;
+  }
+
+  .album-dashboard-shell .stats,
+  .dashboard-counts,
+  .stats {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .album-dashboard-shell .stat,
+  .stat {
+    min-height: 58px !important;
+    height: auto !important;
+    padding: 8px 6px !important;
+    border-radius: 11px !important;
+    display: grid !important;
+    align-content: space-between !important;
+    gap: 3px !important;
+  }
+
+  .stat span {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: clamp(8px, 2.25vw, 10px) !important;
+    line-height: 1.05 !important;
+  }
+
+  .stat strong {
+    justify-self: end !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: clamp(16px, 4.8vw, 21px) !important;
+    line-height: 1 !important;
+  }
+
+  .toolbar {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .search-shell {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .search {
+    width: 100% !important;
+    min-height: 42px !important;
+    padding: 0 40px 0 13px !important;
+    font-size: 12px !important;
+  }
+
+  .clear-search {
+    width: 28px !important;
+    height: 28px !important;
+    right: 7px !important;
+  }
+
+  .toolbar-actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: end !important;
+    gap: 8px !important;
+  }
+
+  .collection-mode-row {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .collection-mode-row span,
+  .country-sort-label {
+    font-size: 9px !important;
+  }
+
+  .collection-mode-select,
+  .country-sort-select,
+  .list-user-select,
+  .live-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 38px !important;
+    font-size: 11px !important;
+  }
+
+  .export-list-btn {
+    width: auto !important;
+    min-width: 92px !important;
+    max-width: 118px !important;
+    min-height: 42px !important;
+    padding: 7px 9px !important;
+    border-radius: 13px !important;
+    line-height: 1.05 !important;
+  }
+
+  .export-list-btn span {
+    font-size: 11px !important;
+  }
+
+  .export-list-btn small {
+    font-size: 8px !important;
+    white-space: normal !important;
+  }
+
+  .country-list-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(118px, 42%) !important;
+    gap: 8px !important;
+    align-items: end !important;
+    width: 100% !important;
+  }
+
+  .country-list-title,
+  .country-sort-control {
+    min-width: 0 !important;
+  }
+
+  .country-list-title strong {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 15px !important;
+  }
+
+  .country-tabs-wrap .country-scroll-arrow {
+    display: none !important;
+  }
+
+  .country-tabs-wrap .country-tabs-viewport {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .country-tabs-wrap .country-tabs {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    transform: none !important;
+  }
+
+  .country-tabs-wrap .country-card,
+  .country-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 76px !important;
+    height: 76px !important;
+    padding: 7px !important;
+    border-radius: 11px !important;
+    overflow: hidden !important;
+  }
+
+  .country-card-title,
+  .country-card-name,
+  .country-card-code,
+  .country-card-count,
+  .country-card-progress span,
+  .country-card * {
+    min-width: 0 !important;
+  }
+
+  .country-card-title,
+  .country-card-name {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: clamp(9px, 2.75vw, 12px) !important;
+    line-height: 1.02 !important;
+  }
+
+  .country-card-code {
+    font-size: 8px !important;
+    line-height: 1 !important;
+  }
+
+  .country-card-count,
+  .country-card-progress span {
+    font-size: 8px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .country-card-progress,
+  .country-card-progress-track {
+    height: 5px !important;
+    border-radius: 999px !important;
+  }
+
+  .duplicate-results-toolbar {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 0 !important;
+  }
+
+  .duplicate-filter-tabs,
+  .duplicate-layout-tabs {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .duplicate-filter-tabs button,
+  .duplicate-layout-tabs button,
+  .duplicate-reserve-button,
+  .duplicate-results-toolbar > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 34px !important;
+    padding: 6px 7px !important;
+    font-size: 9px !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+  }
+
+  .duplicate-country-grid {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .duplicate-country-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 78px !important;
+    padding: 8px !important;
+    border-radius: 11px !important;
+    overflow: hidden !important;
+  }
+
+  .duplicate-country-head {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 5px !important;
+  }
+
+  .duplicate-country-head strong,
+  .duplicate-country-preview,
+  .duplicate-country-counts span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .duplicate-country-head strong {
+    font-size: 12px !important;
+    line-height: 1.05 !important;
+  }
+
+  .duplicate-country-counts b {
+    font-size: 16px !important;
+  }
+
+  .duplicate-country-preview,
+  .duplicate-country-counts span {
+    font-size: 8px !important;
+    line-height: 1.15 !important;
+  }
+
+  .country-modal,
+  .trade-modal {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .country-modal-panel,
+  .trade-modal-panel {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    max-height: calc(92dvh - env(safe-area-inset-top)) !important;
+    margin: 0 !important;
+    border-radius: 18px 18px 0 0 !important;
+    overflow: hidden !important;
+  }
+
+  .country-modal-inner,
+  .trade-modal-panel > div,
+  #tradeModalBody,
+  #reserveModalBody,
+  #mobileToolsModalBody {
+    max-height: calc(92dvh - env(safe-area-inset-top)) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .country-modal-head {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 3 !important;
+    padding: 11px 10px 9px !important;
+  }
+
+  .country-modal-title-row {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 7px !important;
+  }
+
+  .country-modal-title {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 18px !important;
+    line-height: 1.05 !important;
+  }
+
+  .country-modal-title-actions {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(30px, auto) !important;
+    gap: 5px !important;
+    align-items: center !important;
+  }
+
+  .country-modal-nav {
+    min-width: 34px !important;
+    max-width: 48px !important;
+    height: 30px !important;
+    padding: 0 5px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 7.5px !important;
+  }
+
+  .country-modal-close {
+    width: 31px !important;
+    min-width: 31px !important;
+    height: 31px !important;
+  }
+
+  .country-modal-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    padding: 0 10px 9px !important;
+  }
+
+  .country-modal-tabs button {
+    min-width: 0 !important;
+    min-height: 34px !important;
+    padding: 6px 4px !important;
+    font-size: 8.5px !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+  }
+
+  .country-modal-content {
+    padding: 9px 8px calc(16px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+  }
+
+  .sticker-grid,
+  .country-modal-content .sticker-grid,
+  .country-modal-inner.is-duplicate-country-modal .sticker-grid {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .sticker {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 82px !important;
+    padding: 8px !important;
+    border-radius: 11px !important;
+    overflow: hidden !important;
+  }
+
+  .sticker-title,
+  .sticker-name,
+  .sticker small,
+  .duplicate-summary,
+  .reserved-summary {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .sticker-title {
+    font-size: 12px !important;
+    line-height: 1.05 !important;
+  }
+
+  .sticker-name,
+  .sticker small {
+    font-size: 9px !important;
+    line-height: 1.15 !important;
+  }
+
+  .duplicate-row,
+  .reserved-row,
+  .owned-duplicate-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 5px !important;
+    align-items: center !important;
+  }
+
+  .duplicate-buttons {
+    display: inline-grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: 24px !important;
+    gap: 4px !important;
+  }
+
+  .duplicate-control-btn {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+  }
+
+  .friend-mode-banner {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .friend-view-identity {
+    min-width: 0 !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+  }
+
+  .friend-view-identity strong {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 16px !important;
+  }
+
+  .friend-view-tabs {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body.friend-view #livePanel {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    overflow: visible !important;
+  }
+
+  body.friend-view #livePanel .friends-ranking-panel,
+  body.friend-view #livePanel .friend-ranking-box,
+  body.friend-view #livePanel .friend-needed-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.friend-view #livePanel .friends-ranking-panel {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 9px !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-title {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-title strong,
+  body.friend-view #livePanel .friend-ranking-title span,
+  body.friend-view #livePanel .friend-needed-head strong,
+  body.friend-view #livePanel .friend-needed-head span {
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    line-height: 1.15 !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-list {
+    width: 100% !important;
+    max-height: none !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+    overflow: visible !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    grid-template-columns: 30px minmax(0, 1fr) !important;
+    gap: 7px !important;
+    padding: 7px !important;
+    overflow: hidden !important;
+  }
+
+  body.friend-view #livePanel .friend-ranking-main,
+  body.friend-view #livePanel .friend-ranking-main strong,
+  body.friend-view #livePanel .friend-ranking-main small {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  body.friend-view #livePanel .friend-needed-list,
+  body.friend-view #livePanel .friend-needed-chips {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body.friend-view #livePanel .friend-needed-chips {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 5px !important;
+  }
+
+  .lists-shell,
+  .settings-grid,
+  .account-settings-grid,
+  .settings-grid-site,
+  .trade-overview-grid,
+  .comparison-grid,
+  .list-compare-tabs,
+  .history-filter-row,
+  .mobile-tools-page-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .lists-side-nav {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+  }
+
+  .list-compare-input,
+  textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 150px !important;
+    font-size: 12px !important;
+  }
+
+  .list-compare-actions,
+  .settings-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .list-compare-actions button,
+  .settings-actions button,
+  .share-panel button,
+  .setting-card button {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 36px !important;
+    padding: 7px 9px !important;
+    font-size: 11px !important;
+    line-height: 1.1 !important;
+    white-space: normal !important;
+  }
+
+  .mobile-tools-page-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mobile-tool-card {
+    width: 100% !important;
+    min-height: 76px !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .history-day-head-paged {
+    grid-template-columns: 34px minmax(0, 1fr) 34px !important;
+  }
+
+  .history-line {
+    width: 100% !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    overflow: hidden !important;
+  }
+
+  .history-line time,
+  .history-line strong,
+  .history-line p {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .mobile-bottom-nav {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 120 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: calc(var(--mobile-bottom-nav-h) + env(safe-area-inset-bottom)) !important;
+    padding: 6px max(8px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right)) !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    transform: none !important;
+    overflow: visible !important;
+  }
+
+  .mobile-bottom-nav button {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .mobile-nav-icon,
+  .mobile-nav-plus,
+  .mobile-account-avatar {
+    transform: none !important;
+    flex: 0 0 auto !important;
+  }
+
+  .site-footer {
+    padding: 12px 10px calc(14px + var(--mobile-bottom-nav-h) + env(safe-area-inset-bottom)) !important;
+    border-radius: 0 !important;
+  }
+
+  #saveStatus {
+    display: none !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .album-dashboard-shell .stats,
+  .dashboard-counts,
+  .stats {
+    gap: 5px !important;
+  }
+
+  .album-dashboard-shell .stat,
+  .stat {
+    min-height: 54px !important;
+    padding: 7px 5px !important;
+  }
+
+  .country-tabs-wrap .country-tabs {
+    gap: 5px !important;
+  }
+
+  .country-tabs-wrap .country-card,
+  .country-card {
+    height: 72px !important;
+    min-height: 72px !important;
+    padding: 6px !important;
+  }
+
+  .country-card-title,
+  .country-card-name {
+    font-size: clamp(8.5px, 2.6vw, 11px) !important;
+  }
+
+  .sticker-grid,
+  .country-modal-content .sticker-grid,
+  .country-modal-inner.is-duplicate-country-modal .sticker-grid {
+    gap: 6px !important;
+  }
+
+  .sticker {
+    min-height: 78px !important;
+    padding: 7px !important;
+  }
+}
+
+/* auth-mobile-shell-lock-fix-2026-07-20 */
+body.auth-locked {
+  min-height: 100dvh;
+  overflow: hidden !important;
+}
+
+body.auth-locked header,
+body.auth-locked main,
+body.auth-locked #appInstallFooter,
+body.auth-locked #mobileBottomNav,
+body.auth-locked #saveStatus {
+  display: none !important;
+}
+
+body.auth-locked #authGate {
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* auth-fixed-mobile-height-fix-2026-07-20 */
+body.auth-locked {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+}
+
+body.auth-locked #authGate {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  z-index: 200 !important;
+}
